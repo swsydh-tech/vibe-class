@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 두더지 잡기 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        body {
+            font-family: 'Jua', sans-serif;
+            /* 잔디밭 느낌의 배경 패턴 */
+            background-color: #4ade80;
+            background-image: radial-gradient(#22c55e 20%, transparent 20%), radial-gradient(#22c55e 20%, transparent 20%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            user-select: none; /* 드래그 방지 */
+            -webkit-user-select: none;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .hole-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden; /* 구멍 밖으로 나간 두더지는 안 보이게 */
+            border-radius: 20px;
+        }
+
+        /* 흙(구멍 입구) 스타일 */
+        .dirt {
+            position: absolute;
+            bottom: -10%;
+            width: 100%;
+            height: 40%;
+            background-color: #5c3a21;
+            border-radius: 50%;
+            border-top: 6px solid #166534; /* 구멍 테두리 잔디색 */
+            z-index: 10;
+        }
+
+        /* 두더지 캐릭터 스타일 및 애니메이션 */
+        .mole {
+            position: absolute;
+            bottom: 15%; /* 흙 바로 위에서 시작 */
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: translateY(110%); /* 기본적으로 아래로 숨어있음 */
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        /* 클래스 up이 붙으면 위로 튀어오름 */
+        .mole.up {
+            transform: translateY(0%);
+        }
+
+        /* 게임 종료 모달 배경 */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-white/90 p-6 rounded-3xl shadow-xl w-full max-w-lg text-center border-4 border-green-600">
+        <h1 class="text-4xl text-green-700 mb-6 drop-shadow-md">🌱 귀여운 두더지 잡기 🌱</h1>
+        
+        <div class="flex justify-between items-center bg-green-100 p-4 rounded-2xl mb-6 shadow-inner text-xl text-green-800">
+            <div class="flex flex-col">
+                <span class="text-sm text-green-600">남은 시간</span>
+                <span class="text-3xl"><span id="time-left">30</span>초</span>
+            </div>
+            
+            <button id="start-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-6 py-3 rounded-full text-2xl font-bold shadow-[0_4px_0_#b45309] active:shadow-[0_0px_0_#b45309] active:translate-y-1 transition-all">
+                게임 시작!
+            </button>
+            
+            <div class="flex flex-col">
+                <span class="text-sm text-green-600">내 점수</span>
+                <span class="text-3xl text-orange-600"><span id="score">0</span>점</span>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <!-- 9개의 구멍과 두더지를 반복해서 만듭니다 -->
+            <script>
+                const svgMole = `
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-lg filter drop-shadow">
+                        <path d="M 15,100 C 15,20 85,20 85,100 Z" fill="#784A2A" /> <!-- 몸통 -->
+                        <path d="M 30,100 C 30,50 70,50 70,100 Z" fill="#D2B48C" /> <!-- 배 -->
+                        <circle cx="35" cy="45" r="5" fill="#111" /> <!-- 왼쪽 눈 -->
+                        <circle cx="65" cy="45" r="5" fill="#111" /> <!-- 오른쪽 눈 -->
+                        <circle cx="36" cy="43" r="1.5" fill="white" /> <!-- 눈 반짝임 -->
+                        <circle cx="66" cy="43" r="1.5" fill="white" /> <!-- 눈 반짝임 -->
+                        <ellipse cx="50" cy="55" rx="8" ry="5" fill="#FFB6C1" /> <!-- 코 -->
+                        <!-- 수염 -->
+                        <line x1="15" y1="50" x2="30" y2="55" stroke="#333" stroke-width="1.5" stroke-linecap="round" />
+                        <line x1="15" y1="60" x2="30" y2="58" stroke="#333" stroke-width="1.5" stroke-linecap="round" />
+                        <line x1="85" y1="50" x2="70" y2="55" stroke="#333" stroke-width="1.5" stroke-linecap="round" />
+                        <line x1="85" y1="60" x2="70" y2="58" stroke="#333" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                `;
+                for (let i = 0; i < 9; i++) {
+                    document.write(`
+                        <div class="hole-container bg-green-500 shadow-inner shadow-green-700/50">
+                            <div class="mole" data-id="${i}">
+                                ${svgMole}
+                            </div>
+                            <div class="dirt"></div>
+                        </div>
+                    `);
+                }
+            </script>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full mx-4 border-4 border-yellow-400">
+            <h2 class="text-4xl text-orange-600 mb-2">게임 종료!</h2>
+            <p class="text-xl text-gray-600 mb-6">최종 점수는...</p>
+            <div class="text-6xl text-green-600 mb-8 font-bold"><span id="final-score">0</span>점</div>
+            <button onclick="closeModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full text-xl shadow-[0_4px_0_#1e3a8a] active:shadow-[0_0px_0_#1e3a8a] active:translate-y-1 transition-all">
+                다시 하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const moles = document.querySelectorAll('.mole');
+        const scoreBoard = document.getElementById('score');
+        const timerDisplay = document.getElementById('time-left');
+        const startBtn = document.getElementById('start-btn');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+        let timeLeft = 30; // 제한 시간 30초
+        let countdownTimer;
+
+        // 랜덤한 시간을 생성하는 함수 (최소~최대 시간)
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        // 9개의 구멍 중 랜덤하게 하나를 고르는 함수
+        function randomHole(moles) {
+            const idx = Math.floor(Math.random() * moles.length);
+            const hole = moles[idx];
+            // 같은 구멍에서 연속으로 나오지 않게 처리
+            if (hole === lastHole) {
+                return randomHole(moles);
+            }
+            lastHole = hole;
+            return hole;
+        }
+
+        function peep() {
+            // 두더지가 머무는 시간 (초반엔 길게, 랜덤하게)
+            const time = randomTime(600, 1200); 
+            const mole = randomHole(moles);
+            
+            // 두더지 튀어오르기
+            mole.classList.add('up');
+            
+            // 정해진 시간이 지나면 다시 들어가기
+            setTimeout(() => {
+                mole.classList.remove('up');
+                if (!timeUp) {
+                    peep(); // 시간이 안 끝났으면 또 다른 두더지가 튀어나옴
+                }
+            }, time);
+        }
+
+        function startGame() {
+            // 초기화
+            scoreBoard.textContent = 0;
+            score = 0;
+            timeLeft = 30;
+            timeUp = false;
+            timerDisplay.textContent = timeLeft;
+            startBtn.disabled = true; // 게임 중에는 버튼 비활성화
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 두더지 튀어나오기 시작!
+            peep();
+
+            // 타이머 카운트다운 시작
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            timeUp = true;
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // 결과 모달 띄우기 (alert 대신 사용)
+            finalScoreDisplay.textContent = score;
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            gameOverModal.classList.add('hidden');
+        }
+
+        // 두더지를 클릭(터치)했을 때 점수를 올리는 함수
+        function bonk(e) {
+            // 매크로 프로그램 등 비정상적인 클릭 방지
+            if (!e.isTrusted) return; 
+
+            // 이미 내려가는 중이거나 올라오지 않은 두더지는 무시
+            if (!this.classList.contains('up')) return;
+
+            score++;
+            this.classList.remove('up'); // 맞으면 쏙 들어감
+            scoreBoard.textContent = score;
+            
+            // (선택) 맞았을 때 뿅! 하는 시각적 효과를 원한다면 이 자리에 추가 가능
+        }
+
+        // 모든 두더지에 클릭 이벤트 달아주기
+        moles.forEach(mole => mole.addEventListener('click', bonk));
+        // 모바일 터치 환경을 위한 터치 이벤트
+        moles.forEach(mole => mole.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // 더블 탭 줌 방지
+            bonk.call(mole, e);
+        }));
+
+        startBtn.addEventListener('click', startGame);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>마법 스케치북</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: 귀여운 Jua 폰트 사용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #f3f4f6;
+            touch-action: none; /* 화면 스크롤 방지 */
+        }
+
+        /* 툴바 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 캔버스 영역 그림자 및 모서리 설정 */
+        .canvas-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            overflow: hidden;
+            background-color: #ffffff; /* 깨끗한 흰색 배경 */
+        }
+        
+        canvas {
+            display: block;
+            touch-action: none; /* 캔버스 위에서 브라우저 기본 터치 액션 방지 */
+            cursor: crosshair;
+        }
+
+        /* 색상 버튼 활성화 효과 */
+        .color-btn.active {
+            transform: scale(1.2);
+            border: 3px solid #374151;
+        }
+
+        /* 도구 버튼 활성화 효과 */
+        .tool-btn.active {
+            background-color: #fbcfe8; /* 핑크색 하이라이트 */
+            color: #be185d;
+            border-color: #f9a8d4;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 h-screen flex flex-col items-center justify-start p-2 sm:p-4 overflow-hidden">
+
+    <header class="w-full max-w-4xl flex items-center justify-center py-2 sm:py-4 mb-2">
+        <h1 class="text-2xl sm:text-4xl font-bold text-indigo-500 drop-shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-yellow-400"></i>
+            나만의 마법 스케치북
+        </h1>
+    </header>
+
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-md p-3 mb-4 flex flex-wrap gap-4 items-center justify-between z-10 relative">
+        
+        <!-- 색상 팔레트 영역 -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            <span class="text-gray-600 mr-1 text-sm sm:text-base whitespace-nowrap"><i class="fa-solid fa-palette"></i> 색상:</span>
+            <!-- 기본 색상 버튼들 -->
+            <button class="color-btn active w-8 h-8 rounded-full shadow-sm bg-[#ef4444] transition-transform" data-color="#ef4444" aria-label="빨간색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#f97316] transition-transform" data-color="#f97316" aria-label="주황색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#eab308] transition-transform" data-color="#eab308" aria-label="노란색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#22c55e] transition-transform" data-color="#22c55e" aria-label="초록색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#3b82f6] transition-transform" data-color="#3b82f6" aria-label="파란색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#a855f7] transition-transform" data-color="#a855f7" aria-label="보라색"></button>
+            <button class="color-btn w-8 h-8 rounded-full shadow-sm bg-[#1f2937] transition-transform" data-color="#1f2937" aria-label="검은색"></button>
+            <!-- 컬러 피커 (사용자 지정 색상) -->
+            <input type="color" id="colorPicker" class="w-9 h-9 p-0 border-0 rounded-full cursor-pointer overflow-hidden shadow-sm ml-1" value="#ef4444" title="원하는 색상 선택">
+        </div>
+
+        <!-- 브러시 굵기 및 도구 영역 -->
+        <div class="flex items-center gap-4 flex-wrap">
+            <!-- 붓 굵기 조절 -->
+            <div class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-pen text-gray-500 text-sm"></i>
+                <input type="range" id="lineWidth" min="1" max="50" value="5" class="w-20 sm:w-24 accent-indigo-500 cursor-pointer">
+                <span id="lineWidthDisplay" class="text-gray-600 text-sm w-4 text-center">5</span>
+            </div>
+
+            <!-- 도구 버튼: 펜, 지우개, 모두 지우기 -->
+            <div class="flex items-center gap-2">
+                <button id="btnPen" class="tool-btn active flex items-center gap-1 bg-white border-2 border-indigo-200 text-indigo-500 px-3 py-1.5 rounded-xl shadow-sm hover:bg-indigo-50 transition-colors">
+                    <i class="fa-solid fa-paintbrush"></i> <span class="hidden sm:inline">붓</span>
+                </button>
+                <button id="btnEraser" class="tool-btn flex items-center gap-1 bg-white border-2 border-pink-200 text-pink-500 px-3 py-1.5 rounded-xl shadow-sm hover:bg-pink-50 transition-colors">
+                    <i class="fa-solid fa-eraser"></i> <span class="hidden sm:inline">지우개</span>
+                </button>
+                <div class="w-px h-6 bg-gray-300 mx-1"></div> <!-- 구분선 -->
+                <button id="btnClear" class="flex items-center gap-1 bg-red-100 text-red-500 hover:bg-red-200 hover:text-red-600 px-3 py-1.5 rounded-xl shadow-sm transition-colors font-bold">
+                    <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">모두 지우기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container flex-1 w-full max-w-4xl relative">
+        <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const canvasContainer = document.querySelector('.canvas-container');
+
+        // 상태 변수
+        let isDrawing = false;
+        let currentColor = '#ef4444'; // 기본색: 빨강
+        let currentLineWidth = 5;
+        let isEraserMode = false;
+        
+        // 이전 좌표 (선을 부드럽게 그리기 위함)
+        let lastX = 0;
+        let lastY = 0;
+
+        // UI 요소
+        const colorBtns = document.querySelectorAll('.color-btn');
+        const colorPicker = document.getElementById('colorPicker');
+        const lineWidthSlider = document.getElementById('lineWidth');
+        const lineWidthDisplay = document.getElementById('lineWidthDisplay');
+        const btnPen = document.getElementById('btnPen');
+        const btnEraser = document.getElementById('btnEraser');
+        const btnClear = document.getElementById('btnClear');
+
+        // 캔버스 크기 초기화 및 리사이즈 처리
+        function resizeCanvas() {
+            // 현재 그려진 이미지 백업
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            if(canvas.width > 0 && canvas.height > 0) {
+                 tempCtx.drawImage(canvas, 0, 0);
+            }
+
+            // 컨테이너 크기에 맞춰 캔버스 해상도 설정
+            canvas.width = canvasContainer.clientWidth;
+            canvas.height = canvasContainer.clientHeight;
+            
+            // 컨텍스트 기본 설정
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // 백업된 이미지 복원
+            if(tempCanvas.width > 0) {
+                 ctx.drawImage(tempCanvas, 0, 0);
+            } else {
+                 // 초기 배경을 흰색으로 채움 (지우개 작동을 위해 투명 대신 흰색 활용)
+                 clearCanvas(false); 
+            }
+            updateContext();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        // 초기 로드 시 사이즈 설정
+        setTimeout(resizeCanvas, 0); 
+
+        // 붓/지우개 설정 업데이트
+        function updateContext() {
+            ctx.lineWidth = currentLineWidth;
+            if (isEraserMode) {
+                // 지우개 모드: 기존 그림을 지우고 투명하게(또는 흰색으로) 만듦
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.strokeStyle = 'rgba(0,0,0,1)';
+            } else {
+                // 그리기 모드
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentColor;
+            }
+        }
+
+        // --- 그리기 함수 ---
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPointerPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            
+            // 점 하나만 찍을 때를 위해
+            ctx.beginPath();
+            ctx.arc(lastX, lastY, currentLineWidth / 2, 0, Math.PI * 2);
+            if(isEraserMode) {
+                ctx.fillStyle = 'rgba(0,0,0,1)';
+                ctx.fill();
+            } else {
+                ctx.fillStyle = currentColor;
+                ctx.fill();
+            }
+            
+            updateContext();
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault(); // 모바일 스크롤 방지
+            
+            const pos = getPointerPos(e);
+            
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDrawing() {
+            if(!isDrawing) return;
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        // 터치/마우스 좌표 통합 추출 함수
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            // CSS 크기와 실제 캔버스 픽셀 크기 비율 계산
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        // --- 이벤트 리스너 등록 ---
+        
+        // 마우스 이벤트
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // 터치 이벤트 (모바일 지원)
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchcancel', stopDrawing);
+
+        // --- UI 컨트롤 ---
+
+        // 색상 버튼 클릭
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setColor(btn.dataset.color);
+                colorPicker.value = btn.dataset.color; // 피커 색상도 동기화
+            });
+        });
+
+        // 컬러 피커 변경
+        colorPicker.addEventListener('input', (e) => {
+            setColor(e.target.value);
+        });
+
+        // 색상 변경 함수
+        function setColor(color) {
+            currentColor = color;
+            setTool('pen'); // 색상을 바꾸면 자동으로 펜 모드로 전환
+            
+            // 활성화 UI 업데이트
+            colorBtns.forEach(b => {
+                if(b.dataset.color === color) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+
+        // 붓 굵기 변경
+        lineWidthSlider.addEventListener('input', (e) => {
+            currentLineWidth = e.target.value;
+            lineWidthDisplay.innerText = currentLineWidth;
+            updateContext();
+        });
+
+        // 도구 선택 (펜/지우개)
+        btnPen.addEventListener('click', () => setTool('pen'));
+        btnEraser.addEventListener('click', () => setTool('eraser'));
+
+        function setTool(tool) {
+            if (tool === 'pen') {
+                isEraserMode = false;
+                btnPen.classList.add('active');
+                btnEraser.classList.remove('active');
+            } else {
+                isEraserMode = true;
+                btnEraser.classList.add('active');
+                btnPen.classList.remove('active');
+            }
+            updateContext();
+        }
+
+        // 모두 지우기
+        btnClear.addEventListener('click', () => {
+            clearCanvas(true);
+        });
+
+        function clearCanvas(showEffect = false) {
+            // 지우기 전 임시 트랜지션 효과 (선택적)
+            if(showEffect) {
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    canvas.style.transition = 'opacity 0.3s ease';
+                    canvas.style.opacity = '1';
+                    setTimeout(() => canvas.style.transition = '', 300);
+                }, 150);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    </script>
+</body>
+</html>

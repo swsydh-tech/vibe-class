@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>따뜻한 칭찬 도장 앱</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Jua & Poor Story for cozy and warm font styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Poor+Story&display=swap" rel="stylesheet">
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            transition: background-color 0.8s ease;
+            user-select: none;
+        }
+        
+        .story-font {
+            font-family: 'Poor Story', cursive;
+        }
+
+        @keyframes stampPop {
+            0% {
+                transform: scale(3) rotate(-20deg);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(0.9) rotate(5deg);
+                opacity: 1;
+            }
+            80% {
+                transform: scale(1.1) rotate(-3deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .stamp-animation {
+            animation: stampPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(0px) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120px) scale(1.4);
+                opacity: 0;
+            }
+        }
+
+        .floating-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: floatParticle 1s ease-out forwards;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body id="appBody" class="bg-gradient-to-br from-pink-100 via-purple-100 to-yellow-100 min-h-screen flex flex-col items-center justify-between p-4 sm:p-6 overflow-x-hidden">
+
+    <header class="w-full max-w-md text-center pt-4">
+        <div class="inline-flex items-center gap-2 bg-white/70 px-4 py-1.5 rounded-full shadow-sm text-pink-500 text-sm font-bold mb-2">
+            <i class="fa-solid fa-face-smile-star"></i> 마음이 따뜻해지는 공간
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-wide drop-shadow-sm">
+            ✨ 칭찬 도장 꾹! ✨
+        </h1>
+        <p class="text-gray-600 text-sm mt-1 story-font text-lg">오늘도 수고한 나에게, 또는 소중한 친구에게 칭찬을 선물하세요.</p>
+    </header>
+
+    <main class="w-full max-w-md my-auto py-6 flex flex-col items-center relative">
+        <!-- Stamp Container / Card -->
+        <div id="stampCard" class="glass-card w-full rounded-3xl p-8 shadow-xl flex flex-col items-center justify-center min-h-[300px] relative overflow-hidden transition-all duration-300">
+            
+            <!-- Sparkle decorations in background -->
+            <div class="absolute top-4 left-4 text-pink-300 text-lg animate-pulse"><i class="fa-solid fa-sparkles"></i></div>
+            <div class="absolute bottom-4 right-4 text-purple-300 text-lg animate-pulse"><i class="fa-solid fa-star"></i></div>
+
+            <!-- Initial state placeholder -->
+            <div id="welcomeMessage" class="text-center">
+                <div class="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-400 text-4xl shadow-inner animate-bounce">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-700">버튼을 눌러 도장을 찍어보세요!</h2>
+                <p class="text-gray-400 text-sm mt-2">오늘의 따뜻한 칭찬이 기다리고 있어요.</p>
+            </div>
+
+            <!-- Active Praise Display (Hidden initially) -->
+            <div id="praiseDisplay" class="hidden flex flex-col items-center text-center w-full">
+                <!-- Stamp Badge Frame -->
+                <div id="stampBadge" class="border-4 border-dashed border-rose-400 bg-rose-50/80 rounded-2xl p-6 shadow-md w-full transform transition-all">
+                    <div id="stampIcon" class="text-5xl mb-2 text-rose-500">🌟</div>
+                    <div id="praiseText" class="text-3xl sm:text-4xl font-extrabold text-rose-600 tracking-tight leading-snug drop-shadow-sm">
+                        참 잘했어요!
+                    </div>
+                </div>
+                <p id="subPraise" class="text-gray-500 text-base mt-4 story-font">언제나 응원하고 있어요!</p>
+            </div>
+
+            <!-- Floating Particles Container -->
+            <div id="particleContainer" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+
+        <!-- Counter & Reset options -->
+        <div class="flex items-center justify-between w-full px-4 mt-4 text-gray-700 font-semibold text-sm">
+            <div class="bg-white/60 px-4 py-2 rounded-xl shadow-sm backdrop-blur-sm">
+                🎁 받은 칭찬 도장: <span id="stampCount" class="text-pink-600 font-bold text-base">0</span>개
+            </div>
+            <button onclick="resetCounter()" class="text-gray-400 hover:text-red-500 transition-colors text-xs bg-white/40 px-3 py-2 rounded-xl backdrop-blur-sm">
+                <i class="fa-solid fa-rotate-right"></i> 초기화
+            </button>
+        </div>
+    </main>
+
+    <footer class="w-full max-w-md pb-6 flex flex-col gap-3">
+        <button onclick="givePraise()" id="praiseBtn" class="w-full py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:to-indigo-600 text-white font-extrabold text-xl rounded-2xl shadow-lg transform active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer">
+            <i class="fa-solid fa-stamp text-2xl animate-pulse"></i> 칭찬 받기
+        </button>
+        
+        <div class="text-center text-xs text-gray-500 font-medium">
+            Made with 💖 for a wonderful day!
+        </div>
+    </footer>
+
+    <script>
+        // 칭찬 문구 리스트 데이터
+        const praises = [
+            { text: "참 잘했어요!", sub: "오늘도 한 걸음 더 성장했네요!", icon: "🌟" },
+            { text: "최고야!", sub: "당신의 열정은 언제나 빛나요!", icon: "🏆" },
+            { text: "아주 멋져!", sub: "정말 감탄스러운 멋진 모습이에요!", icon: "🎨" },
+            { text: "멋진 도전이야!", sub: "용기 있게 해낸 모습이 아름다워요!", icon: "🚀" },
+            { text: "참 기특해요!", sub: "마음 씀씀이가 참 예뻐요!", icon: "🍀" },
+            { text: "정말 훌륭해!", sub: "노력한 결실이 환하게 피어납니다!", icon: "👑" },
+            { text: "빛나는 보석 같아!", sub: "존재 자체로 큰 힘이 돼요!", icon: "💎" },
+            { text: "수고했어요!", sub: "오늘 하루도 정말 애썼어요!", icon: "☕" },
+            { text: "대단한 집중력이야!", sub: "몰입하는 모습이 너무 멋져요!", icon: "🎯" }
+        ];
+
+        // 파스텔 배경 색상 테마 팔레트
+        const bgPalettes = [
+            "from-pink-100 via-purple-100 to-yellow-100",
+            "from-blue-100 via-teal-100 to-emerald-100",
+            "from-amber-100 via-rose-100 to-orange-100",
+            "from-violet-100 via-fuchsia-100 to-pink-100",
+            "from-sky-100 via-indigo-100 to-purple-100"
+        ];
+
+        let count = localStorage.getItem('stampCount') ? parseInt(localStorage.getItem('stampCount')) : 0;
+        document.getElementById('stampCount').innerText = count;
+
+        function givePraise() {
+            // 랜덤 칭찬 선택
+            const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+            
+            // UI 요소 가져오기
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            const praiseDisplay = document.getElementById('praiseDisplay');
+            const praiseText = document.getElementById('praiseText');
+            const subPraise = document.getElementById('subPraise');
+            const stampIcon = document.getElementById('stampIcon');
+            const stampBadge = document.getElementById('stampBadge');
+            const stampCard = document.getElementById('stampCard');
+            const appBody = document.getElementById('appBody');
+
+            // 첫 화면 숨기기 및 칭찬 표시 활성화
+            welcomeMsg.classList.add('hidden');
+            praiseDisplay.classList.remove('hidden');
+
+            // 내용 업데이트
+            praiseText.innerText = randomPraise.text;
+            subPraise.innerText = randomPraise.sub;
+            stampIcon.innerText = randomPraise.icon;
+
+            // 도장 찍히는 애니메이션 클래스 재적용
+            stampBadge.classList.remove('stamp-animation');
+            void stampBadge.offsetWidth; // trigger reflow
+            stampBadge.classList.add('stamp-animation');
+
+            // 배경 파스텔톤 부드럽게 변경
+            const randomPalette = bgPalettes[Math.floor(Math.random() * bgPalettes.length)];
+            appBody.className = `bg-gradient-to-br ${randomPalette} min-h-screen flex flex-col items-center justify-between p-4 sm:p-6 overflow-x-hidden transition-all duration-800`;
+
+            // 카운트 증가 및 저장
+            count++;
+            document.getElementById('stampCount').innerText = count;
+            localStorage.setItem('stampCount', count);
+
+            // 반짝이는 파티클 효과 생성
+            createParticles();
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particleContainer');
+            const icons = ['✨', '💖', '⭐', '🎈', '🌸'];
+            
+            for (let i = 0; i < 6; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'floating-particle';
+                particle.innerText = icons[Math.floor(Math.random() * icons.length)];
+                
+                // 랜덤 위치 지정
+                const randomX = Math.random() * 260 - 130; // -130px ~ 130px
+                particle.style.left = `calc(50% + ${randomX}px)`;
+                particle.style.bottom = '40px';
+                particle.style.fontSize = `${Math.random() * 12 + 16}px`;
+                particle.style.animationDuration = `${Math.random() * 0.6 + 0.6}s`;
+
+                container.appendChild(particle);
+
+                // 애니메이션 종료 후 제거
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000);
+            }
+        }
+
+        function resetCounter() {
+            count = 0;
+            document.getElementById('stampCount').innerText = count;
+            localStorage.setItem('stampCount', count);
+            
+            // 화면 초기화
+            document.getElementById('welcomeMessage').classList.remove('hidden');
+            document.getElementById('praiseDisplay').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
