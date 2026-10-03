@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여름 바이브 🌊 50계단 퀴즈 & 캐릭터 상점 🌴</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Korean Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Jua', 'Noto Sans KR', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #00c6ff 70%, #0072ff 100%);
+            min-height: 100vh;
+        }
+
+        .font-gaegu {
+            font-family: 'Gaegu', cursive;
+        }
+
+        /* Glassmorphic Summer Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 3px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 20px 40px rgba(0, 114, 255, 0.22);
+        }
+
+        /* Background Wave Animation */
+        .ocean-wave {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 110px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.35" d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,176C960,203,1056,213,1152,192C1248,171,1344,117,1392,90L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x;
+            background-size: 1440px 110px;
+            animation: waveMove 12s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes waveMove {
+            0% { background-position-x: 0; }
+            100% { background-position-x: 1440px; }
+        }
+
+        /* Float Bounce Animations */
+        @keyframes floatBounce {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(4deg); }
+        }
+        .animate-float {
+            animation: floatBounce 3s ease-in-out infinite;
+        }
+
+        /* Ding-Dong-Deng Graphic Pop Effect */
+        @keyframes dingDongDengPop {
+            0% { transform: translate(-50%, -50%) scale(0.1) rotate(-20deg); opacity: 0; }
+            40% { transform: translate(-50%, -50%) scale(1.25) rotate(5deg); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(1.0) rotate(-2deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); opacity: 0; }
+        }
+        .animate-dingdongdeng {
+            animation: dingDongDengPop 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Dancing Dog Keyframe */
+        @keyframes dogDance {
+            0% { transform: scale(1) rotate(-15deg) translateY(0); }
+            25% { transform: scale(1.2) rotate(15deg) translateY(-25px); }
+            50% { transform: scale(0.9) rotate(-15deg) translateY(0); }
+            75% { transform: scale(1.25) rotate(15deg) translateY(-20px); }
+            100% { transform: scale(1) rotate(-15deg) translateY(0); }
+        }
+        .animate-dog-dance {
+            animation: dogDance 0.6s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e0f7fa;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00bcd4;
+            border-radius: 10px;
+        }
+
+        /* Staircase track container */
+        .stair-step-active {
+            box-shadow: 0 0 15px #ffaa00;
+            border-color: #f59e0b !important;
+            background: linear-gradient(135deg, #fef08a, #fde047) !important;
+        }
+    </style>
+</head>
+<body class="relative overflow-x-hidden flex flex-col justify-between min-h-screen text-slate-800 pb-8">
+
+    <!-- Ocean Wave Overlay -->
+    <div class="ocean-wave"></div>
+
+    <!-- Ding Dong Deng 🔔 3-Chime Pop Banner -->
+    <div id="dingDongDengOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none hidden whitespace-nowrap text-center">
+        <div class="text-5xl sm:text-7xl font-black text-yellow-300 drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)] border-4 border-white bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 px-8 sm:px-12 py-5 sm:py-7 rounded-full font-gaegu flex items-center gap-4 shadow-2xl">
+            🔔 딩동댕! 정답입니다! 🎉
+        </div>
+    </div>
+
+    <!-- Header Controls & Level Bar -->
+    <header class="relative z-10 w-full max-w-5xl mx-auto px-4 pt-5 pb-2 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-3">
+            <div id="activeAvatarHeader" class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-3xl transform -rotate-6 animate-float border-2 border-cyan-300">
+                🐶
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md tracking-wide flex items-center gap-2">
+                    여름 바이브 50계단 퀴즈!
+                </h1>
+                <p class="text-xs sm:text-sm text-cyan-100 font-gaegu font-bold text-lg">
+                    🌊 10계단 마다 레벨업! 캐릭터 상점에서 장착해보세요!
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Side Top Stats -->
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Ocean Sound Toggle -->
+            <button id="waveAudioBtn" onclick="toggleWaveSound()" class="px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-cyan-800 transition flex items-center gap-1.5 text-xs sm:text-sm font-bold shadow-sm">
+                <i id="waveIcon" class="fa-solid fa-water text-cyan-600"></i>
+                <span id="waveText">파도 소리 켜기</span>
+            </button>
+
+            <!-- Coins Badge -->
+            <div class="px-3 py-1.5 rounded-xl bg-amber-400 text-amber-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
+                <span>🪙 코인:</span>
+                <span id="coinText" class="text-base font-black text-amber-950">0</span>
+            </div>
+
+            <!-- Shop Button -->
+            <button onclick="openShopModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center gap-1.5">
+                <i class="fa-solid fa-store"></i>
+                <span>캐릭터 상점</span>
+            </button>
+
+            <!-- Certificate Button (Unlocked after 50 Stairs) -->
+            <button id="certificateBtn" onclick="openCertificateModal()" class="hidden px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm shadow-lg transition flex items-center gap-1.5 animate-bounce">
+                <i class="fa-solid fa-award text-amber-900 text-base"></i>
+                <span>🏆 천재 상장</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Application Grid -->
+    <main class="relative z-10 w-full max-w-5xl mx-auto px-4 py-3 flex-grow flex flex-col lg:flex-row gap-5">
+
+        <!-- Left Sidebar: 50 Stairs Level Tower -->
+        <aside class="w-full lg:w-1/3 glass-card rounded-3xl p-4 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-2 pb-2 border-b border-cyan-100">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-stairs text-cyan-600"></i>
+                    <span>50계단 등반 현황</span>
+                </h3>
+                <span id="stairLevelBadge" class="px-3 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-xs font-black">
+                    수준 1 (1~10계단)
+                </span>
+            </div>
+
+            <!-- Stair Progress Summary Card -->
+            <div class="bg-gradient-to-r from-cyan-50 to-emerald-50 rounded-2xl p-3 border border-cyan-200 mb-3 flex items-center justify-between">
+                <div>
+                    <div class="text-xs text-slate-500 font-bold">현재 위치</div>
+                    <div class="text-2xl font-black text-cyan-700 font-gaegu"><span id="currentStairNum">0</span> / 50 계단</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-slate-500 font-bold">현재 레벨 (수준)</div>
+                    <div id="currentLevelNameText" class="text-sm font-extrabold text-emerald-600">1수준: 기초 상식</div>
+                </div>
+            </div>
+
+            <!-- 50 Steps Staircase Display (Scrollable) -->
+            <div id="stairsContainer" class="h-64 lg:h-96 overflow-y-auto space-y-1 pr-1 flex flex-col-reverse">
+                <!-- 50 Stair rows dynamically generated -->
+            </div>
+        </aside>
+
+        <!-- Right Main: Quiz Board & Video Display -->
+        <section class="w-full lg:w-2/3 glass-card rounded-3xl p-5 sm:p-7 flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Top Controls in Card -->
+            <div class="w-full flex justify-between items-center mb-3 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <span id="quizLevelTag" class="bg-cyan-100 text-cyan-800 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-cyan-200">
+                        🏷️ 1수준 · 쉬움 상식
+                    </span>
+                    <span id="hintCountBadge" class="bg-amber-100 text-amber-900 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-amber-200">
+                        💡 힌트: <span id="hintCount">0</span>개
+                    </span>
+                </div>
+
+                <!-- Hidden Creator Button -->
+                <button id="hiddenCreatorBtn" onclick="openHiddenModal()" disabled class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition flex items-center gap-1.5 border border-slate-300">
+                    <i class="fa-solid fa-lock text-xs" id="hiddenLockIcon"></i>
+                    <span>히든 (퀴즈 만들기)</span>
+                </button>
+            </div>
+
+            <!-- Quiz Main Display -->
+            <div id="quizDisplayArea" class="w-full my-auto flex flex-col items-center">
+                
+                <!-- Start Screen -->
+                <div id="startScreen" class="flex flex-col items-center text-center py-8 gap-4">
+                    <div id="avatarStartDisplay" class="text-7xl sm:text-8xl animate-float">🐶</div>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-cyan-900 font-gaegu leading-tight">
+                        50계단을 올라가 <span class="text-emerald-600">5가지 수준</span>을 완등하고<br><span class="text-pink-600">마지막 세상이 못 맞히는 문제</span>에 도전하세요!
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 max-w-md">
+                        • 1문제 맞힐 때마다 <b>+1계단</b> 등반!<br>
+                        • 정답을 맞히면 <b>'딩동댕~'</b> 소리와 <b>관련 자료 영상</b>이 공개됩니다!<br>
+                        • 10계단 클리어 시 <b>상점 코인 + 힌트 1개 + 춤추는 캐릭터</b> 획득!
+                    </p>
+                    <button onclick="startQuizGame()" class="mt-2 px-10 py-4 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white font-extrabold text-2xl rounded-2xl shadow-xl transform transition active:scale-95 flex items-center gap-3">
+                        <i class="fa-solid fa-play text-yellow-300"></i>
+                        <span>퀴즈 시작하기!</span>
+                    </button>
+                </div>
+
+                <!-- Quiz Screen -->
+                <div id="quizScreen" class="hidden w-full flex flex-col items-center gap-4">
+                    
+                    <!-- Question Header & Hint Button -->
+                    <div class="flex justify-between items-center w-full">
+                        <span id="stairQuestionHeader" class="text-sm font-extrabold text-cyan-700">
+                            📍 계단 1번 문제
+                        </span>
+                        <button id="useHintBtn" onclick="useHintChance()" class="px-3 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-sm disabled:opacity-50">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span>힌트 사용</span>
+                        </button>
+                    </div>
+
+                    <!-- Question Text -->
+                    <h2 id="questionText" class="text-2xl sm:text-3xl font-black text-slate-800 text-center font-gaegu leading-snug min-h-[60px] flex items-center justify-center">
+                        질문 내용입니다.
+                    </h2>
+
+                    <!-- Hint Box -->
+                    <div id="hintBox" class="hidden w-full bg-amber-50 border-2 border-amber-300 p-3 rounded-2xl text-xs sm:text-sm text-amber-900 font-semibold text-center animate-bounce">
+                        💡 <b>힌트:</b> <span id="hintText"></span>
+                    </div>
+
+                    <!-- 4 Choice Options Grid -->
+                    <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-1">
+                        <!-- Options generated here -->
+                    </div>
+
+                    <!-- Related Video Card Section (Appears or Updates) -->
+                    <div id="videoContainer" class="w-full mt-2 bg-slate-900 rounded-2xl overflow-hidden shadow-lg border-2 border-cyan-300 hidden flex-col">
+                        <div class="bg-cyan-800 text-cyan-100 px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-film text-yellow-300"></i>
+                                <span>📺 정답 지식 관련 자료 영상</span>
+                            </span>
+                            <span id="videoTitleText" class="text-cyan-200 text-xs truncate max-w-[200px]">관련 자료</span>
+                        </div>
+                        <div class="relative w-full aspect-video bg-black flex items-center justify-center">
+                            <iframe id="youtubeIframe" class="w-full h-full" src="" title="Related Quiz Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+
+                    <!-- Next Question Button -->
+                    <button id="nextBtn" onclick="nextStairQuiz()" class="hidden mt-3 px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-blue-600 transition flex items-center gap-2">
+                        <span>다음 계단 문제 도전!</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Progress Bar -->
+            <div class="w-full border-t border-cyan-100 pt-3 mt-3">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
+                    <span>🏁 50계단 완등 진행도</span>
+                    <span id="overallProgressText" class="text-cyan-700">0 / 50 계단</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                    <div id="overallProgressBar" class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 h-full rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Character Shop Modal -->
+    <div id="shopModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl relative border-4 border-amber-300 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeShopModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-2xl font-extrabold text-amber-800 mb-1 flex items-center gap-2 font-gaegu text-3xl">
+                🛍️ 캐릭터 상점
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">
+                10계단을 오를 때마다 획득한 코인으로 등반 캐릭터를 구매해 장착하세요!
+            </p>
+
+            <!-- Current Coin Balance -->
+            <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 flex justify-between items-center mb-4">
+                <span class="text-xs font-bold text-amber-900">보유 코인:</span>
+                <span class="text-xl font-black text-amber-600 flex items-center gap-1">
+                    🪙 <span id="shopCoinText">0</span>개
+                </span>
+            </div>
+
+            <!-- Characters Grid -->
+            <div id="shopGrid" class="grid grid-cols-2 gap-3">
+                <!-- Dynamically generated shop items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Creator Modal -->
+    <div id="hiddenModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl relative border-4 border-pink-200 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeHiddenModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-2xl font-extrabold text-pink-600 mb-1 flex items-center gap-2 font-gaegu text-3xl">
+                ✨ 히든 기능: 나만의 퀴즈 추가!
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">
+                직접 질문과 관련 유튜브 영상 URL을 입력해 나만의 문제에 도전하세요!
+            </p>
+
+            <form onsubmit="handleCreateCustomQuiz(event)" class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">퀴즈 질문</label>
+                    <input type="text" id="customQ" placeholder="예: 바다에 가장 많이 녹아있는 염류는?" required class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 1 (정답)</label>
+                        <input type="text" id="customOpt1" placeholder="염화나트륨" required class="w-full px-3 py-1.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:outline-none text-xs font-semibold bg-emerald-50/50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 2 (오답)</label>
+                        <input type="text" id="customOpt2" placeholder="설탕" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 3 (오답)</label>
+                        <input type="text" id="customOpt3" placeholder="비타민" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 4 (오답)</label>
+                        <input type="text" id="customOpt4" placeholder="지방" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">관련 유튜브 영상 ID 또는 URL (선택)</label>
+                    <input type="text" id="customVideo" placeholder="예: ui_OA6oT-kk 또는 유튜브 링크" class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">힌트 문구</label>
+                    <input type="text" id="customHint" placeholder="예: 소금의 대표 주성분이에요." required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeHiddenModal()" class="w-1/2 py-2.5 rounded-xl font-bold text-slate-500 bg-slate-100 transition">취소</button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 transition shadow-md">퀴즈 생성!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Level / 10-Stair Clear Celebration Modal -->
+    <div id="levelClearModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gradient-to-b from-yellow-100 via-white to-cyan-100 rounded-3xl p-7 max-w-md w-full shadow-2xl text-center relative border-4 border-yellow-300">
+            
+            <div id="dancingCharacterIcon" class="text-7xl sm:text-8xl my-3 animate-dog-dance inline-block">
+                🐶
+            </div>
+            
+            <h3 id="levelClearTitle" class="text-3xl sm:text-4xl font-extrabold text-yellow-800 font-gaegu mb-1">
+                🎉 수준 클리어 성공!! 🎉
+            </h3>
+            <p id="levelClearSub" class="text-base font-bold text-emerald-600 mb-3 font-gaegu">
+                10계단을 정복하여 신나는 댄스 타임! 🕺✨
+            </p>
+
+            <div class="bg-white/90 rounded-2xl p-4 border border-yellow-200 text-xs sm:text-sm font-bold text-slate-700 space-y-2 mb-5 text-left">
+                <div class="text-amber-600 flex items-center gap-2">
+                    <i class="fa-solid fa-coins"></i>
+                    <span>보상: <b>골드 코인 +100개</b> 획득!</span>
+                </div>
+                <div class="text-pink-600 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span><b>'히든 버튼'</b> (퀴즈 작성기) 추가 해금!</span>
+                </div>
+                <div class="text-emerald-600 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span><b>'힌트 +1개'</b> 획득!</span>
+                </div>
+            </div>
+
+            <button onclick="closeLevelClearModal()" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 text-yellow-950 font-extrabold text-lg rounded-2xl shadow-lg transition">
+                다음 계단 도전하기 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Official "You Are A Genius!" Certificate Modal -->
+    <div id="certificateModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-amber-50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative border-8 border-amber-300 text-center text-amber-950 flex flex-col items-center">
+            <button onclick="closeCertificateModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-amber-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Certificate Frame Inner -->
+            <div class="w-full border-4 border-double border-amber-400 p-5 sm:p-7 rounded-2xl bg-white/90 relative overflow-hidden shadow-inner">
+                <div class="absolute -top-10 -right-10 text-9xl opacity-10 select-none pointer-events-none">🏆</div>
+                <div class="text-xs font-black tracking-widest text-amber-700 uppercase mb-1">OFFICIAL CERTIFICATE OF GENIUS</div>
+                
+                <h2 class="text-3xl sm:text-4xl font-black text-amber-900 font-gaegu my-1 flex items-center justify-center gap-2">
+                    <span>📜</span>
+                    <span>상 장</span>
+                    <span>📜</span>
+                </h2>
+
+                <div id="certAvatar" class="text-6xl my-2 animate-bounce">🐶</div>
+
+                <div class="text-2xl sm:text-3xl font-black text-rose-600 font-gaegu my-2 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 py-2 px-4 rounded-xl border-2 border-amber-300 shadow-sm">
+                    ✨ 당신은 천재! ✨
+                </div>
+
+                <p class="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed font-gaegu my-3">
+                    위 사람은 <b>'여름 바이브 50계단 퀴즈'</b>의 모든 고난도 문제를 극복하고,<br>
+                    마지막 세상이 못 맞히는 문제까지 완벽하게 정복하였으므로<br>
+                    지구상 최고 지능의 소유자임을 인정하여 이 <b>천재 상장</b>을 수여합니다!
+                </p>
+
+                <div class="mt-5 pt-3 border-t border-amber-200 flex justify-between items-center text-[11px] text-amber-800 font-bold">
+                    <div class="text-left">
+                        <div>발행일: <span id="certDate">2026. 10. 03</span></div>
+                        <div>수여 기관: 여름 바이브 퀴즈 위원회</div>
+                    </div>
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 border-4 border-amber-300 flex items-center justify-center text-white font-black text-[10px] shadow-lg transform rotate-12 leading-tight">
+                        천재인증<br>⭐
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-4 flex gap-2.5 w-full">
+                <button onclick="window.print()" class="w-1/2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl transition flex items-center justify-center gap-1.5 text-xs">
+                    <i class="fa-solid fa-print"></i>
+                    <span>상장 인쇄하기</span>
+                </button>
+                <button onclick="closeCertificateModal()" class="w-1/2 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-amber-950 font-black rounded-xl shadow-md transition text-xs">
+                    확인 및 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 text-center py-3 text-xs text-white/80 font-normal">
+        <p>🌊 시원한 여름 바이브 50계단 랜덤 퀴즈 & 캐릭터 상점 🏝️️</p>
+    </footer>
+
+    <script>
+        // --- 1. 50-Stairs Quiz Database (Levels 1 to 5 + Final Impossible Question) ---
+        const STAIR_QUIZZES = [
+            // Level 1: Stairs 1 ~ 10 (Easy Trivia)
+            {
+                stair: 1, level: 1, category: "🌊 1수준 · 여름 상식",
+                question: "바닷물이 짜게 느껴지는 가장 주된 소금 성분의 화학 이름은?",
+                options: ["염화나트륨", "이산화탄소", "탄산칼슘", "수산화나트륨"], answer: 0,
+                hint: "식탁에 올라오는 식염의 주성분이에요!", videoId: "ui_OA6oT-kk", videoTitle: "바다의 염분과 소금 과학"
+            },
+            {
+                stair: 2, level: 1, category: "🐬 1수준 · 동물의 세계",
+                question: "지구상에서 몸집이 가장 큰 포유류 동물은 무엇일까요?",
+                options: ["아프리카코끼리", "대왕고래 (흰수염고래)", "티라노사우루스", "향고래"], answer: 1,
+                hint: "바다에 살며 크릴새우를 주로 먹는 거대 포유류입니다.", videoId: "pTn3P33Zsxo", videoTitle: "지구상 가장 큰 대왕고래 다큐"
+            },
+            {
+                stair: 3, level: 1, category: "🍉 1수준 · 과일 상식",
+                question: "수박 속살의 빨간색을 띠게 만드는 대표적 항산화 물질은?",
+                options: ["안토시아닌", "라이코펜", "카로틴", "비타민C"], answer: 1,
+                hint: "토마토에도 풍부한 항산화 물질입니다.", videoId: "5p3WxN1GdmI", videoTitle: "과일 속 영양소와 라이코펜"
+            },
+            {
+                stair: 4, level: 1, category: "🍦 1수준 · 디저트 지식",
+                question: "차가운 아이스크림을 급하게 먹을 때 머리가 띵한 현상의 영어 표현은?",
+                options: ["Brain Freeze", "Ice Pain", "Cold Head", "Frozen Mind"], answer: 0,
+                hint: "'뇌'가 '어는' 느낌의 관용어입니다.", videoId: "D4ebPMHkkGQ", videoTitle: "차거운 음식을 먹을 때 두통 원리"
+            },
+            {
+                stair: 5, level: 1, category: "🌴 1수준 · 천문 기본",
+                question: "지구가 태양 주위를 한 바퀴 완주하는 데 걸리는 시간은?",
+                options: ["24시간", "1달", "1년 (약 365일)", "10년"], answer: 2,
+                hint: "사계절이 한 번 돌고 나이가 한 살 더 드는 기간입니다.", videoId: "zgDerx1eeBg", videoTitle: "지구의 자전과 공전 운동"
+            },
+            {
+                stair: 6, level: 1, category: "⚽ 1수준 · 스포츠",
+                question: "축구 정식 경기에서 한 팀의 필드 출전 인원은 몇 명일까요?",
+                options: ["9명", "10명", "11명", "12명"], answer: 2,
+                hint: "골키퍼 1명과 필드 플레이어 10명입니다.", videoId: "ui_OA6oT-kk", videoTitle: "축구 규칙 및 기본 지식"
+            },
+            {
+                stair: 7, level: 1, category: "🧪 1수준 · 공기 과학",
+                question: "지구 대기 공기 중에 가장 많이 존재하는 기체 성분은?",
+                options: ["산소", "질소", "이산화탄소", "수소"], answer: 1,
+                hint: "대기의 약 78%를 차지하는 기체입니다.", videoId: "RkeuNeSiRzI", videoTitle: "지구 대기의 기체 조성"
+            },
+            {
+                stair: 8, level: 1, category: "🎨 1수준 · 빛과 색상",
+                question: "빛의 삼원색(Red, Green, Blue)을 모두 겹치면 무슨 색이 될까요?",
+                options: ["검은색", "흰색", "보라색", "갈색"], answer: 1,
+                hint: "물감과 달리 빛은 합칠수록 밝아집니다.", videoId: "5p3WxN1GdmI", videoTitle: "빛의 삼원색 합성 실험"
+            },
+            {
+                stair: 9, level: 1, category: "🚀 1수준 · 우주 탐사",
+                question: "태양계에서 크기가 가장 큰 행성은 무엇일까요?",
+                options: ["화성", "토성", "목성", "해왕성"], answer: 2,
+                hint: "대적점과 강한 자장을 지닌 거대 가스 행성입니다.", videoId: "zgDerx1eeBg", videoTitle: "목성 주노 탐사선 관측 영상"
+            },
+            {
+                stair: 10, level: 1, category: "🐶 1수준 · 동물 행동",
+                question: "개가 기분이 최고로 좋을 때 주로 보이는 대표 행동은?",
+                options: ["꼬리를 살랑살랑 흔든다", "하품을 연속으로 한다", "귀를 눕힌다", "땅을 판다"], answer: 0,
+                hint: "반가울 때 엉덩이와 함께 흔드는 이 부위입니다.", videoId: "pTn3P33Zsxo", videoTitle: "강아지 언어와 행동 분석"
+            },
+
+            // Level 2: Stairs 11 ~ 20 (Intermediate Knowledge)
+            {
+                stair: 11, level: 2, category: "🇰🇷 2수준 · 지리 역사",
+                question: "대한민국 동쪽 끝에 위치한 아름다운 우리 땅 섬의 이름은?",
+                options: ["제주도", "독도", "울릉도", "마라도"], answer: 1,
+                hint: "울릉도 동남쪽 뱃길따라 이백리!", videoId: "75xSxE35f9Y", videoTitle: "독도의 아름다운 자연 영상"
+            },
+            {
+                stair: 12, level: 2, category: "🌿 2수준 · 식물 과학",
+                question: "식물이 햇빛과 이산화탄소를 이용해 광합성을 하고 배출하는 기체는?",
+                options: ["질소", "산소", "메탄", "수소"], answer: 1,
+                hint: "인간과 동물이 호흡할 때 꼭 필요한 기체입니다.", videoId: "RkeuNeSiRzI", videoTitle: "식물 광합성 메커니즘"
+            },
+            {
+                stair: 13, level: 2, category: "📜 2수준 · 한글 역사",
+                question: "조선 시대 세종대왕이 훈민정음을 창제하여 반포한 연도는?",
+                options: ["1392년", "1446년", "1592년", "1910년"], answer: 1,
+                hint: "15세기 중반, 집현전 학자들과 함께 완성했습니다.", videoId: "75xSxE35f9Y", videoTitle: "훈민정음 창제와 세종대왕"
+            },
+            {
+                stair: 14, level: 2, category: "📐 2수준 · 수학 피타고라스",
+                question: "직각삼각형에서 직각을 낀 두 변 길이가 3과 4일 때 빗변의 길이는?",
+                options: ["5", "6", "7", "8"], answer: 0,
+                hint: "3² + 4² = 9 + 16 = 25 (√25 = ?)", videoId: "D4ebPMHkkGQ", videoTitle: "피타고라스 정리 쉬운 설명"
+            },
+            {
+                stair: 15, level: 2, category: "🌊 2수준 · 세계 지리",
+                question: "지구상에서 가장 면적이 넓은 바다(해양)는 어디일까요?",
+                options: ["대서양", "인도양", "태평양", "북극해"], answer: 2,
+                hint: "지구 표면의 약 1/3을 차지하는 거대한 바다입니다.", videoId: "pjL0p6FK1cc", videoTitle: "태평양 해류와 바다 신비"
+            },
+            {
+                stair: 16, level: 2, category: "🦴 2수준 · 인체 과학",
+                question: "성인 인간의 몸을 구성하는 뼈의 총 개수는 몇 개일까요?",
+                options: ["106개", "206개", "306개", "506개"], answer: 1,
+                hint: "갓 태어났을 땐 300개가 넘지만 자라면서 합쳐져 200여 개가 됩니다.", videoId: "D4ebPMHkkGQ", videoTitle: "인체 뼈 구조와 신비"
+            },
+            {
+                stair: 17, level: 2, category: "☀️ 2수준 · 태양계 과학",
+                question: "태양의 표면 온도는 대략 몇 도(°C) 쯤 될까요?",
+                options: ["약 1,000°C", "약 6,000°C", "약 100,000°C", "약 1,000,000°C"], answer: 1,
+                hint: "중심부는 1500만 도에 달하지만 표면은 약 6,000도입니다.", videoId: "zgDerx1eeBg", videoTitle: "태양 표면 개기일식 관측"
+            },
+            {
+                stair: 18, level: 2, category: "🌙 2수준 · 달의 천문",
+                question: "달이 지수를 한 바퀴 자전하는 데 걸리는 시간과 공전 주기의 관계는?",
+                options: ["자전이 훨씬 빠르다", "공전과 자전 주기가 같다", "달은 자전하지 않는다", "공전이 2배 느리다"], answer: 1,
+                hint: "동주기 자전 때문에 지구에서는 달의 한쪽 면만 보입니다.", videoId: "zgDerx1eeBg", videoTitle: "달의 동주기 자전 원리"
+            },
+            {
+                stair: 19, level: 2, category: "🏛️ 2수준 · 세계 역사",
+                question: "이집트의 거대한 고대 무덤으로 사각뿔 모양의 건축물은?",
+                options: ["파르테논", "피라미드", "콜로세움", "타지마할"], answer: 1,
+                hint: "파라오의 영원한 안식처입니다.", videoId: "75xSxE35f9Y", videoTitle: "고대 이집트 피라미드 탐사"
+            },
+            {
+                stair: 20, level: 2, category: "🏆 2수준 · 올림픽 역사",
+                question: "올림픽 오륜기에서 5개의 고리가 상징하는 의미는?",
+                options: ["세계 5대 영웅", "세계 5대 대륙", "5가지 스포츠 기본 정신", "5개 창립 국가"], answer: 1,
+                hint: "아시아, 유럽, 아프리카, 아메리카, 오세아니아를 뜻합니다.", videoId: "ui_OA6oT-kk", videoTitle: "올림픽 오륜기 상징 상식"
+            },
+
+            // Level 3: Stairs 21 ~ 30 (Advanced Knowledge)
+            {
+                stair: 21, level: 3, category: "🧪 3수준 · 화학 전문",
+                question: "아보가드로 수(Avogadro's number) 1몰(mol)의 입자 수는 약 얼마일까요?",
+                options: ["6.02 × 10²³ 개", "3.14 × 10¹⁰ 개", "9.8 × 10⁸ 개", "1.6 × 10⁻¹⁹ 개"], answer: 0,
+                hint: "6.02 × 10의 23제곱 개입니다.", videoId: "5p3WxN1GdmI", videoTitle: "화학 아보가드로 수 원리"
+            },
+            {
+                stair: 22, level: 3, category: "⚛️ 3수준 · 양자역학",
+                question: "중첩 상태와 관측에 의한 상자의 고양이 사고실험을 제시한 물리학자는?",
+                options: ["아인슈타인", "슈뢰딩거", "하이젠베르크", "닐스 보어"], answer: 1,
+                hint: "죽음과 삶이 중첩된 상자 속 고양이 실험!", videoId: "pjL0p6FK1cc", videoTitle: "슈뢰딩거 고양이 양자역학"
+            },
+            {
+                stair: 23, level: 3, category: "💡 3수준 · 물리학 상수",
+                question: "진공 상태에서 빛의 속도(c)는 초당 약 몇 km 일까요?",
+                options: ["약 3만 km/s", "약 30만 km/s", "약 300만 km/s", "약 3천만 km/s"], answer: 1,
+                hint: "1초에 지구를 7바퀴 반 돌 수 있는 속도입니다 (약 300,000 km/s).", videoId: "zgDerx1eeBg", videoTitle: "빛의 속도 측정 과학"
+            },
+            {
+                stair: 24, level: 3, category: "🧬 3수준 · 생명과학",
+                question: "1953년 DNA의 이중나선 구조를 밝혀내어 노벨상을 수상한 학자는?",
+                options: ["왓슨과 크릭", "멘델과 파스퇴르", "다윈과 라마르크", "플레밍과 젠너"], answer: 0,
+                hint: "제임스 왓슨과 프랜시스 크릭입니다.", videoId: "pTn3P33Zsxo", videoTitle: "DNA 이중나선 구조 발명 다큐"
+            },
+            {
+                stair: 25, level: 3, category: "🌌 3수준 · 천문 천체",
+                question: "우주가 팽창함에 따라 은하들이 멀어질수록 후퇴 속도가 빨라진다는 법칙은?",
+                options: ["케플러 법칙", "허블-르메트르 법칙", "만유인력 법칙", "뉴턴 제3법칙"], answer: 1,
+                hint: "우주 망원경 이름으로도 유명한 에드윈 허블의 법칙입니다.", videoId: "zgDerx1eeBg", videoTitle: "허블 법칙과 팽창하는 우주"
+            },
+            {
+                stair: 26, level: 3, category: "🌡️ 3수준 · 열역학",
+                question: "이론상 분자의 운동 에너지가 완전히 멈추는 절대 0도(0 Kelvin)의 섭씨온도는?",
+                options: ["-100.15°C", "-273.15°C", "-373.15°C", "-500.00°C"], answer: 1,
+                hint: "섭씨 마이너스 273.15도입니다.", videoId: "D4ebPMHkkGQ", videoTitle: "절대영도 물리 상태 실험"
+            },
+            {
+                stair: 27, level: 3, category: "📜 3수준 · 고대 고고학",
+                question: "고대 이집트 상형문자를 해독할 수 있게 해준 결정적 유물 석판은?",
+                options: ["함무라비 법전", "로제타 석판", "사자의 서", "사해 문서"], answer: 1,
+                hint: "나폴레옹 원정대가 발견한 3개 언어로 적힌 석판입니다.", videoId: "75xSxE35f9Y", videoTitle: "로제타석과 이집트 문자의 비밀"
+            },
+            {
+                stair: 28, level: 3, category: "🧠 3수준 · 뇌 신경학",
+                question: "인간의 자율신경계 조절, 체온 유지, 체중 및 호르몬 항상성을 총괄하는 뇌 부위는?",
+                options: ["대뇌 피질", "시상하부", "소뇌", "측두엽"], answer: 1,
+                hint: "간뇌에 속하며 뇌하수체 바로 위에 위치합니다.", videoId: "pTn3P33Zsxo", videoTitle: "인간 뇌 구조 시상하부 역할"
+            },
+            {
+                stair: 29, level: 3, category: "📐 3수준 · 수학 역사",
+                question: "350년 넘게 난제로 남아있다 1995년 앤드루 와일스 교수가 증명한 수학 정리?",
+                options: ["페르마의 마지막 정리", "골드바흐 추측", "4색 정리", "오일러 공식"], answer: 0,
+                hint: "xⁿ + yⁿ = zⁿ (n>2) 정수해가 존재하지 않음을 증명!", videoId: "D4ebPMHkkGQ", videoTitle: "페르마의 마지막 정리 해설"
+            },
+            {
+                stair: 30, level: 3, category: "⚛️ 3수준 · 입자물리학",
+                question: "입자들에게 질량을 부여하여 '신의 입자'라 불리는 표준모형 입자는?",
+                options: ["힉스 보손 (Higgs boson)", "쿼크", "글루온", "중성미자"], answer: 0,
+                hint: "피터 힉스 교수의 이름을 딴 보손 입자입니다.", videoId: "pjL0p6FK1cc", videoTitle: "CERN 힉스 보손 발견 다큐"
+            },
+
+            // Level 4: Stairs 31 ~ 40 (Master Level)
+            {
+                stair: 31, level: 4, category: "🕳️ 4수준 · 블랙홀 물리",
+                question: "블랙홀의 중력이 너무 강해 빛조차 탈출할 수 없는 경계면 반경 공식의 명칭은?",
+                options: ["슈바르츠실트 반지름", "하블 반지름", "플랑크 길의", "보어 반지름"], answer: 0,
+                hint: "독일 물리학자 카를 슈바르츠실트의 이름입니다.", videoId: "EHLhI4p2ZsM", videoTitle: "블랙홀 사건의 지평선 원리"
+            },
+            {
+                stair: 32, level: 4, category: "💻 4수준 · 컴퓨터 과학",
+                question: "기계가 인간 수준의 지능을 가졌는지 판별하는 앨런 튜링의 원래 시험 명칭은?",
+                options: ["이미테이션 게임 (Imitation Game)", "캡차 테스트", "튜링 오토마타", "알파고 테스트"], answer: 0,
+                hint: "영화 제목으로도 제작된 '흉내 내기 게임'입니다.", videoId: "KlO_Ow4wFsw", videoTitle: "튜링 테스트와 인공지능 역사"
+            },
+            {
+                stair: 33, level: 4, category: "🌌 4수준 · 우주 관측",
+                question: "2021년 발사된 제임스 웹 우주망원경이 위치한 라그랑주 점의 명칭은?",
+                options: ["L1 지점", "L2 지점", "L4 지점", "L5 지점"], answer: 1,
+                hint: "지구 뒤쪽 약 150만 km 떨어진 L2 위치입니다.", videoId: "DX-gLNS51Do", videoTitle: "제임스웹 망원경 L2 궤도 설명"
+            },
+            {
+                stair: 34, level: 4, category: "🧮 4수준 · 난제 수학",
+                question: "3차원 구면의 위상적 특징에 대한 추론으로, 그리샤 페렐만이 증명한 명제는?",
+                options: ["푸앵카레 추측", "리만 가설", "콜라츠 추측", "밀러-라빈"], answer: 0,
+                hint: "프랑스의 수학자 앙리 푸앵카레의 추측입니다.", videoId: "D4ebPMHkkGQ", videoTitle: "푸앵카레 추측과 페렐만 이야기"
+            },
+            {
+                stair: 35, level: 4, category: "🧬 4수준 · 유전체학",
+                question: "인간 게놈(Genome) 프로젝트에서 밝혀진 인간 DNA 염기쌍의 대략적 개수는?",
+                options: ["약 3천만 개", "약 3억 개", "약 30억 개", "약 300억 개"], answer: 2,
+                hint: "약 30억 염기쌍 (3 Billion base pairs)으로 이루어져 있습니다.", videoId: "pTn3P33Zsxo", videoTitle: "인간 게놈 지지도 완성 이야기"
+            },
+            {
+                stair: 36, level: 4, category: "🌀 4수준 · 열역학 제2법칙",
+                question: "고립계에서 무질서도의 척도로, 항상 증가하는 방향으로 진행한다는 물리량은?",
+                options: ["엔탈피", "엔트로피", "플럭스", "임피던스"], answer: 1,
+                hint: "시간의 화살과 관련 깊은 Entropy 입니다.", videoId: "pjL0p6FK1cc", videoTitle: "엔트로피와 무질서도 물리"
+            },
+            {
+                stair: 37, level: 4, category: "⚛️ 4수준 · 양자 컴퓨팅",
+                question: "양자 컴퓨터에서 0과 1의 중첩 상태를 동시에 가질 수 있는 기본 정보 단위는?",
+                options: ["Bit (비트)", "Qubit (큐비트)", "Byte (바이트)", "Teraflop"], answer: 1,
+                hint: "Quantum Bit의 줄임말입니다.", videoId: "KlO_Ow4wFsw", videoTitle: "양자컴퓨터 큐비트 동작 원리"
+            },
+            {
+                stair: 38, level: 4, category: "🎻 4수준 · 현대 이론물리",
+                question: "모든 물질의 근본이 차원이 다른 진동하는 1차원의 끈으로 이루어졌다는 이론은?",
+                options: ["초끈 이론 (Superstring Theory)", "대통합 이론", "M-이론", "양자 고리 중력"], answer: 0,
+                hint: "우주를 10차원 또는 11차원으로 설명하는 이론입니다.", videoId: "zgDerx1eeBg", videoTitle: "초끈이론 다차원 우주 해설"
+            },
+            {
+                stair: 39, level: 4, category: "🧪 4수준 · 유기화학",
+                question: "벤젠(C₆H₆) 고리처럼 6개의 탄소가 공명 구조를 이루는 특성을 일컫는 말은?",
+                options: ["방향족성 (Aromaticity)", "지방족성", "이성질성", "키랄성"], answer: 0,
+                hint: "영문으로 Aromaticity라고 부릅니다.", videoId: "5p3WxN1GdmI", videoTitle: "벤젠 분자 구조와 방향족"
+            },
+            {
+                stair: 40, level: 4, category: "🏛️ 4수준 · 고대 철학",
+                question: "플라톤의 동굴의 비유에서 현실 세계의 불완전한 원형이 존재하는 이성의 영역은?",
+                options: ["아레테", "이데아 (Idea)", "카타르시스", "아포리아"], answer: 1,
+                hint: "영원불변하는 본질의 세계, Idea입니다.", videoId: "75xSxE35f9Y", videoTitle: "플라톤 동굴의 비유 철학"
+            },
+
+            // Level 5: Stairs 41 ~ 50 (God Level & Impossible Final Question)
+            {
+                stair: 41, level: 5, category: "♾️ 5수준 · 신의 영역 난이도",
+                question: "리만 가설(Riemann Hypothesis)에서 소수 배치와 관련된 제타 함수의 자명하지 않은 제로점들의 실수부는?",
+                options: ["1/4", "1/2", "1", "2"], answer: 1,
+                hint: "모든 비자명 해의 실수부는 Re(s) = 1/2 라인에 위치합니다.", videoId: "D4ebPMHkkGQ", videoTitle: "리만가설 1/2 실수부 수학"
+            },
+            {
+                stair: 42, level: 5, category: "🌌 5수준 · 우주론",
+                question: "우주 마이크로파 배경복사(CMB) 온도 변동에서 찾아낸 우주의 대략적 나이는?",
+                options: ["약 46억 년", "약 138억 년", "약 250억 년", "약 500억 년"], answer: 1,
+                hint: "약 13.8 Billion years 입니다.", videoId: "zgDerx1eeBg", videoTitle: "CMB 우주 마이크로파 배경 관측"
+            },
+            {
+                stair: 43, level: 5, category: "⚛️ 5수준 · 양자 장론",
+                question: "양자역학에서 두 입자가 아무리 멀리 떨어져 있어도 순간적으로 상태가 연동되는 현상은?",
+                options: ["양자 얽힘 (Quantum Entanglement)", "양자 터널링", "양자 맥동", "양자 상쇄"], answer: 0,
+                hint: "아인슈타인이 '원거리의 기괴한 작용'이라 부른 현상입니다.", videoId: "pjL0p6FK1cc", videoTitle: "양자 얽힘과 노벨 물리학상"
+            },
+            {
+                stair: 44, level: 5, category: "🧮 5수준 · 토폴로지",
+                question: "한 면만 존재하는 2차원 위상적 구부러진 고리 표면의 이름은?",
+                options: ["뫼비우스의 띠", "클라인 병", "토러스", "하이퍼스피어"], answer: 0,
+                hint: "종이 띠를 한 번 꼬아 붙인 유명한 고리입니다.", videoId: "D4ebPMHkkGQ", videoTitle: "뫼비우스의 띠 위상수학"
+            },
+            {
+                stair: 45, level: 5, category: "🧬 5수준 · 분자생물학",
+                question: "CRISPR-Cas9 유전자 가위 기술에서 Cas9 단백질이 표적 DNA를 인식하도록 안내하는 RNA는?",
+                options: ["mRNA", "tRNA", "가이드 RNA (gRNA)", "rRNA"], answer: 2,
+                hint: "Guide RNA 라고 부릅니다.", videoId: "pTn3P33Zsxo", videoTitle: "크리스퍼 유전자 가위 원리"
+            },
+            {
+                stair: 46, level: 5, category: "📐 5수준 · 기하학",
+                question: "유클리드 기하학의 제5공준(평행선 공준)을 부정하여 탄생한 비유클리드 기하학 종류는?",
+                options: ["쌍곡 기하학 & 타원 기하학", "데카르트 좌표계", "투시 기하학", "디지털 기하학"], answer: 0,
+                hint: "가우스, 로바체프스키, 리만이 개척한 영역입니다.", videoId: "D4ebPMHkkGQ", videoTitle: "비유클리드 기하학의 출현"
+            },
+            {
+                stair: 47, level: 5, category: "🌌 5수준 · 암흑물질",
+                question: "우주 전체 에너지-질량 구성 중 눈에 보이지 않는 '암흑 에너지'의 비중은 대략 몇 %일까요?",
+                options: ["약 5%", "약 27%", "약 68%", "약 99%"], answer: 2,
+                hint: "우주 가속 팽창을 일으키는 암흑 에너지는 약 68%를 차지합니다.", videoId: "zgDerx1eeBg", videoTitle: "암흑물질과 암흑에너지"
+            },
+            {
+                stair: 48, level: 5, category: "💻 5수준 · 계산 이론",
+                question: "P 대 NP 문제에서 다항 시간 내 검증 가능한 결정 문제들의 집합을 무엇이라 하나요?",
+                options: ["P 집합", "NP 집합", "NP-하드", "NP-완전"], answer: 1,
+                hint: "Nondeterministic Polynomial time 입니다.", videoId: "KlO_Ow4wFsw", videoTitle: "밀레니엄 난제 P 대 NP 알고리즘"
+            },
+            {
+                stair: 49, level: 5, category: "⚛️ 5수준 · 양자 전자기학",
+                question: "파인만 도형을 도입하여 양자 전자기학(QED)을 완성하고 노벨상을 수상한 물리학자는?",
+                options: ["리처드 파인만", "로버트 오펜하이머", "닐스 보어", "스티븐 호킹"], answer: 0,
+                hint: "QED와 파인만 다이어그램의 거장입니다.", videoId: "pjL0p6FK1cc", videoTitle: "리처드 파인만의 양자전자기학"
+            },
+
+            // Stair 50: The Impossible Final Question! (이 세상 사람이 못 맞히는 문제)
+            {
+                stair: 50, level: 5, category: "🔥 5수준 MAX · 이 세상 사람이 못 맞히는 문제",
+                question: "💥 [우주 최종 문제] 이 우주가 창조되기 0.0000001초 전에, 출제자가 마음속으로 점심으로 먹었던 메뉴와, 4차원 외계인이 생각한 비밀 숫자의 합은?",
+                options: [
+                    "1. 42 (은하수를 여행하는 히치하이커의 답)",
+                    "2. 우주 폭발과 함께 증발함",
+                    "3. 정답은 오직 출제자 마음속에만 존재함!",
+                    "4. 무한대"
+                ],
+                answer: 2,
+                hint: "이 세상 그 어떤 과학자나 물리학자도 논리적으로 맞힐 수 없습니다... 정답은 3번입니다!",
+                videoId: "EHLhI4p2ZsM", videoTitle: "우주 최고의 신비와 궁극의 질문"
+            }
+        ];
+
+        // --- 2. Shop Characters Database ---
+        const SHOP_CHARACTERS = [
+            { id: "dog", name: "🐶 댄싱 댕댕이", price: 0, unlocked: true, icon: "🐶", desc: "기본 제공되는 흥 넘치는 강아지!" },
+            { id: "dolphin", name: "🐬 서핑 돌고래", price: 100, unlocked: false, icon: "🐬", desc: "시원하게 파도를 가르는 돌고래!" },
+            { id: "turtle", name: "🐢 핑크 바다거북", price: 100, unlocked: false, icon: "🐢", desc: "차근차근 계단을 오르는 부지런한 거북이!" },
+            { id: "lion", name: "🦁 불꽃 라이온", price: 200, unlocked: false, icon: "🦁", desc: "모든 문제에 용감하게 도전하는 사자!" },
+            { id: "mermaid", name: "🧜‍♀️ 오션 인어", price: 200, unlocked: false, icon: "🧜‍♀️", desc: "신비로운 바다의 인어 공주!" },
+            { id: "rabbit", name: "🚀 우주 토끼", price: 300, unlocked: false, icon: "🚀", desc: "50계단을 단숨에 솟구치는 토끼!" },
+            { id: "god", name: "👑 퀴즈의 신", price: 500, unlocked: false, icon: "👑", desc: "우주 모든 지식을 통달한 퀴즈 왕!" }
+        ];
+
+        // Global Game States
+        let currentStair = 0; // Starts at stair 0
+        let activeQuiz = null;
+        let hintsAvailable = 0;
+        let userCoins = 0;
+        let selectedCharacterIcon = "🐶";
+        let isWavePlaying = false;
+        let isHiddenUnlocked = false;
+        let isCertificateUnlocked = false;
+        let answeredCurrent = false;
+
+        // Web Audio Context & Nodes
+        let audioCtx = null;
+        let waveNoiseNode = null;
+        let waveGainNode = null;
+        let waveFilterNode = null;
+        let waveInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- 3. Sound Effects Synthesizer ---
+        
+        // 🔔 "Ding-Dong-Deng" (딩동댕 - 3 Tone Melody) Audio Synthesizer
+        function playDingDongDengSound() {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            
+            // Note 1: "Ding" (G5 - 783.99 Hz)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(783.99, now);
+            gain1.gain.setValueAtTime(0.35, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.45);
+
+            // Note 2: "Dong" (E5 - 659.25 Hz)
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(659.25, now + 0.16);
+            gain2.gain.setValueAtTime(0.38, now + 0.16);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.16);
+            osc2.stop(now + 0.6);
+
+            // Note 3: "Deng!" (C6 - 1046.50 Hz)
+            const osc3 = audioCtx.createOscillator();
+            const gain3 = audioCtx.createGain();
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(1046.50, now + 0.35);
+            gain3.gain.setValueAtTime(0.45, now + 0.35);
+            gain3.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+            osc3.connect(gain3);
+            gain3.connect(audioCtx.destination);
+            osc3.start(now + 0.35);
+            osc3.stop(now + 1.0);
+        }
+
+        // Wrong Buzz Sound
+        function playWrongSound() {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.setValueAtTime(130, now + 0.15);
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+
+        // Ocean Wave Sound Synthesizer
+        function toggleWaveSound() {
+            initAudio();
+            if (!audioCtx) return;
+
+            const icon = document.getElementById('waveIcon');
+            const text = document.getElementById('waveText');
+
+            if (isWavePlaying) {
+                if (waveGainNode) waveGainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+                setTimeout(() => {
+                    if (waveNoiseNode) {
+                        waveNoiseNode.stop();
+                        waveNoiseNode.disconnect();
+                    }
+                    if (waveInterval) clearInterval(waveInterval);
+                }, 800);
+
+                isWavePlaying = false;
+                text.textContent = "파도 소리 켜기";
+                icon.className = "fa-solid fa-water text-cyan-600";
+            } else {
+                const bufferSize = audioCtx.sampleRate * 3;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    data[i] *= 0.11;
+                    b6 = white * 0.115926;
+                }
+
+                waveNoiseNode = audioCtx.createBufferSource();
+                waveNoiseNode.buffer = buffer;
+                waveNoiseNode.loop = true;
+
+                waveFilterNode = audioCtx.createBiquadFilter();
+                waveFilterNode.type = 'lowpass';
+                waveFilterNode.frequency.setValueAtTime(350, audioCtx.currentTime);
+
+                waveGainNode = audioCtx.createGain();
+                waveGainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+
+                waveNoiseNode.connect(waveFilterNode);
+                waveFilterNode.connect(waveGainNode);
+                waveGainNode.connect(audioCtx.destination);
+
+                waveNoiseNode.start();
+
+                let waveCycle = 0;
+                waveInterval = setInterval(() => {
+                    if (!audioCtx || !isWavePlaying) return;
+                    waveCycle += 0.1;
+                    const swell = (Math.sin(waveCycle) + 1) / 2;
+                    const now = audioCtx.currentTime;
+                    waveGainNode.gain.linearRampToValueAtTime(0.05 + swell * 0.22, now + 0.4);
+                    waveFilterNode.frequency.linearRampToValueAtTime(250 + swell * 550, now + 0.4);
+                }, 400);
+
+                isWavePlaying = true;
+                text.textContent = "파도 소리 끄기";
+                icon.className = "fa-solid fa-volume-high text-emerald-600 animate-bounce";
+            }
+        }
+
+        // --- 4. Game System & 50 Stairs Controls ---
+
+        function buildStairsUI() {
+            const container = document.getElementById('stairsContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 50; i++) {
+                const stepRow = document.createElement('div');
+                const levelNum = Math.ceil(i / 10);
+                
+                stepRow.id = `stairRow-${i}`;
+                stepRow.className = `stair-row p-2 rounded-xl border flex items-center justify-between text-xs transition-all duration-300 ${
+                    i === currentStair 
+                        ? 'stair-step-active font-black scale-[1.02]' 
+                        : (i < currentStair ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white/80 border-cyan-100 text-slate-600')
+                }`;
+
+                const levelColors = ["text-cyan-600", "text-blue-600", "text-indigo-600", "text-purple-600", "text-rose-600"];
+
+                stepRow.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg ${i <= currentStair ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700'} font-extrabold flex items-center justify-center text-[10px]">
+                            ${i <= currentStair ? '✓' : i}
+                        </span>
+                        <span class="font-bold ${i === 50 ? 'text-rose-600 font-black' : ''}">
+                            ${i === 50 ? '🔥 [최종] 못 맞히는 문제' : `${i}계단 (${levelNum}수준)`}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] font-extrabold ${levelColors[levelNum-1]}">${levelNum}수준</span>
+                        <span class="avatar-holder text-base">${i === currentStair ? selectedCharacterIcon : ''}</span>
+                    </div>
+                `;
+
+                container.appendChild(stepRow);
+            }
+        }
+
+        function updateStairsVisual() {
+            buildStairsUI();
+            
+            // Scroll active stair into view
+            if (currentStair > 0 && currentStair <= 50) {
+                const activeElement = document.getElementById(`stairRow-${currentStair}`);
+                if (activeElement) {
+                    activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+
+            const levelNum = currentStair === 0 ? 1 : Math.min(5, Math.ceil(currentStair / 10));
+            const levelNames = ["1수준: 쉬움 상식", "2수준: 보통 상식", "3수준: 심화 학술", "4수준: 마스터 지식", "5수준: 신의 영역 난이도"];
+
+            document.getElementById('currentStairNum').textContent = currentStair;
+            document.getElementById('stairLevelBadge').textContent = `수준 ${levelNum} (${(levelNum-1)*10 + 1}~${levelNum*10}계단)`;
+            document.getElementById('currentLevelNameText').textContent = levelNames[levelNum - 1];
+
+            // Progress bar
+            const percent = (currentStair / 50) * 100;
+            document.getElementById('overallProgressBar').style.width = `${percent}%`;
+            document.getElementById('overallProgressText').textContent = `${currentStair} / 50 계단`;
+        }
+
+        function startQuizGame() {
+            initAudio();
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            if (currentStair === 0) currentStair = 1;
+            updateStairsVisual();
+            loadStairQuiz(currentStair);
+        }
+
+        function loadStairQuiz(stairNum) {
+            answeredCurrent = false;
+            document.getElementById('hintBox').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            document.getElementById('videoContainer').classList.add('hidden');
+
+            activeQuiz = STAIR_QUIZZES.find(q => q.stair === stairNum) || STAIR_QUIZZES[0];
+
+            document.getElementById('stairQuestionHeader').textContent = `📍 계단 ${activeQuiz.stair}번 문제 (수준 ${activeQuiz.level})`;
+            document.getElementById('quizLevelTag').textContent = activeQuiz.category;
+            document.getElementById('questionText').textContent = activeQuiz.question;
+            document.getElementById('hintText').textContent = activeQuiz.hint;
+
+            // Load Video preview
+            if (activeQuiz.videoId) {
+                const embedUrl = `https://www.youtube.com/embed/${activeQuiz.videoId}?rel=0`;
+                document.getElementById('youtubeIframe').src = embedUrl;
+                document.getElementById('videoTitleText').textContent = activeQuiz.videoTitle || "관련 자료 영상";
+            }
+
+            // Options
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            activeQuiz.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-cyan-200 hover:border-cyan-400 text-slate-800 font-bold flex items-center justify-between shadow-sm text-left font-gaegu text-lg sm:text-xl transition-all";
+                btn.innerHTML = `
+                    <span class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-full bg-cyan-100 text-cyan-800 text-xs font-sans font-extrabold flex items-center justify-center">${idx + 1}</span>
+                        <span>${optText}</span>
+                    </span>
+                    <i class="fa-regular fa-circle text-cyan-300 text-base"></i>
+                `;
+                btn.onclick = () => selectOption(idx, btn);
+                container.appendChild(btn);
+            });
+
+            updateHintButtonState();
+        }
+
+        function selectOption(selectedIndex, btnElement) {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+
+            const allButtons = document.querySelectorAll('#optionsContainer button');
+
+            // Show video related to quiz upon answering
+            document.getElementById('videoContainer').classList.remove('hidden');
+            document.getElementById('videoContainer').classList.add('flex');
+
+            if (selectedIndex === activeQuiz.answer) {
+                // Correct Answer!
+                playDingDongDengSound();
+                triggerDingDongDengVisual();
+
+                btnElement.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-emerald-500 border-2 border-emerald-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
+                btnElement.querySelector('i').className = "fa-solid fa-circle-check text-yellow-300 text-xl";
+
+                try {
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: currentStair === 50 ? 120 : 40,
+                            spread: currentStair === 50 ? 100 : 70,
+                            origin: { y: 0.6 },
+                            colors: ['#00f2fe', '#4facfe', '#00c6ff', '#a8ff78', '#ffaa00', '#ff007f']
+                        });
+                    }
+                } catch(e) {}
+
+                // Check for 50th Stair Completion Certificate
+                if (currentStair === 50) {
+                    isCertificateUnlocked = true;
+                    updateStatsDisplay();
+                    setTimeout(() => {
+                        openCertificateModal();
+                    }, 1200);
+                }
+                // Level clear check (Every 10 Stairs, 10 ~ 40)
+                else if (currentStair % 10 === 0) {
+                    userCoins += 100;
+                    hintsAvailable += 1;
+                    isHiddenUnlocked = true;
+                    updateStatsDisplay();
+
+                    setTimeout(() => {
+                        showLevelClearModal(currentStair / 10);
+                    }, 800);
+                }
+
+            } else {
+                // Wrong Answer
+                playWrongSound();
+                btnElement.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-rose-500 border-2 border-rose-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
+                btnElement.querySelector('i').className = "fa-solid fa-circle-xmark text-white text-xl";
+
+                const correctBtn = allButtons[activeQuiz.answer];
+                if (correctBtn) {
+                    correctBtn.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-emerald-100 border-2 border-emerald-400 text-emerald-900 font-bold flex items-center justify-between text-left font-gaegu text-lg sm:text-xl";
+                }
+            }
+
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextStairQuiz() {
+            if (currentStair < 50) {
+                currentStair++;
+                updateStairsVisual();
+                loadStairQuiz(currentStair);
+            } else {
+                openCertificateModal();
+            }
+        }
+
+        function openCertificateModal() {
+            if (!isCertificateUnlocked) return;
+            document.getElementById('certAvatar').textContent = selectedCharacterIcon;
+            
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`;
+            document.getElementById('certDate').textContent = dateStr;
+
+            document.getElementById('certificateModal').classList.remove('hidden');
+
+            try {
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 80, spread: 90, origin: { y: 0.5 } });
+                }
+            } catch(e) {}
+        }
+
+        function closeCertificateModal() {
+            document.getElementById('certificateModal').classList.add('hidden');
+        }
+
+        function updateAvatarDisplays() {
+            document.getElementById('activeAvatarHeader').textContent = selectedCharacterIcon;
+            document.getElementById('avatarStartDisplay').textContent = selectedCharacterIcon;
+            document.getElementById('dancingCharacterIcon').textContent = selectedCharacterIcon;
+            document.getElementById('certAvatar').textContent = selectedCharacterIcon;
+            updateStairsVisual();
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('coinText').textContent = userCoins;
+            document.getElementById('hintCount').textContent = hintsAvailable;
+            document.getElementById('hintCountBadge').textContent = `💡 힌트: ${hintsAvailable}개`;
+
+            const hiddenBtn = document.getElementById('hiddenCreatorBtn');
+            if (isHiddenUnlocked) {
+                hiddenBtn.disabled = false;
+                hiddenBtn.className = "px-3.5 py-1.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md cursor-pointer transition flex items-center gap-1.5 border border-white";
+                document.getElementById('hiddenLockIcon').className = "fa-solid fa-wand-magic-sparkles text-yellow-300";
+            }
+
+            const certBtn = document.getElementById('certificateBtn');
+            if (isCertificateUnlocked) {
+                certBtn.classList.remove('hidden');
+            }
+
+            updateHintButtonState();
+        }
+
+        function updateHintButtonState() {
+            const btn = document.getElementById('useHintBtn');
+            btn.disabled = (hintsAvailable <= 0 || answeredCurrent);
+        }
+
+        function useHintChance() {
+            if (hintsAvailable <= 0 || answeredCurrent) return;
+            hintsAvailable--;
+            updateStatsDisplay();
+            document.getElementById('hintBox').classList.remove('hidden');
+        }
+
+        // --- 6. Celebration Modals ---
+
+        function showLevelClearModal(clearedLevelNum) {
+            document.getElementById('levelClearTitle').textContent = `🎉 ${clearedLevelNum}수준 클리어 성공!! 🎉`;
+            document.getElementById('levelClearSub').textContent = `${clearedLevelNum * 10}계단을 정복하여 신나는 댄스 타임! 🕺✨`;
+            document.getElementById('levelClearModal').classList.remove('hidden');
+
+            try {
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 70, spread: 80, origin: { y: 0.5 } });
+                }
+            } catch(e) {}
+        }
+
+        function closeLevelClearModal() {
+            document.getElementById('levelClearModal').classList.add('hidden');
+        }
+
+        // --- 7. Custom Quiz Creator ---
+
+        function openHiddenModal() {
+            if (!isHiddenUnlocked) return;
+            document.getElementById('hiddenModal').classList.remove('hidden');
+        }
+
+        function closeHiddenModal() {
+            document.getElementById('hiddenModal').classList.add('hidden');
+        }
+
+        function handleCreateCustomQuiz(e) {
+            e.preventDefault();
+            const q = document.getElementById('customQ').value.trim();
+            const opt1 = document.getElementById('customOpt1').value.trim();
+            const opt2 = document.getElementById('customOpt2').value.trim();
+            const opt3 = document.getElementById('customOpt3').value.trim();
+            const opt4 = document.getElementById('customOpt4').value.trim();
+            let videoInput = document.getElementById('customVideo').value.trim();
+            const hint = document.getElementById('customHint').value.trim();
+
+            if (!q || !opt1 || !opt2 || !opt3 || !opt4) return;
+
+            // Extract YouTube Video ID if full URL supplied
+            if (videoInput.includes('v=')) {
+                videoInput = videoInput.split('v=')[1].split('&')[0];
+            } else if (videoInput.includes('youtu.be/')) {
+                videoInput = videoInput.split('youtu.be/')[1].split('?')[0];
+            }
+
+            const customQuizObj = {
+                stair: currentStair,
+                level: Math.ceil(currentStair / 10),
+                category: "✨ 내가 만든 커스텀 퀴즈",
+                question: q,
+                options: [opt1, opt2, opt3, opt4],
+                answer: 0,
+                hint: hint || "내가 직접 만든 특별한 퀴즈입니다!",
+                videoId: videoInput || "ui_OA6oT-kk",
+                videoTitle: "내가 추가한 관련 영상"
+            };
+
+            // Replace or prepend quiz
+            const idx = STAIR_QUIZZES.findIndex(item => item.stair === currentStair);
+            if (idx !== -1) {
+                STAIR_QUIZZES[idx] = customQuizObj;
+            } else {
+                STAIR_QUIZZES.unshift(customQuizObj);
+            }
+
+            closeHiddenModal();
+            alert('🎉 성공! 내가 만든 퀴즈가 현재 계단 문제로 등록되었습니다!');
+            loadStairQuiz(currentStair);
+        }
+
+        // Initial Load
+        window.onload = function() {
+            buildStairsUI();
+            updateStairsVisual();
+            updateStatsDisplay();
+        };
+    </script>
+</body>
+</html>
