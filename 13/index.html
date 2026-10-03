@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>스테이지 리듬 히어로 : 캐릭 & 가챠 에디션</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
+            background-color: #030208;
+            color: #ffffff;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* 무대 배경 및 조명 효과 */
+        .stage-container {
+            background: radial-gradient(circle at 50% 30%, #1a0826 0%, #080312 60%, #020108 100%);
+            perspective: 800px;
+            transition: background 0.5s ease;
+        }
+
+        .stage-container.nightmare-mode {
+            background: radial-gradient(circle at 50% 30%, #3b0512 0%, #170208 60%, #050002 100%);
+        }
+
+        .spotlight-left {
+            position: absolute;
+            top: -100px;
+            left: 8%;
+            width: 300px;
+            height: 1200px;
+            background: linear-gradient(180deg, rgba(147, 51, 234, 0.45) 0%, rgba(147, 51, 234, 0) 80%);
+            transform-origin: top center;
+            transform: rotate(25deg);
+            animation: swingLeft 6s ease-in-out infinite alternate;
+            pointer-events: none;
+            filter: blur(20px);
+        }
+
+        .spotlight-right {
+            position: absolute;
+            top: -100px;
+            right: 8%;
+            width: 300px;
+            height: 1200px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.45) 0%, rgba(59, 130, 246, 0) 80%);
+            transform-origin: top center;
+            transform: rotate(-25deg);
+            animation: swingRight 6s ease-in-out infinite alternate;
+            pointer-events: none;
+            filter: blur(20px);
+        }
+
+        .nightmare-mode .spotlight-left,
+        .nightmare-mode .spotlight-right {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.65) 0%, rgba(239, 68, 68, 0) 80%);
+            animation-duration: 2.2s;
+        }
+
+        @keyframes swingLeft {
+            0% { transform: rotate(15deg); }
+            100% { transform: rotate(38deg); }
+        }
+
+        @keyframes swingRight {
+            0% { transform: rotate(-15deg); }
+            100% { transform: rotate(-38deg); }
+        }
+
+        /* 3D 트랙 보드 */
+        .track-board {
+            transform: rotateX(28deg);
+            transform-style: preserve-3d;
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.35);
+            border-left: 3px solid rgba(147, 51, 234, 0.6);
+            border-right: 3px solid rgba(147, 51, 234, 0.6);
+        }
+
+        .nightmare-mode .track-board {
+            box-shadow: 0 0 60px rgba(239, 68, 68, 0.55);
+            border-left-color: rgba(239, 68, 68, 0.85);
+            border-right-color: rgba(239, 68, 68, 0.85);
+        }
+
+        /* 납작한 파란색 노트 스타일 */
+        .flat-blue-note {
+            position: absolute;
+            width: 90%;
+            left: 5%;
+            height: 20px;
+            background: linear-gradient(180deg, #60a5fa 0%, #2563eb 60%, #1d4ed8 100%);
+            border: 2px solid #93c5fd;
+            border-radius: 6px;
+            box-shadow: 0 0 16px #3b82f6, inset 0 2px 4px rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            will-change: top;
+        }
+
+        .flat-blue-note.accent-note {
+            background: linear-gradient(180deg, #93c5fd 0%, #3b82f6 60%, #1e40af 100%);
+            box-shadow: 0 0 24px #60a5fa, inset 0 2px 6px #ffffff;
+            border-color: #ffffff;
+        }
+
+        /* 노란색 히트 버튼 */
+        .yellow-hit-btn {
+            background: linear-gradient(180deg, #fef08a 0%, #eab308 70%, #ca8a04 100%);
+            border: 3px solid #fef08a;
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.9);
+            color: #422006;
+            font-weight: 900;
+            transition: transform 0.04s ease, filter 0.04s ease;
+        }
+
+        .yellow-hit-btn.pressed {
+            transform: scale(0.92) translateY(4px);
+            background: linear-gradient(180deg, #fef08a 0%, #facc15 100%);
+            box-shadow: 0 0 35px rgba(250, 204, 21, 1), inset 0 1px 2px rgba(0,0,0,0.4);
+            filter: brightness(1.25);
+        }
+
+        .lane-flash {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(360deg, rgba(234, 179, 8, 0.35) 0%, rgba(234, 179, 8, 0) 70%);
+            opacity: 0;
+            transition: opacity 0.08s ease-out;
+            pointer-events: none;
+        }
+
+        .lane-flash.active {
+            opacity: 1;
+        }
+
+        @keyframes judgmentPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.25); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        .judgment-text {
+            animation: judgmentPop 0.35s ease-out forwards;
+        }
+
+        @keyframes danceBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-12px) scale(1.06); }
+        }
+
+        .character-dancing {
+            animation: danceBounce 0.45s infinite ease-in-out;
+        }
+
+        @keyframes cardGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(234,179,8,0.5)); }
+            50% { filter: drop-shadow(0 0 25px rgba(234,179,8,0.9)); }
+        }
+
+        .gacha-legendary {
+            animation: cardGlow 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between items-center relative select-none">
+
+    <!-- 무대 조명 및 배경 효과 -->
+    <div id="stageContainer" class="stage-container fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
+        <div class="spotlight-left"></div>
+        <div class="spotlight-right"></div>
+        
+        <!-- Danger Strobe Layer -->
+        <div id="dangerOverlay" class="danger-overlay absolute inset-0 bg-red-600/20 hidden z-10 pointer-events-none"></div>
+
+        <!-- 무대 전광판 LED 백그라운드 -->
+        <div class="absolute top-0 w-full h-36 bg-gradient-to-b from-purple-950/40 to-transparent flex justify-around items-center px-10 opacity-30">
+            <div id="eqContainer" class="flex gap-1 items-end h-16 w-full justify-between">
+                <!-- JS 생성 이퀄라이저 바 -->
+            </div>
+        </div>
+
+        <!-- 무대 중앙 댄싱 캐릭터 라인 -->
+        <div class="absolute top-16 z-10 flex flex-col items-center">
+            <div id="stageCharAvatar" class="character-dancing w-24 h-24 md:w-32 md:h-32 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] transition-all">
+                <!-- SVG/Pixel Character Graphic -->
+            </div>
+            <div id="stageCharName" class="text-xs font-bold px-3 py-1 bg-black/60 border border-yellow-400/50 rounded-full text-yellow-300 mt-1 shadow-md">
+                선택된 캐릭터
+            </div>
+        </div>
+
+        <!-- 무대 바닥 빛 잔영 -->
+        <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-purple-900/30 via-blue-900/10 to-transparent"></div>
+    </div>
+
+    <!-- 상단 HUD Header -->
+    <header class="relative z-20 w-full max-w-4xl p-3 md:p-4 flex flex-col gap-2 bg-black/60 backdrop-blur-md border-b border-purple-500/30 rounded-b-2xl">
+        <div class="flex justify-between items-center">
+            <!-- 재화 & 곡 정보 -->
+            <div class="flex items-center gap-3">
+                <i id="discIcon" class="fa-solid fa-compact-disc text-yellow-400 text-2xl animate-spin" style="animation-duration: 4s;"></i>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-sm md:text-lg font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-blue-400 to-purple-400">STAGE HERO</h1>
+                        <span id="diffBadge" class="text-[10px] font-black px-2 py-0.5 rounded bg-yellow-400 text-black">EASY</span>
+                    </div>
+                    <p id="currentTrackName" class="text-xs text-blue-300">트랙을 선택하세요</p>
+                </div>
+            </div>
+
+            <!-- 보유 보석 표시 및 스코어 -->
+            <div class="flex items-center gap-3 md:gap-5">
+                <div class="flex items-center gap-1.5 px-3 py-1 bg-yellow-950/60 border border-yellow-400/60 rounded-full">
+                    <i class="fa-solid fa-gem text-cyan-400 text-sm"></i>
+                    <span id="gemCountDisplay" class="text-sm font-black text-yellow-300">1,000</span>
+                </div>
+                <div class="text-right">
+                    <div class="text-[9px] text-gray-400">SCORE</div>
+                    <div id="scoreDisplay" class="text-base md:text-xl font-black text-yellow-400">000000</div>
+                </div>
+                <button id="pauseBtn" class="p-2 bg-purple-900/60 hover:bg-purple-800 text-yellow-400 rounded-xl border border-yellow-400/40 transition">
+                    <i class="fa-solid fa-pause"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- HP/라이프 게이지 바 -->
+        <div class="w-full bg-slate-950/80 rounded-full h-2.5 p-0.5 border border-purple-500/40 relative overflow-hidden">
+            <div id="hpBar" class="h-full bg-gradient-to-r from-green-500 via-emerald-400 to-green-300 rounded-full transition-all duration-200" style="width: 100%;"></div>
+        </div>
+    </header>
+
+    <!-- 메인 무대 리듬 트랙 영역 -->
+    <main class="relative z-10 flex-1 w-full max-w-md flex flex-col justify-end items-center pb-3 px-2">
+        
+        <!-- 판정 텍스트 연출 레이어 -->
+        <div class="absolute top-1/3 z-30 flex flex-col items-center pointer-events-none">
+            <div id="judgmentDisplay" class="text-3xl md:text-5xl font-black tracking-widest drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"></div>
+            <div id="comboDisplay" class="text-2xl md:text-3xl font-black text-yellow-300 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] mt-1 opacity-0">0 COMBO</div>
+        </div>
+
+        <!-- 3D 트랙 보드 -->
+        <div id="trackBoard" class="track-board relative w-full h-[58vh] bg-gradient-to-b from-black/85 via-slate-900/90 to-black/95 rounded-t-xl overflow-hidden flex border-t-2 border-yellow-400/60">
+            
+            <!-- 4개의 노트 라인 -->
+            <div id="lane-0" class="relative flex-1 border-r border-blue-500/20">
+                <div class="lane-flash"></div>
+                <div class="lane-notes absolute inset-0"></div>
+            </div>
+            <div id="lane-1" class="relative flex-1 border-r border-blue-500/20">
+                <div class="lane-flash"></div>
+                <div class="lane-notes absolute inset-0"></div>
+            </div>
+            <div id="lane-2" class="relative flex-1 border-r border-blue-500/20">
+                <div class="lane-flash"></div>
+                <div class="lane-notes absolute inset-0"></div>
+            </div>
+            <div id="lane-3" class="relative flex-1">
+                <div class="lane-flash"></div>
+                <div class="lane-notes absolute inset-0"></div>
+            </div>
+
+            <!-- 노란색 판정 라인 -->
+            <div class="absolute bottom-[65px] w-full h-[4px] bg-gradient-to-r from-yellow-500 via-yellow-200 to-yellow-500 shadow-[0_0_15px_#facc15] z-20"></div>
+        </div>
+
+        <!-- 하단 노란색 타겟 히트 버튼 영역 -->
+        <div class="w-full grid grid-cols-4 gap-2 mt-2 z-20">
+            <button id="btn-0" data-key="d" class="yellow-hit-btn h-14 md:h-16 rounded-xl flex flex-col items-center justify-center cursor-pointer active:scale-95">
+                <span class="text-[9px] opacity-75">LANE 1</span>
+                <span class="text-lg md:text-xl font-black">D</span>
+            </button>
+            <button id="btn-1" data-key="f" class="yellow-hit-btn h-14 md:h-16 rounded-xl flex flex-col items-center justify-center cursor-pointer active:scale-95">
+                <span class="text-[9px] opacity-75">LANE 2</span>
+                <span class="text-lg md:text-xl font-black">F</span>
+            </button>
+            <button id="btn-2" data-key="j" class="yellow-hit-btn h-14 md:h-16 rounded-xl flex flex-col items-center justify-center cursor-pointer active:scale-95">
+                <span class="text-[9px] opacity-75">LANE 3</span>
+                <span class="text-lg md:text-xl font-black">J</span>
+            </button>
+            <button id="btn-3" data-key="k" class="yellow-hit-btn h-14 md:h-16 rounded-xl flex flex-col items-center justify-center cursor-pointer active:scale-95">
+                <span class="text-[9px] opacity-75">LANE 4</span>
+                <span class="text-lg md:text-xl font-black">K</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- 메인 로비 / 곡 선택 모달 -->
+    <div id="lobbyOverlay" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex flex-col items-center justify-center p-4">
+        <div class="max-w-md w-full bg-slate-900/95 border border-yellow-500/40 rounded-3xl p-5 shadow-2xl text-center space-y-4 my-auto max-h-[95vh] overflow-y-auto">
+            <div>
+                <i class="fa-solid fa-guitar text-yellow-400 text-4xl mb-1 animate-bounce"></i>
+                <h2 class="text-2xl font-black text-yellow-400 tracking-wider">STAGE RHYTHM HERO</h2>
+                <p class="text-xs text-gray-300 mt-0.5">클리어하고 보석 500개 보상을 획득하세요!</p>
+            </div>
+
+            <!-- 네비게이션 탭 (게임시작 / 캐릭터 세팅 / 가챠 뽑기) -->
+            <div class="grid grid-cols-3 gap-2 p-1 bg-black/60 rounded-2xl border border-white/10">
+                <button id="tabGameBtn" class="py-2 text-xs font-bold rounded-xl bg-yellow-400 text-black shadow">곡 선택</button>
+                <button id="tabCharBtn" class="py-2 text-xs font-bold rounded-xl text-gray-300 hover:text-white">캐릭터</button>
+                <button id="tabGachaBtn" class="py-2 text-xs font-bold rounded-xl text-gray-300 hover:text-white flex items-center justify-center gap-1">
+                    <span>뽑기</span>
+                    <span class="text-[9px] px-1 bg-red-500 text-white rounded-full">HOT</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: 곡 선택 및 플레이 설정 -->
+            <div id="tabContentGame" class="space-y-4">
+                <!-- 스피드 조절 옵션 -->
+                <div class="bg-black/40 p-3 rounded-2xl border border-white/10 text-left space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-bold text-yellow-400"><i class="fa-solid fa-gauge-high mr-1"></i>노트 속도 설정</label>
+                        <span id="speedValueText" class="text-xs font-black text-blue-300">X 1.5</span>
+                    </div>
+                    <input id="speedSlider" type="range" min="1.0" max="2.5" step="0.1" value="1.5" class="w-full accent-yellow-400 cursor-pointer">
+                </div>
+
+                <!-- 곡 목록 -->
+                <div class="space-y-2 text-left">
+                    <label class="text-xs text-yellow-400 font-bold tracking-widest"><i class="fa-solid fa-music mr-1"></i>난이도 및 트랙 선택</label>
+                    <div class="space-y-2" id="songListContainer">
+                        <div data-track="0" class="song-card p-3 rounded-xl bg-purple-950/60 border-2 border-yellow-400 flex justify-between items-center cursor-pointer transition">
+                            <div>
+                                <div class="font-bold text-white text-sm">Neon Stage Pulse</div>
+                                <div class="text-[10px] text-purple-300">EDM Light Beat • 128 BPM</div>
+                            </div>
+                            <span class="text-xs font-black bg-emerald-400 text-black px-2.5 py-1 rounded-md">EASY</span>
+                        </div>
+                        <div data-track="1" class="song-card p-3 rounded-xl bg-slate-800/60 border-2 border-transparent hover:border-yellow-400/50 flex justify-between items-center cursor-pointer transition">
+                            <div>
+                                <div class="font-bold text-white text-sm">Cyber Concert Rush</div>
+                                <div class="text-[10px] text-blue-300">Fast Synthwave • 150 BPM</div>
+                            </div>
+                            <span class="text-xs font-black bg-blue-500 text-white px-2.5 py-1 rounded-md">HARD</span>
+                        </div>
+                        <div data-track="2" class="song-card p-3 rounded-xl bg-red-950/40 border-2 border-red-600/50 hover:border-red-500 flex justify-between items-center cursor-pointer transition">
+                            <div>
+                                <div class="font-bold text-red-400 text-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-fire animate-pulse text-red-500"></i>
+                                    NIGHTMARE OVERDRIVE
+                                </div>
+                                <div class="text-[10px] text-red-300">Crazy Stream / Double Beats • 185 BPM</div>
+                            </div>
+                            <span class="text-xs font-black bg-red-600 text-white px-2 py-1 rounded-md animate-pulse">CRAZY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="startGameBtn" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black text-base rounded-2xl shadow-lg hover:brightness-110 active:scale-95 transition">
+                    <i class="fa-solid fa-play mr-2"></i>무대 시작하기 (START)
+                </button>
+            </div>
+
+            <!-- TAB 2: 캐릭터 인벤토리 & 장착 -->
+            <div id="tabContentChar" class="space-y-3 hidden">
+                <div class="text-left text-xs font-bold text-yellow-400 flex justify-between items-center">
+                    <span><i class="fa-solid fa-user-gear mr-1"></i>보유 캐릭터 설정</span>
+                    <span id="charUnlockedCount" class="text-gray-300">1 / 8</span>
+                </div>
+                <div id="characterGrid" class="grid grid-cols-2 gap-2.5 max-h-[45vh] overflow-y-auto pr-1">
+                    <!-- JS 캐릭터 카드 생성 영역 -->
+                </div>
+            </div>
+
+            <!-- TAB 3: 캐릭터 가챠 (300 보석 / 3,000 보석) -->
+            <div id="tabContentGacha" class="space-y-4 hidden">
+                <div class="bg-gradient-to-br from-purple-900/80 to-blue-950/80 p-4 rounded-2xl border border-yellow-400/40 relative overflow-hidden">
+                    <i class="fa-solid fa-wand-magic-sparkles text-yellow-300 text-5xl absolute -right-2 -bottom-2 opacity-20"></i>
+                    <h3 class="text-lg font-black text-yellow-300">스테이지 스타 가챠</h3>
+                    <p class="text-xs text-gray-300 mt-1">강력한 전설 등급 캐릭터를 뽑아 점수를 대폭 늘려보세요!</p>
+                    <div class="mt-2 text-[10px] text-gray-400 flex justify-center gap-3">
+                        <span>🟡 전설(3%)</span>
+                        <span>🟣 에픽(12%)</span>
+                        <span>🔵 레어(25%)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="gachaSingleBtn" class="py-3 px-2 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 border border-blue-300 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition">
+                        <span class="text-xs font-bold">1회 뽑기</span>
+                        <div class="flex items-center gap-1 text-yellow-300 font-black text-sm">
+                            <i class="fa-solid fa-gem text-cyan-300"></i> 300
+                        </div>
+                    </button>
+                    <button id="gachaMultiBtn" class="py-3 px-2 bg-gradient-to-b from-amber-500 to-yellow-600 hover:from-amber-400 border border-yellow-200 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition shadow-lg">
+                        <span class="text-xs font-black text-black">10회 연속 뽑기</span>
+                        <div class="flex items-center gap-1 text-black font-black text-sm">
+                            <i class="fa-solid fa-gem text-cyan-900"></i> 3,000
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 가챠 결과 오버레이 모달 -->
+    <div id="gachaResultOverlay" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 hidden">
+        <h2 class="text-2xl font-black text-yellow-400 mb-4 animate-bounce">✨ 뽑기 결과 ✨</h2>
+        <div id="gachaResultCards" class="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-2xl w-full max-h-[60vh] overflow-y-auto p-2">
+            <!-- JS 결과 카드 삽입 -->
+        </div>
+        <button id="closeGachaResultBtn" class="mt-6 px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-base rounded-2xl transition">
+            확인 및 닫기
+        </button>
+    </div>
+
+    <!-- 결과 및 클리어 보상 오버레이 -->
+    <div id="resultOverlay" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6 hidden">
+        <div class="max-w-md w-full bg-slate-900/90 border border-yellow-400/50 rounded-3xl p-6 text-center space-y-4">
+            <div>
+                <i id="resultIcon" class="fa-solid fa-trophy text-yellow-400 text-6xl animate-pulse"></i>
+                <h2 id="resultHeader" class="text-3xl font-black text-yellow-400 mt-2">STAGE CLEAR!</h2>
+            </div>
+            
+            <div class="bg-black/60 p-4 rounded-2xl border border-white/10 space-y-2.5">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <span class="text-gray-400 text-xs">클리어 보상</span>
+                    <span id="earnedGemsText" class="text-lg font-black text-cyan-300 flex items-center gap-1">
+                        <i class="fa-solid fa-gem"></i> +500
+                    </span>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <span class="text-gray-400 text-xs">최종 점수</span>
+                    <span id="finalScore" class="text-xl font-black text-yellow-400">0</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <span class="text-gray-400 text-xs">최대 콤보</span>
+                    <span id="finalMaxCombo" class="text-sm font-bold text-blue-400">0 COMBO</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                    <span class="text-gray-400 text-xs">정확도</span>
+                    <span id="finalAccuracy" class="text-sm font-bold text-green-400">0.0%</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-1 text-xs">
+                    <div class="bg-blue-950/60 p-1.5 rounded-lg border border-blue-500/30">
+                        <div class="text-blue-400 font-bold text-[10px]">PERFECT</div>
+                        <div id="countPerfect" class="text-sm font-black">0</div>
+                    </div>
+                    <div class="bg-green-950/60 p-1.5 rounded-lg border border-green-500/30">
+                        <div class="text-green-400 font-bold text-[10px]">GREAT</div>
+                        <div id="countGreat" class="text-sm font-black">0</div>
+                    </div>
+                    <div class="bg-red-950/60 p-1.5 rounded-lg border border-red-500/30">
+                        <div class="text-red-400 font-bold text-[10px]">MISS</div>
+                        <div id="countMiss" class="text-sm font-black">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="retryBtn" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 다시하기
+                </button>
+                <button id="menuBtn" class="flex-1 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black rounded-xl transition">
+                    <i class="fa-solid fa-bars mr-1"></i> 로비로
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ===================================================================
+         * WEB AUDIO SYNTHESIZER ENGINE
+         * =================================================================== */
+        class StageSynthEngine {
+            constructor() {
+                this.ctx = null;
+                this.isPlaying = false;
+                this.bpm = 128;
+                this.nextNoteTime = 0;
+                this.currentBeat = 0;
+                this.timerID = null;
+                this.selectedTrack = 0;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            setTrack(trackIdx) {
+                this.selectedTrack = trackIdx;
+                if (trackIdx === 0) this.bpm = 128;
+                else if (trackIdx === 1) this.bpm = 150;
+                else this.bpm = 185; // Nightmare BPM
+            }
+
+            start() {
+                this.init();
+                this.isPlaying = true;
+                this.currentBeat = 0;
+                this.nextNoteTime = this.ctx.currentTime;
+                this.scheduler();
+            }
+
+            stop() {
+                this.isPlaying = false;
+                clearTimeout(this.timerID);
+            }
+
+            scheduler() {
+                while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
+                    this.playBeat(this.currentBeat, this.nextNoteTime);
+                    const secondsPerBeat = 60.0 / this.bpm / 2;
+                    this.nextNoteTime += secondsPerBeat;
+                    this.currentBeat = (this.currentBeat + 1) % 32;
+                }
+                if (this.isPlaying) {
+                    this.timerID = setTimeout(() => this.scheduler(), 20);
+                }
+            }
+
+            playBeat(beat, time) {
+                // Kick Drum
+                if (beat % 4 === 0 || (this.selectedTrack === 2 && beat % 2 === 1)) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(170, time);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.12);
+                    gain.gain.setValueAtTime(0.9, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + 0.12);
+                }
+
+                // Snare
+                if (beat % 4 === 2) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(290, time);
+                    gain.gain.setValueAtTime(0.4, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + 0.1);
+                }
+
+                // Bass Synthesizer
+                const scale = this.selectedTrack === 2 
+                    ? [130.81, 138.59, 155.56, 174.61, 185.00, 207.65] 
+                    : [130.81, 146.83, 164.81, 174.61, 196.00, 220.00];
+
+                if (beat % 2 === 0 || this.selectedTrack === 2) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = this.selectedTrack === 2 ? 'sawtooth' : 'square';
+                    
+                    const noteIdx = (beat * 3 + Math.floor(beat / 4)) % scale.length;
+                    const freq = scale[noteIdx] * (this.selectedTrack === 2 ? 1.8 : 1.2);
+                    
+                    osc.frequency.setValueAtTime(freq, time);
+                    gain.gain.setValueAtTime(0.12, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1100 + Math.sin(beat) * 500, time);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(time);
+                    osc.stop(time + 0.18);
+                }
+            }
+
+            playHitSound(accuracy) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                const baseFreq = accuracy === 'PERFECT' ? 950 : (accuracy === 'GREAT' ? 680 : 280);
+                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+        }
+
+        /* ===================================================================
+         * CHARACTER DATABASE & GACHA SYSTEM
+         * =================================================================== */
+        const CHARACTERS = [
+            {
+                id: 'char_0',
+                name: '기본 비트보이',
+                rank: 'NORMAL',
+                rankBg: 'bg-gray-700',
+                rankColor: 'text-gray-300',
+                buffDesc: '기본 보너스 없음',
+                scoreMultiplier: 1.0,
+                hpRecoverBonus: 0,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="40" fill="#3b82f6"/><rect x="30" y="35" width="12" height="12" rx="3" fill="#fff"/><rect x="58" y="35" width="12" height="12" rx="3" fill="#fff"/><path d="M 35 68 Q 50 80 65 68" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`
+            },
+            {
+                id: 'char_1',
+                name: '스페이드 로봇',
+                rank: 'NORMAL',
+                rankBg: 'bg-gray-700',
+                rankColor: 'text-gray-300',
+                buffDesc: '점수 +5% 증가',
+                scoreMultiplier: 1.05,
+                hpRecoverBonus: 0,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><rect x="15" y="15" width="70" height="70" rx="15" fill="#64748b"/><rect x="28" y="32" width="16" height="16" fill="#38bdf8"/><rect x="56" y="32" width="16" height="16" fill="#38bdf8"/><rect x="30" y="62" width="40" height="8" fill="#f1f5f9"/></svg>`
+            },
+            {
+                id: 'char_2',
+                name: '버블 걸',
+                rank: 'RARE',
+                rankBg: 'bg-blue-900',
+                rankColor: 'text-blue-300',
+                buffDesc: '점수 +10% 증가',
+                scoreMultiplier: 1.10,
+                hpRecoverBonus: 1,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="40" fill="#ec4899"/><circle cx="38" cy="42" r="7" fill="#fff"/><circle cx="62" cy="42" r="7" fill="#fff"/><path d="M 40 65 Q 50 72 60 65" stroke="#fff" stroke-width="4" fill="none"/></svg>`
+            },
+            {
+                id: 'char_3',
+                name: '네온 스타',
+                rank: 'RARE',
+                rankBg: 'bg-blue-900',
+                rankColor: 'text-blue-300',
+                buffDesc: 'HP 회복량 +25% 증가',
+                scoreMultiplier: 1.05,
+                hpRecoverBonus: 2,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><polygon points="50,10 63,38 93,38 68,56 78,86 50,68 22,86 32,56 7,38 37,38" fill="#facc15"/><circle cx="42" cy="45" r="4" fill="#000"/><circle cx="58" cy="45" r="4" fill="#000"/></svg>`
+            },
+            {
+                id: 'char_4',
+                name: 'DJ 냥이',
+                rank: 'EPIC',
+                rankBg: 'bg-purple-900',
+                rankColor: 'text-purple-300',
+                buffDesc: '점수 +18% & HP 회복 증가',
+                scoreMultiplier: 1.18,
+                hpRecoverBonus: 3,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M 20 20 L 35 40 L 15 45 Z" fill="#a855f7"/><path d="M 80 20 L 65 40 L 85 45 Z" fill="#a855f7"/><circle cx="50" cy="55" r="35" fill="#c084fc"/><ellipse cx="38" cy="50" rx="6" ry="10" fill="#000"/><ellipse cx="62" cy="50" rx="6" ry="10" fill="#000"/><polygon points="50,62 45,67 55,67" fill="#e879f9"/></svg>`
+            },
+            {
+                id: 'char_5',
+                name: '사이버 루나',
+                rank: 'EPIC',
+                rankBg: 'bg-purple-900',
+                rankColor: 'text-purple-300',
+                buffDesc: '점수 +20% 증가',
+                scoreMultiplier: 1.20,
+                hpRecoverBonus: 2,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="40" fill="#06b6d4"/><path d="M 25 35 Q 50 15 75 35" stroke="#f43f5e" stroke-width="8" fill="none"/><circle cx="38" cy="48" r="6" fill="#fff"/><circle cx="62" cy="48" r="6" fill="#fff"/></svg>`
+            },
+            {
+                id: 'char_6',
+                name: '네온 비트걸',
+                rank: 'LEGENDARY',
+                rankBg: 'bg-amber-950 border border-yellow-400',
+                rankColor: 'text-yellow-300 font-black',
+                buffDesc: '점수 +30% & HP 대폭 회복',
+                scoreMultiplier: 1.30,
+                hpRecoverBonus: 5,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full gacha-legendary"><circle cx="50" cy="50" r="42" fill="#f59e0b"/><polygon points="50,15 58,35 80,35 62,48 68,70 50,56 32,70 38,48 20,35 42,35" fill="#fef08a"/><circle cx="38" cy="48" r="6" fill="#000"/><circle cx="62" cy="48" r="6" fill="#000"/><path d="M 38 64 Q 50 76 62 64" stroke="#000" stroke-width="5" fill="none"/></svg>`
+            },
+            {
+                id: 'char_7',
+                name: '골든 드래곤',
+                rank: 'LEGENDARY',
+                rankBg: 'bg-amber-950 border border-yellow-400',
+                rankColor: 'text-yellow-300 font-black',
+                buffDesc: '극상의 점수 +35% 증가',
+                scoreMultiplier: 1.35,
+                hpRecoverBonus: 4,
+                svg: `<svg viewBox="0 0 100 100" class="w-full h-full gacha-legendary"><rect x="15" y="15" width="70" height="70" rx="20" fill="#eab308"/><path d="M 30 30 L 45 10 L 55 30 L 70 10 L 70 30" fill="#fef08a"/><circle cx="36" cy="48" r="7" fill="#000"/><circle cx="64" cy="48" r="7" fill="#000"/><path d="M 35 70 Q 50 82 65 70" stroke="#000" stroke-width="6" fill="none"/></svg>`
+            }
+        ];
+
+        // 유저 재화 및 보유 캐릭터 로컬스토리지 관리
+        let userGems = parseInt(localStorage.getItem('stage_hero_gems')) || 1000;
+        let unlockedCharIds = JSON.parse(localStorage.getItem('stage_hero_unlocked_chars')) || ['char_0'];
+        let selectedCharId = localStorage.getItem('stage_hero_selected_char') || 'char_0';
+
+        function saveUserData() {
+            localStorage.setItem('stage_hero_gems', userGems);
+            localStorage.setItem('stage_hero_unlocked_chars', JSON.stringify(unlockedCharIds));
+            localStorage.setItem('stage_hero_selected_char', selectedCharId);
+            updateGemDisplay();
+            renderCharacterLocker();
+            updateStageCharacterDisplay();
+        }
+
+        function updateGemDisplay() {
+            document.getElementById('gemCountDisplay').innerText = userGems.toLocaleString();
+        }
+
+        function getSelectedCharacter() {
+            return CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
+        }
+
+        function updateStageCharacterDisplay() {
+            const char = getSelectedCharacter();
+            document.getElementById('stageCharAvatar').innerHTML = char.svg;
+            document.getElementById('stageCharName').innerText = `${char.name} (${char.buffDesc})`;
+        }
+
+        // 캐릭터 라커룸 UI 생성
+        function renderCharacterLocker() {
+            const grid = document.getElementById('characterGrid');
+            grid.innerHTML = '';
+
+            document.getElementById('charUnlockedCount').innerText = `${unlockedCharIds.length} / ${CHARACTERS.length}`;
+
+            CHARACTERS.forEach(char => {
+                const isUnlocked = unlockedCharIds.includes(char.id);
+                const isSelected = char.id === selectedCharId;
+
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-2xl border flex flex-col items-center justify-between text-center relative transition ${
+                    isSelected ? 'border-yellow-400 bg-yellow-950/40 shadow-lg' : 'border-white/10 bg-black/40'
+                } ${!isUnlocked ? 'opacity-40 grayscale' : 'hover:border-yellow-400/50 cursor-pointer'}`;
+
+                card.innerHTML = `
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${char.rankBg} ${char.rankColor} absolute top-2 left-2">${char.rank}</span>
+                    <div class="w-14 h-14 my-2">${char.svg}</div>
+                    <div class="text-xs font-bold text-white">${char.name}</div>
+                    <div class="text-[10px] text-yellow-300 mt-0.5">${char.buffDesc}</div>
+                    ${isSelected ? '<span class="mt-1 text-[9px] font-black px-2 py-0.5 bg-yellow-400 text-black rounded-md">장착중</span>' : ''}
+                `;
+
+                if (isUnlocked && !isSelected) {
+                    card.addEventListener('click', () => {
+                        selectedCharId = char.id;
+                        saveUserData();
+                    });
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // 가챠 뽑기 기능 (300 보석 / 3,000 보석)
+        document.getElementById('gachaSingleBtn').addEventListener('click', () => pullGacha(1));
+        document.getElementById('gachaMultiBtn').addEventListener('click', () => pullGacha(10));
+
+        function pullGacha(count) {
+            const cost = count * 300;
+            if (userGems < cost) {
+                alert('보석이 부족합니다! 곡을 클리어하여 보석을 획득하세요.');
+                return;
+            }
+
+            userGems -= cost;
+            const pulledResults = [];
+
+            for (let i = 0; i < count; i++) {
+                const rand = Math.random() * 100;
+                let rank = 'NORMAL';
+                if (rand < 3) rank = 'LEGENDARY';
+                else if (rand < 15) rank = 'EPIC';
+                else if (rand < 40) rank = 'RARE';
+
+                const possibleChars = CHARACTERS.filter(c => c.rank === rank);
+                const picked = possibleChars[Math.floor(Math.random() * possibleChars.length)];
+
+                let isNew = false;
+                if (!unlockedCharIds.includes(picked.id)) {
+                    unlockedCharIds.push(picked.id);
+                    isNew = true;
+                } else {
+                    // 중복 시 보석 일부 환급
+                    userGems += 100;
+                }
+                pulledResults.push({ char: picked, isNew: isNew });
+            }
+
+            saveUserData();
+            showGachaResults(pulledResults);
+        }
+
+        function showGachaResults(results) {
+            const cardsContainer = document.getElementById('gachaResultCards');
+            cardsContainer.innerHTML = '';
+
+            results.forEach(res => {
+                const c = res.char;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col items-center justify-center text-center space-y-1 bg-slate-900 border-yellow-400/50 shadow-xl`;
+                card.innerHTML = `
+                    <div class="w-16 h-16">${c.svg}</div>
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded ${c.rankBg} ${c.rankColor}">${c.rank}</span>
+                    <div class="text-xs font-bold text-white">${c.name}</div>
+                    ${res.isNew ? '<span class="text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded">NEW!</span>' : '<span class="text-[9px] text-cyan-300">+100 보석 환급</span>'}
+                `;
+                cardsContainer.appendChild(card);
+            });
+
+            document.getElementById('gachaResultOverlay').classList.remove('hidden');
+        }
+
+        document.getElementById('closeGachaResultBtn').addEventListener('click', () => {
+            document.getElementById('gachaResultOverlay').classList.add('hidden');
+        });
+
+        /* ===================================================================
+         * MAIN RHYTHM GAME ENGINE
+         * =================================================================== */
+        const synth = new StageSynthEngine();
+
+        let isGameRunning = false;
+        let isPaused = false;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let totalHits = 0;
+        let successfulHits = 0;
+        let hp = 100;
+
+        let counts = { PERFECT: 0, GREAT: 0, MISS: 0 };
+
+        let notes = [];
+        let noteIdCounter = 0;
+        let lastSpawnTime = 0;
+        let userSpeedMultiplier = 1.5;
+
+        const TRACK_CONFIGS = [
+            { name: "Neon Stage Pulse", bpm: 128, baseSpeed: 3.0, interval: 520, doubleProb: 0.05, badge: "EASY", color: "bg-emerald-400" },
+            { name: "Cyber Concert Rush", bpm: 150, baseSpeed: 4.2, interval: 350, doubleProb: 0.20, badge: "HARD", color: "bg-blue-500" },
+            { name: "NIGHTMARE OVERDRIVE", bpm: 185, baseSpeed: 5.8, interval: 200, doubleProb: 0.45, badge: "CRAZY", color: "bg-red-600 animate-pulse" }
+        ];
+
+        let currentTrackIdx = 0;
+
+        const keyLaneMap = {
+            'd': 0, 'D': 0, 'ㅇ': 0,
+            'f': 1, 'F': 1, 'ㄹ': 1,
+            'j': 2, 'J': 2, 'ㅓ': 2,
+            'k': 3, 'K': 3, 'ㅏ': 3
+        };
+
+        const laneContainers = [
+            document.querySelector('#lane-0 .lane-notes'),
+            document.querySelector('#lane-1 .lane-notes'),
+            document.querySelector('#lane-2 .lane-notes'),
+            document.querySelector('#lane-3 .lane-notes')
+        ];
+
+        const laneFlashes = document.querySelectorAll('.lane-flash');
+        const buttons = [
+            document.getElementById('btn-0'),
+            document.getElementById('btn-1'),
+            document.getElementById('btn-2'),
+            document.getElementById('btn-3')
+        ];
+
+        // 이퀄라이저 바 생성
+        const eqContainer = document.getElementById('eqContainer');
+        for (let i = 0; i < 28; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'flex-1 bg-gradient-to-t from-blue-500 to-yellow-400 rounded-t transition-all duration-100';
+            bar.style.height = '10%';
+            eqContainer.appendChild(bar);
+        }
+        const eqBars = eqContainer.children;
+
+        // 탭 전환 시스템
+        const tabGameBtn = document.getElementById('tabGameBtn');
+        const tabCharBtn = document.getElementById('tabCharBtn');
+        const tabGachaBtn = document.getElementById('tabGachaBtn');
+
+        const tabContentGame = document.getElementById('tabContentGame');
+        const tabContentChar = document.getElementById('tabContentChar');
+        const tabContentGacha = document.getElementById('tabContentGacha');
+
+        function switchTab(tab) {
+            [tabGameBtn, tabCharBtn, tabGachaBtn].forEach(b => {
+                b.className = 'py-2 text-xs font-bold rounded-xl text-gray-300 hover:text-white';
+            });
+            [tabContentGame, tabContentChar, tabContentGacha].forEach(c => c.classList.add('hidden'));
+
+            if (tab === 'game') {
+                tabGameBtn.className = 'py-2 text-xs font-bold rounded-xl bg-yellow-400 text-black shadow';
+                tabContentGame.classList.remove('hidden');
+            } else if (tab === 'char') {
+                tabCharBtn.className = 'py-2 text-xs font-bold rounded-xl bg-yellow-400 text-black shadow';
+                tabContentChar.classList.remove('hidden');
+            } else {
+                tabGachaBtn.className = 'py-2 text-xs font-bold rounded-xl bg-yellow-400 text-black shadow flex items-center justify-center gap-1';
+                tabContentGacha.classList.remove('hidden');
+            }
+        }
+
+        tabGameBtn.addEventListener('click', () => switchTab('game'));
+        tabCharBtn.addEventListener('click', () => switchTab('char'));
+        tabGachaBtn.addEventListener('click', () => switchTab('gacha'));
+
+        // 스피드 슬라이더
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValueText = document.getElementById('speedValueText');
+        speedSlider.addEventListener('input', (e) => {
+            userSpeedMultiplier = parseFloat(e.target.value);
+            speedValueText.innerText = `X ${userSpeedMultiplier.toFixed(1)}`;
+        });
+
+        // 트랙 선택
+        document.querySelectorAll('.song-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.song-card').forEach(c => {
+                    c.classList.remove('border-yellow-400', 'bg-purple-950/60');
+                    c.classList.add('border-transparent');
+                });
+                card.classList.remove('border-transparent');
+                card.classList.add('border-yellow-400', 'bg-purple-950/60');
+                currentTrackIdx = parseInt(card.getAttribute('data-track'));
+            });
+        });
+
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            document.getElementById('lobbyOverlay').classList.add('hidden');
+            initGame();
+        });
+
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            document.getElementById('resultOverlay').classList.add('hidden');
+            initGame();
+        });
+
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            document.getElementById('resultOverlay').classList.add('hidden');
+            document.getElementById('lobbyOverlay').classList.remove('hidden');
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (!isGameRunning) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                synth.stop();
+            } else {
+                synth.start();
+                requestAnimationFrame(gameLoop);
+            }
+        });
+
+        function initGame() {
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            totalHits = 0;
+            successfulHits = 0;
+            hp = 100;
+            counts = { PERFECT: 0, GREAT: 0, MISS: 0 };
+            
+            laneContainers.forEach(container => container.innerHTML = '');
+            notes = [];
+
+            const track = TRACK_CONFIGS[currentTrackIdx];
+            document.getElementById('currentTrackName').innerText = track.name;
+            
+            const badge = document.getElementById('diffBadge');
+            badge.innerText = track.badge;
+            badge.className = `text-[10px] font-black px-2 py-0.5 rounded text-white ${track.color}`;
+
+            const stage = document.getElementById('stageContainer');
+            const danger = document.getElementById('dangerOverlay');
+            if (currentTrackIdx === 2) {
+                stage.classList.add('nightmare-mode');
+                danger.classList.remove('hidden');
+            } else {
+                stage.classList.remove('nightmare-mode');
+                danger.classList.add('hidden');
+            }
+
+            updateHUD();
+
+            synth.setTrack(currentTrackIdx);
+            synth.start();
+
+            isGameRunning = true;
+            isPaused = false;
+            lastSpawnTime = performance.now();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        let lastTime = performance.now();
+        function gameLoop(currentTime) {
+            if (!isGameRunning || isPaused) return;
+
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            const track = TRACK_CONFIGS[currentTrackIdx];
+
+            if (currentTime - lastSpawnTime > track.interval) {
+                spawnNotesPattern(track);
+                lastSpawnTime = currentTime;
+            }
+
+            const finalSpeed = track.baseSpeed * userSpeedMultiplier;
+
+            for (let i = notes.length - 1; i >= 0; i--) {
+                const note = notes[i];
+                note.y += finalSpeed * (deltaTime * 60);
+                note.element.style.top = `${note.y}%`;
+
+                if (note.y > 92 && !note.hit) {
+                    triggerJudgment('MISS');
+                    removeNoteIndex(i);
+                }
+            }
+
+            for (let i = 0; i < eqBars.length; i++) {
+                const h = Math.floor(Math.random() * 85) + 15;
+                eqBars[i].style.height = `${h}%`;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnNotesPattern(track) {
+            const lane1 = Math.floor(Math.random() * 4);
+            createNote(lane1, false);
+
+            if (Math.random() < track.doubleProb) {
+                let lane2 = Math.floor(Math.random() * 4);
+                if (lane2 === lane1) lane2 = (lane1 + 1) % 4;
+                createNote(lane2, true);
+            }
+        }
+
+        function createNote(lane, isDouble) {
+            const noteEl = document.createElement('div');
+            noteEl.className = `flat-blue-note ${isDouble ? 'accent-note' : ''}`;
+            noteEl.style.top = '0%';
+
+            laneContainers[lane].appendChild(noteEl);
+
+            notes.push({
+                id: noteIdCounter++,
+                lane: lane,
+                y: 0,
+                element: noteEl,
+                hit: false
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat || !isGameRunning || isPaused) return;
+            const lane = keyLaneMap[e.key];
+            if (lane !== undefined) {
+                handlePress(lane);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const lane = keyLaneMap[e.key];
+            if (lane !== undefined) {
+                handleRelease(lane);
+            }
+        });
+
+        buttons.forEach((btn, laneIdx) => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handlePress(laneIdx);
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleRelease(laneIdx);
+            });
+            btn.addEventListener('mousedown', () => handlePress(laneIdx));
+            btn.addEventListener('mouseup', () => handleRelease(laneIdx));
+        });
+
+        function handlePress(lane) {
+            buttons[lane].classList.add('pressed');
+            laneFlashes[lane].classList.add('active');
+            checkHit(lane);
+        }
+
+        function handleRelease(lane) {
+            buttons[lane].classList.remove('pressed');
+            laneFlashes[lane].classList.remove('active');
+        }
+
+        function checkHit(lane) {
+            const targetY = 82;
+            let closestNoteIdx = -1;
+            let minDistance = 999;
+
+            for (let i = 0; i < notes.length; i++) {
+                if (notes[i].lane === lane && !notes[i].hit) {
+                    const dist = Math.abs(notes[i].y - targetY);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestNoteIdx = i;
+                    }
+                }
+            }
+
+            if (closestNoteIdx !== -1 && minDistance < 14) {
+                let judgment = 'MISS';
+                if (minDistance < 4.5) {
+                    judgment = 'PERFECT';
+                } else if (minDistance < 9.0) {
+                    judgment = 'GREAT';
+                } else {
+                    judgment = 'MISS';
+                }
+
+                synth.playHitSound(judgment);
+                triggerJudgment(judgment);
+                removeNoteIndex(closestNoteIdx);
+            }
+        }
+
+        function removeNoteIndex(idx) {
+            if (notes[idx] && notes[idx].element) {
+                notes[idx].element.remove();
+            }
+            notes.splice(idx, 1);
+        }
+
+        function triggerJudgment(type) {
+            totalHits++;
+            counts[type]++;
+
+            const currentChar = getSelectedCharacter();
+            const display = document.getElementById('judgmentDisplay');
+            const comboEl = document.getElementById('comboDisplay');
+
+            if (type === 'PERFECT') {
+                const base = 1000 + combo * 10;
+                score += Math.floor(base * currentChar.scoreMultiplier);
+                combo++;
+                successfulHits++;
+                hp = Math.min(100, hp + 3 + currentChar.hpRecoverBonus);
+                display.innerText = 'PERFECT!';
+                display.className = 'text-3xl md:text-5xl font-black tracking-widest text-yellow-300 judgment-text drop-shadow-[0_0_15px_rgba(250,204,21,0.9)]';
+            } else if (type === 'GREAT') {
+                const base = 600 + combo * 5;
+                score += Math.floor(base * currentChar.scoreMultiplier);
+                combo++;
+                successfulHits++;
+                hp = Math.min(100, hp + 1 + Math.floor(currentChar.hpRecoverBonus / 2));
+                display.innerText = 'GREAT!';
+                display.className = 'text-3xl md:text-5xl font-black tracking-widest text-blue-400 judgment-text drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]';
+            } else {
+                combo = 0;
+                const damage = currentTrackIdx === 2 ? 18 : 10;
+                hp = Math.max(0, hp - damage);
+                
+                display.innerText = 'MISS';
+                display.className = 'text-3xl md:text-5xl font-black tracking-widest text-red-500 judgment-text drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]';
+            }
+
+            if (combo > maxCombo) maxCombo = combo;
+
+            if (combo > 1) {
+                comboEl.innerText = `${combo} COMBO!`;
+                comboEl.classList.remove('opacity-0');
+            } else {
+                comboEl.classList.add('opacity-0');
+            }
+
+            updateHUD();
+
+            if (hp <= 0) {
+                endGame(false);
+                return;
+            }
+
+            if (totalHits >= (currentTrackIdx === 2 ? 120 : 80)) {
+                endGame(true);
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('scoreDisplay').innerText = String(score).padStart(6, '0');
+            const accuracy = totalHits > 0 ? ((successfulHits / totalHits) * 100).toFixed(1) : '100.0';
+
+            const hpBar = document.getElementById('hpBar');
+            hpBar.style.width = `${hp}%`;
+            if (hp < 30) {
+                hpBar.className = 'h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-200 animate-pulse';
+            } else {
+                hpBar.className = 'h-full bg-gradient-to-r from-green-500 via-emerald-400 to-green-300 rounded-full transition-all duration-200';
+            }
+        }
+
+        function endGame(isSuccess) {
+            isGameRunning = false;
+            synth.stop();
+
+            const header = document.getElementById('resultHeader');
+            const icon = document.getElementById('resultIcon');
+
+            if (isSuccess) {
+                header.innerText = 'STAGE CLEAR!';
+                header.className = 'text-3xl font-black text-yellow-400 mt-2';
+                icon.className = 'fa-solid fa-trophy text-yellow-400 text-6xl animate-pulse';
+
+                // 클리어 보상 보석 500개 지급 (+보너스)
+                const rewardGems = 500 + Math.floor(score / 2000);
+                userGems += rewardGems;
+                document.getElementById('earnedGemsText').innerHTML = `<i class="fa-solid fa-gem text-cyan-300"></i> +${rewardGems}`;
+                saveUserData();
+            } else {
+                header.innerText = 'STAGE FAILED!';
+                header.className = 'text-3xl font-black text-red-500 mt-2';
+                icon.className = 'fa-solid fa-skull-crossbones text-red-500 text-6xl animate-bounce';
+                document.getElementById('earnedGemsText').innerHTML = `<span class="text-gray-400">보상 없음</span>`;
+            }
+
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalMaxCombo').innerText = `${maxCombo} COMBO`;
+            const accuracy = totalHits > 0 ? ((successfulHits / totalHits) * 100).toFixed(1) : '100.0';
+            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+
+            document.getElementById('countPerfect').innerText = counts.PERFECT;
+            document.getElementById('countGreat').innerText = counts.GREAT;
+            document.getElementById('countMiss').innerText = counts.MISS;
+
+            document.getElementById('resultOverlay').classList.remove('hidden');
+        }
+
+        // 초기화 실행
+        window.onload = function() {
+            saveUserData();
+            renderCharacterLocker();
+            updateStageCharacterDisplay();
+        };
+    </script>
+</body>
+</html>

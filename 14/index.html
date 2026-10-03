@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>댄디의 세계: 베시의 탈출</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .heart-icon {
+            filter: drop-shadow(0px 2px 4px rgba(220, 38, 38, 0.5));
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
+
+        .heart-lost {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        /* Touch Joystick Styling */
+        #joystick-container {
+            position: absolute;
+            bottom: 35px;
+            left: 35px;
+            width: 130px;
+            height: 130px;
+            background: rgba(255, 255, 255, 0.35);
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            z-index: 20;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        #joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transform: translate(0px, 0px);
+        }
+
+        #damage-overlay {
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Canvas background -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Hurt Flash Effect -->
+    <div id="damage-overlay" class="absolute inset-0 bg-red-600 opacity-0 z-10"></div>
+
+    <!-- HUD Overlay -->
+    <div id="ui-hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-20 pointer-events-none">
+        <!-- Health Display -->
+        <div class="glass-panel px-4 py-2 rounded-2xl flex items-center space-x-2 shadow-lg">
+            <span class="text-xs font-bold text-gray-800 uppercase tracking-wider mr-1">베시 체력:</span>
+            <div id="hearts-container" class="flex space-x-1 text-red-500 text-2xl">
+                <i class="fa-solid fa-heart heart-icon"></i>
+                <i class="fa-solid fa-heart heart-icon"></i>
+                <i class="fa-solid fa-heart heart-icon"></i>
+            </div>
+        </div>
+
+        <!-- Machines Fixed Display -->
+        <div class="glass-panel px-4 py-3 rounded-2xl flex flex-col items-end shadow-lg">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-gears text-amber-600 text-xl"></i>
+                <span class="text-xs font-bold text-gray-800 uppercase tracking-wider">이코르 기계 가동</span>
+            </div>
+            <div id="machine-count" class="text-2xl font-black text-slate-800 mt-1">
+                0 <span class="text-sm text-gray-600 font-semibold">/ 5</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Machine Repair Prompt Button -->
+    <div id="interact-prompt" class="absolute bottom-10 right-8 z-20 hidden flex-col items-center">
+        <button id="interact-btn" class="w-24 h-24 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-bold flex flex-col items-center justify-center shadow-2xl border-4 border-white transition-all cursor-pointer">
+            <i class="fa-solid fa-wrench text-2xl mb-1"></i>
+            <span class="text-xs">기계 가동</span>
+        </button>
+        <div id="repair-bar-container" class="w-32 bg-gray-200/80 rounded-full h-3 mt-3 overflow-hidden border border-white hidden">
+            <div id="repair-bar-fill" class="bg-amber-500 h-full w-0 transition-all duration-75"></div>
+        </div>
+    </div>
+
+    <!-- Mobile Virtual Joystick -->
+    <div id="joystick-container">
+        <div id="joystick-stick"></div>
+    </div>
+
+    <!-- Controls Tip -->
+    <div class="absolute bottom-2 left-8 text-xs text-slate-600 font-semibold z-10 hidden sm:block">
+        💡 PC: WASD 또는 방향키로 이동 | 모바일/마우스: 화면 조이스틱 드래그
+    </div>
+
+    <!-- Start / Title Screen -->
+    <div id="start-screen" class="absolute inset-0 bg-slate-900/80 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-white/95 p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100">
+            <div class="w-16 h-16 bg-pink-100 text-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-seedling"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 mb-2">댄디의 세계: 베시의 탈출</h1>
+            <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                밝은 가든뷰 건물 안에서 <span class="text-pink-600 font-bold">툰 '베시'</span>가 되어 탈출하세요!<br>
+                건물 안의 <span class="text-amber-600 font-bold">5개 이코르 기계</span>를 모두 가동시키세요.<br>
+                검은 이코르에 잠식된 <span class="text-purple-600 font-bold">트위스티드(트윗)</span>을 피해야 합니다!
+            </p>
+            <div class="bg-slate-100 p-3 rounded-xl text-xs text-slate-600 mb-6 text-left space-y-1">
+                <div>🌸 <b>주인공:</b> 툰 베시 (Bassie)</div>
+                <div>😈 <b>추적자:</b> 트위스티드 트윗 (발각 시 추적!)</div>
+                <div>❤️ <b>체력:</b> 하트 3개 (피격 시 -1)</div>
+                <div>🕹️ <b>조작방법:</b> 조이스틱 드래그 / WASD 방향키</div>
+            </div>
+            <button id="start-btn" class="w-full py-4 bg-pink-500 hover:bg-pink-600 active:scale-95 text-white font-bold rounded-2xl shadow-lg transition-all text-base tracking-wide cursor-pointer">
+                베시로 탈출 시작하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="absolute inset-0 bg-purple-950/85 backdrop-blur-md z-30 hidden flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-white/95 p-8 rounded-3xl shadow-2xl max-w-md w-full">
+            <div class="w-16 h-16 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-ghost"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">트위스티드에게 잡혔습니다!</h2>
+            <p class="text-sm text-slate-600 mb-6">검은 이코르에 잠식된 트윗에게 붙잡히고 말았습니다...</p>
+            <button id="restart-btn" class="w-full py-4 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold rounded-2xl shadow-lg transition-all text-base cursor-pointer">
+                다시 도전하기
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="absolute inset-0 bg-emerald-950/80 backdrop-blur-md z-30 hidden flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-white/95 p-8 rounded-3xl shadow-2xl max-w-md w-full">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-door-open"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">탈출 성공! 🎉</h2>
+            <p class="text-sm text-slate-600 mb-6">모든 기계를 가동하여 무사히 탈출했습니다!</p>
+            <button id="win-restart-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg transition-all text-base cursor-pointer">
+                다시 플레이하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game Logic State
+        const TOTAL_MACHINES = 5;
+        let machinesFixed = 0;
+        let health = 3;
+        let isGameOver = false;
+        let isGameStarted = false;
+        let isRepairing = false;
+        let repairProgress = 0;
+        let currentMachineNearby = null;
+
+        // Player & Controls State
+        const moveVector = { x: 0, z: 0 };
+        const keysPressed = {};
+        let invulnerabilityTimer = 0;
+
+        // Web Audio Procedural Sound Engine
+        let audioCtx = null;
+        let isAudioInitialized = false;
+
+        function initAudio() {
+            if (isAudioInitialized) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                isAudioInitialized = true;
+                startEerieAtmosphere();
+            } catch(e) {
+                console.log("Audio Init Error: ", e);
+            }
+        }
+
+        function startEerieAtmosphere() {
+            if (!audioCtx) return;
+
+            const droneOsc = audioCtx.createOscillator();
+            const droneGain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            droneOsc.type = 'sawtooth';
+            droneOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(180, audioCtx.currentTime);
+
+            droneGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+            droneOsc.connect(filter);
+            filter.connect(droneGain);
+            droneGain.connect(audioCtx.destination);
+            droneOsc.start();
+
+            setInterval(() => {
+                if (isGameOver || !isGameStarted || !audioCtx) return;
+                const now = audioCtx.currentTime;
+                droneOsc.frequency.exponentialRampToValueAtTime(50 + Math.random() * 12, now + 2);
+                filter.frequency.linearRampToValueAtTime(150 + Math.random() * 80, now + 2);
+            }, 3000);
+
+            scheduleCreepyVoices();
+        }
+
+        function scheduleCreepyVoices() {
+            if (!isGameStarted || isGameOver) {
+                setTimeout(scheduleCreepyVoices, 3000);
+                return;
+            }
+
+            const delay = 5000 + Math.random() * 7000;
+            setTimeout(() => {
+                if (isGameStarted && !isGameOver) {
+                    if (Math.random() > 0.5) playCreepyLaugh();
+                    else playCreepyCry();
+                }
+                scheduleCreepyVoices();
+            }, delay);
+        }
+
+        function playCreepyLaugh() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+
+            for (let i = 0; i < 6; i++) {
+                const time = now + i * 0.12;
+                osc.frequency.setValueAtTime(440 + (i % 2 === 0 ? 90 : 0), time);
+                gain.gain.setValueAtTime(0.1, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            }
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.8);
+        }
+
+        function playCreepyCry() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(360, now);
+            osc.frequency.exponentialRampToValueAtTime(160, now + 1.2);
+
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.09, now + 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 1.2);
+        }
+
+        function playHitSound() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        const canvas = document.getElementById('game-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf1f5f9);
+        scene.fog = new THREE.FogExp2(0xf1f5f9, 0.025);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xfffaed, 0.85);
+        mainLight.position.set(20, 40, 20);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+
+        // Environment Floor & Walls
+        const houseSize = 40;
+        const floorGeo = new THREE.PlaneGeometry(houseSize, houseSize);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const gridHelper = new THREE.GridHelper(houseSize, 20, 0xcbd5e1, 0xe2e8f0);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+        const wallThickness = 0.5;
+        const wallHeight = 5;
+
+        function createWall(x, z, w, d) {
+            const geo = new THREE.BoxGeometry(w, wallHeight, d);
+            const mesh = new THREE.Mesh(geo, wallMat);
+            mesh.position.set(x, wallHeight / 2, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+        }
+
+        createWall(0, -houseSize/2, houseSize, wallThickness);
+        createWall(0, houseSize/2, houseSize, wallThickness);
+        createWall(-houseSize/2, 0, wallThickness, houseSize);
+        createWall(houseSize/2, 0, wallThickness, houseSize);
+
+        const machinePositions = [
+            { x: -12, z: -12 },
+            { x: 12, z: -12 },
+            { x: -12, z: 12 },
+            { x: 12, z: 12 },
+            { x: 0, z: 14 }
+        ];
+
+        const machines = [];
+
+        machinePositions.forEach((pos, index) => {
+            const group = new THREE.Group();
+            group.position.set(pos.x, 0, pos.z);
+
+            const baseGeo = new THREE.BoxGeometry(2, 2.5, 2);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.3 });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1.25;
+            base.castShadow = true;
+            group.add(base);
+
+            const rotorGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.6, 12);
+            const rotorMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.2 });
+            const rotor = new THREE.Mesh(rotorGeo, rotorMat);
+            rotor.position.y = 2.8;
+            rotor.castShadow = true;
+            group.add(rotor);
+
+            const lightGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const lightMat = new THREE.MeshStandardMaterial({ 
+                color: 0xef4444, 
+                emissive: 0xef4444, 
+                emissiveIntensity: 0.8 
+            });
+            const indicatorLight = new THREE.Mesh(lightGeo, lightMat);
+            indicatorLight.position.y = 3.3;
+            group.add(indicatorLight);
+
+            scene.add(group);
+
+            machines.push({
+                group: group,
+                rotor: rotor,
+                light: indicatorLight,
+                isFixed: false,
+                id: index
+            });
+        });
+
+        // Player Model (Bassie)
+        const playerGroup = new THREE.Group();
+        playerGroup.position.set(0, 0, -10);
+
+        const bodyGeo = new THREE.CylinderGeometry(0.45, 0.65, 1.3, 16);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.3 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0.75;
+        body.castShadow = true;
+        playerGroup.add(body);
+
+        const skirtGeo = new THREE.ConeGeometry(0.85, 0.5, 12);
+        const skirtMat = new THREE.MeshStandardMaterial({ color: 0xfbcfe8, roughness: 0.4 });
+        const skirt = new THREE.Mesh(skirtGeo, skirtMat);
+        skirt.position.y = 0.45;
+        playerGroup.add(skirt);
+
+        const headGeo = new THREE.SphereGeometry(0.42, 16, 16);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xffedd5 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 1.65;
+        head.castShadow = true;
+        playerGroup.add(head);
+
+        for (let i = 0; i < 5; i++) {
+            const petalGeo = new THREE.SphereGeometry(0.15, 8, 8);
+            const petalMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e });
+            const petal = new THREE.Mesh(petalGeo, petalMat);
+            const angle = (i / 5) * Math.PI * 2;
+            petal.position.set(Math.cos(angle) * 0.3, 1.95, Math.sin(angle) * 0.3);
+            playerGroup.add(petal);
+        }
+
+        scene.add(playerGroup);
+
+        // Killer Model (Twisted Tweet)
+        const enemyGroup = new THREE.Group();
+        enemyGroup.position.set(12, 0, -5);
+
+        const enemyBodyGeo = new THREE.CylinderGeometry(0.55, 0.4, 1.8, 16);
+        const enemyBodyMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.2 });
+        const enemyBody = new THREE.Mesh(enemyBodyGeo, enemyBodyMat);
+        enemyBody.position.y = 0.9;
+        enemyBody.castShadow = true;
+        enemyGroup.add(enemyBody);
+
+        const enemyHeadGeo = new THREE.SphereGeometry(0.45, 16, 16);
+        const enemyHeadMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+        const enemyHead = new THREE.Mesh(enemyHeadGeo, enemyHeadMat);
+        enemyHead.position.y = 2.0;
+        enemyHead.castShadow = true;
+        enemyGroup.add(enemyHead);
+
+        const eyeGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0xa855f7, emissiveIntensity: 1.2 });
+        const eyeLeft = new THREE.Mesh(eyeGeo, eyeMat);
+        eyeLeft.position.set(-0.15, 2.08, 0.38);
+        const eyeRight = new THREE.Mesh(eyeGeo, eyeMat);
+        eyeRight.position.set(0.15, 2.08, 0.38);
+        enemyGroup.add(eyeLeft);
+        enemyGroup.add(eyeRight);
+
+        // Alert Icon above enemy head
+        const alertCanvas = document.createElement('canvas');
+        alertCanvas.width = 64;
+        alertCanvas.height = 64;
+        const alertCtx = alertCanvas.getContext('2d');
+        alertCtx.fillStyle = '#ef4444';
+        alertCtx.font = 'bold 48px sans-serif';
+        alertCtx.textAlign = 'center';
+        alertCtx.textBaseline = 'middle';
+        alertCtx.fillText('!', 32, 32);
+
+        const alertTexture = new THREE.CanvasTexture(alertCanvas);
+        const alertMat = new THREE.SpriteMaterial({ map: alertTexture, transparent: true });
+        const alertSprite = new THREE.Sprite(alertMat);
+        alertSprite.position.set(0, 2.8, 0);
+        alertSprite.scale.set(1.2, 1.2, 1);
+        alertSprite.visible = false;
+        enemyGroup.add(alertSprite);
+
+        scene.add(enemyGroup);
+
+        // Enemy Waypoints & AI State
+        const waypoints = [
+            { x: 12, z: -5 },
+            { x: 12, z: 12 },
+            { x: -12, z: 12 },
+            { x: -12, z: -12 },
+            { x: 0, z: 0 }
+        ];
+        let currentWaypointIdx = 0;
+        let isChasing = false;
+        const DETECTION_RADIUS = 8.5; 
+        const LOSE_RADIUS = 13.0;      
+        const patrolSpeed = 0.045;
+        const chaseSpeed = 0.082;
+
+        window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+        window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystickStick = document.getElementById('joystick-stick');
+        let isJoystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        const maxJoystickRadius = 45;
+
+        function handleJoystickStart(e) {
+            initAudio();
+            isJoystickActive = true;
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = joystickContainer.getBoundingClientRect();
+            joystickCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            handleJoystickMove(e);
+        }
+
+        function handleJoystickMove(e) {
+            if (!isJoystickActive) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - joystickCenter.x;
+            const deltaY = touch.clientY - joystickCenter.y;
+            const distance = Math.hypot(deltaX, deltaY);
+
+            const clampedDistance = Math.min(distance, maxJoystickRadius);
+            const angle = Math.atan2(deltaY, deltaX);
+
+            const moveX = Math.cos(angle) * clampedDistance;
+            const moveY = Math.sin(angle) * clampedDistance;
+
+            joystickStick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+            moveVector.x = moveX / maxJoystickRadius;
+            moveVector.z = moveY / maxJoystickRadius;
+        }
+
+        function handleJoystickEnd() {
+            isJoystickActive = false;
+            joystickStick.style.transform = `translate(0px, 0px)`;
+            moveVector.x = 0;
+            moveVector.z = 0;
+        }
+
+        joystickContainer.addEventListener('touchstart', handleJoystickStart, { passive: false });
+        window.addEventListener('touchmove', handleJoystickMove, { passive: false });
+        window.addEventListener('touchend', handleJoystickEnd);
+
+        joystickContainer.addEventListener('mousedown', handleJoystickStart);
+        window.addEventListener('mousemove', handleJoystickMove);
+        window.addEventListener('mouseup', handleJoystickEnd);
+
+        // Machine Interact Button Events
+        const interactBtn = document.getElementById('interact-btn');
+        const interactPrompt = document.getElementById('interact-prompt');
+        const repairBarFill = document.getElementById('repair-bar-fill');
+        const repairBarContainer = document.getElementById('repair-bar-container');
+
+        interactBtn.addEventListener('mousedown', () => { isRepairing = true; repairBarContainer.classList.remove('hidden'); });
+        interactBtn.addEventListener('mouseup', () => { isRepairing = false; });
+        interactBtn.addEventListener('mouseleave', () => { isRepairing = false; });
+        interactBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isRepairing = true; repairBarContainer.classList.remove('hidden'); });
+        interactBtn.addEventListener('touchend', () => { isRepairing = false; });
+
+        // Start & Restart Game Event Listeners
+        document.getElementById('start-btn').onclick = startGame;
+        document.getElementById('restart-btn').onclick = restartGame;
+        document.getElementById('win-restart-btn').onclick = restartGame;
+
+        function startGame() {
+            initAudio();
+            document.getElementById('start-screen').style.display = 'none';
+            isGameStarted = true;
+        }
+
+        function restartGame() {
+            health = 3;
+            machinesFixed = 0;
+            isGameOver = false;
+            isGameStarted = true;
+            isChasing = false;
+            alertSprite.visible = false;
+
+            updateHeartsUI();
+            document.getElementById('machine-count').innerHTML = `0 <span class="text-sm text-gray-600 font-semibold">/ 5</span>`;
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('victory-screen').classList.add('hidden');
+
+            playerGroup.position.set(0, 0, -10);
+            enemyGroup.position.set(12, 0, -5);
+
+            machines.forEach(m => {
+                m.isFixed = false;
+                m.light.material.color.setHex(0xef4444);
+                m.light.material.emissive.setHex(0xef4444);
+            });
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            if (isGameStarted && !isGameOver) {
+                updatePlayerMovement();
+                updateEnemyAI();
+                checkProximityAndRepair(delta);
+                checkEnemyCollision();
+            }
+
+            machines.forEach(m => {
+                if (m.isFixed) {
+                    m.rotor.rotation.y += 0.08;
+                }
+            });
+
+            // Camera Tracking
+            camera.position.x = playerGroup.position.x;
+            camera.position.y = playerGroup.position.y + 14;
+            camera.position.z = playerGroup.position.z + 12;
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 0.8, playerGroup.position.z);
+
+            renderer.render(scene, camera);
+        }
+
+        function updatePlayerMovement() {
+            let dx = moveVector.x;
+            let dz = moveVector.z;
+
+            if (keysPressed['w'] || keysPressed['arrowup']) dz = -1;
+            if (keysPressed['s'] || keysPressed['arrowdown']) dz = 1;
+            if (keysPressed['a'] || keysPressed['arrowleft']) dx = -1;
+            if (keysPressed['d'] || keysPressed['arrowright']) dx = 1;
+
+            if (dx !== 0 || dz !== 0) {
+                const moveSpeed = 0.12;
+                const newX = playerGroup.position.x + dx * moveSpeed;
+                const newZ = playerGroup.position.z + dz * moveSpeed;
+
+                const limit = houseSize / 2 - 1;
+                if (Math.abs(newX) < limit) playerGroup.position.x = newX;
+                if (Math.abs(newZ) < limit) playerGroup.position.z = newZ;
+
+                const angle = Math.atan2(dx, dz);
+                playerGroup.rotation.y = angle;
+            }
+        }
+
+        function updateEnemyAI() {
+            const distToPlayer = enemyGroup.position.distanceTo(playerGroup.position);
+
+            if (!isChasing && distToPlayer < DETECTION_RADIUS) {
+                isChasing = true;
+                alertSprite.visible = true;
+                playCreepyLaugh();
+            } else if (isChasing && distToPlayer > LOSE_RADIUS) {
+                isChasing = false;
+                alertSprite.visible = false;
+            }
+
+            let targetX, targetZ, currentSpeed;
+
+            if (isChasing) {
+                targetX = playerGroup.position.x;
+                targetZ = playerGroup.position.z;
+                currentSpeed = chaseSpeed;
+
+                eyeLeft.material.color.setHex(0xef4444);
+                eyeRight.material.color.setHex(0xef4444);
+                eyeLeft.material.emissive.setHex(0xef4444);
+                eyeRight.material.emissive.setHex(0xef4444);
+            } else {
+                const target = waypoints[currentWaypointIdx];
+                targetX = target.x;
+                targetZ = target.z;
+                currentSpeed = patrolSpeed;
+
+                eyeLeft.material.color.setHex(0xa855f7);
+                eyeRight.material.color.setHex(0xa855f7);
+                eyeLeft.material.emissive.setHex(0xa855f7);
+                eyeRight.material.emissive.setHex(0xa855f7);
+
+                const distToWp = Math.hypot(targetX - enemyGroup.position.x, targetZ - enemyGroup.position.z);
+                if (distToWp < 0.5) {
+                    currentWaypointIdx = (currentWaypointIdx + 1) % waypoints.length;
+                }
+            }
+
+            const dx = targetX - enemyGroup.position.x;
+            const dz = targetZ - enemyGroup.position.z;
+            const dist = Math.hypot(dx, dz);
+
+            if (dist > 0.05) {
+                enemyGroup.position.x += (dx / dist) * currentSpeed;
+                enemyGroup.position.z += (dz / dist) * currentSpeed;
+                enemyGroup.rotation.y = Math.atan2(dx, dz);
+            }
+        }
+
+        function checkProximityAndRepair(delta) {
+            let nearMachine = null;
+
+            machines.forEach(m => {
+                if (!m.isFixed) {
+                    const dist = playerGroup.position.distanceTo(m.group.position);
+                    if (dist < 3.2) {
+                        nearMachine = m;
+                    }
+                }
+            });
+
+            if (nearMachine) {
+                currentMachineNearby = nearMachine;
+                interactPrompt.classList.remove('hidden');
+
+                if (isRepairing) {
+                    repairProgress += delta * 40;
+                    repairBarFill.style.width = `${Math.min(repairProgress, 100)}%`;
+
+                    if (repairProgress >= 100) {
+                        currentMachineNearby.isFixed = true;
+                        currentMachineNearby.light.material.color.setHex(0x10b981);
+                        currentMachineNearby.light.material.emissive.setHex(0x10b981);
+                        machinesFixed++;
+
+                        document.getElementById('machine-count').innerHTML = `${machinesFixed} <span class="text-sm text-gray-600 font-semibold">/ 5</span>`;
+
+                        isRepairing = false;
+                        repairProgress = 0;
+                        repairBarFill.style.width = '0%';
+
+                        if (machinesFixed >= TOTAL_MACHINES) {
+                            triggerVictory();
+                        }
+                    }
+                } else {
+                    repairProgress = Math.max(0, repairProgress - delta * 50);
+                    repairBarFill.style.width = `${repairProgress}%`;
+                }
+            } else {
+                currentMachineNearby = null;
+                interactPrompt.classList.add('hidden');
+                isRepairing = false;
+                repairProgress = 0;
+                repairBarFill.style.width = '0%';
+            }
+        }
+
+        function checkEnemyCollision() {
+            if (invulnerabilityTimer > 0) {
+                invulnerabilityTimer -= 0.016;
+                return;
+            }
+
+            const dist = playerGroup.position.distanceTo(enemyGroup.position);
+            if (dist < 1.3) {
+                health--;
+                playHitSound();
+                invulnerabilityTimer = 2.0;
+
+                const damageOverlay = document.getElementById('damage-overlay');
+                damageOverlay.style.opacity = '0.6';
+                setTimeout(() => { damageOverlay.style.opacity = '0'; }, 300);
+
+                updateHeartsUI();
+
+                if (health <= 0) {
+                    triggerGameOver();
+                }
+            }
+        }
+
+        function updateHeartsUI() {
+            const container = document.getElementById('hearts-container');
+            const hearts = container.children;
+            for (let i = 0; i < 3; i++) {
+                if (i < health) {
+                    hearts[i].classList.remove('heart-lost');
+                } else {
+                    hearts[i].classList.add('heart-lost');
+                }
+            }
+        }
+
+        function triggerGameOver() {
+            isGameOver = true;
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        function triggerVictory() {
+            isGameOver = true;
+            document.getElementById('victory-screen').classList.remove('hidden');
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        window.onload = function() {
+            animate();
+        };
+    </script>
+</body>
+</html>
