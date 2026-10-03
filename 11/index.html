@@ -26,6 +26,7 @@
         .animate-pulse-slow {
             animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+        .icon svg { width: 100%; height: 100%; }
         body { margin: 0; font-family: 'Inter', sans-serif; overflow: hidden; background-color: #020617; }
     </style>
 </head>
@@ -35,15 +36,22 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // [수정] feather.replace() 대신 React가 직접 SVG를 그리는 아이콘 컴포넌트
+        // (feather.replace()가 React 몰래 DOM을 바꾸면 다음 라운드에서 오류가 나 화면이 꺼졌음)
+        const Icon = ({ name, className = "" }) => {
+            const svg = (window.feather && feather.icons[name]) ? feather.icons[name].toSvg() : "";
+            return <span className={`icon inline-block ${className}`} dangerouslySetInnerHTML={{ __html: svg }} />;
+        };
+
         // 아이콘 컴포넌트들 (Feather 기반)
-        const IconSparkles = () => <i data-feather="star" className="w-16 h-16 text-yellow-300 mx-auto mb-6 animate-pulse-slow"></i>;
-        const IconStar = ({className}) => <i data-feather="star" className={className}></i>;
-        const IconTrophyLg = () => <i data-feather="award" className="w-24 h-24 text-yellow-400 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>;
-        const IconTrophySm = () => <i data-feather="award" className="w-6 h-6 text-yellow-400"></i>;
-        const IconRefresh = () => <i data-feather="rotate-cw" className="w-5 h-5"></i>;
-        const IconCheck = () => <i data-feather="check-circle" className="w-6 h-6 text-emerald-400 relative z-10 animate-bounce"></i>;
-        const IconX = () => <i data-feather="x-circle" className="w-6 h-6 text-rose-400 relative z-10"></i>;
-        const IconLoader = () => <i data-feather="loader" className="w-10 h-10 text-indigo-400 animate-spin"></i>;
+        const IconSparkles = () => <Icon name="star" className="!block w-16 h-16 text-yellow-300 mx-auto mb-6 animate-pulse-slow" />;
+        const IconStar = ({className}) => <Icon name="star" className={className} />;
+        const IconTrophyLg = () => <Icon name="award" className="!block w-24 h-24 text-yellow-400 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]" />;
+        const IconTrophySm = () => <Icon name="award" className="w-6 h-6 text-yellow-400" />;
+        const IconRefresh = () => <Icon name="rotate-cw" className="w-5 h-5" />;
+        const IconCheck = () => <Icon name="check-circle" className="w-6 h-6 text-emerald-400 relative z-10 animate-bounce" />;
+        const IconX = () => <Icon name="x-circle" className="w-6 h-6 text-rose-400 relative z-10" />;
+        const IconLoader = () => <Icon name="loader" className="w-10 h-10 text-indigo-400 animate-spin" />;
 
         // 88 Constellations Data
         const CONSTELLATIONS = [
@@ -246,8 +254,6 @@
             const MAX_ROUNDS = 10;
 
             useEffect(() => {
-                feather.replace(); // 아이콘 렌더링
-                
                 const newStars = Array.from({ length: 70 }).map(() => ({
                     id: Math.random(),
                     left: `${Math.random() * 100}%`,
@@ -274,12 +280,6 @@
                 fetchGeo();
             }, []);
 
-            useEffect(() => {
-                if (window.feather) {
-                    feather.replace();
-                }
-            }, [gameState, round]);
-
             const startNewGame = () => {
                 setScore(0);
                 setRound(1);
@@ -301,8 +301,6 @@
                 setOptions(newOptions);
                 setSelectedOption(null);
                 setGameState('playing');
-                
-                setTimeout(() => { if (window.feather) feather.replace(); }, 50);
             };
 
             const handleOptionClick = (option) => {
@@ -313,8 +311,6 @@
                 
                 if (isCorrect) setScore(prev => prev + 10);
                 setGameState('result');
-                
-                setTimeout(() => { if (window.feather) feather.replace(); }, 50);
 
                 setTimeout(() => {
                     if (round >= MAX_ROUNDS) {
@@ -348,7 +344,7 @@
                             onClick={startNewGame}
                             className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-full text-xl overflow-hidden shadow-[0_0_40px_rgba(79,70,229,0.5)] transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                         >
-                            게임 시작하기 <i data-feather="arrow-right" className="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            게임 시작하기 <Icon name="arrow-right" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
                     )}
                 </div>
