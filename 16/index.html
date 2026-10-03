@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사람 2명 vs AI 2명 2v2 가위바위보 대전 🥊</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Jua) -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Jua', cursive, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 30%, #a1c4fd 70%, #c2e9fb 100%);
+            background-size: 200% 200%;
+            animation: gradientBG 12s ease infinite;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-choice {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-choice:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-choice:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-choice.selected {
+            ring: 4px solid #f59e0b;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+        }
+
+        /* Pop in animation */
+        @keyframes popIn {
+            0% { transform: scale(0.4); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Shake animation for vs countdown */
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-3 sm:p-6 min-h-screen">
+
+    <!-- Game Header -->
+    <header class="w-full max-w-4xl text-center mb-3">
+        <div class="inline-block bg-white/80 backdrop-blur-md px-6 py-2 rounded-full border-2 border-white shadow-md mb-1">
+            <span class="text-xs sm:text-sm font-black text-rose-500 flex items-center gap-2 justify-center">
+                <i class="fa-solid fa-users"></i> 사람(2명) VS AI(2명) 2대2 팀 대전!
+            </span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black text-slate-800 drop-shadow-md tracking-wide">
+            🥊 우주 최강 2v2 가위바위보 대전 ⚔️
+        </h1>
+    </header>
+
+    <!-- Scoreboard Section -->
+    <main class="w-full max-w-4xl my-auto">
+        <div class="glass-card rounded-3xl p-4 sm:p-6 relative overflow-hidden">
+            
+            <!-- Teams & Score Header -->
+            <div class="grid grid-cols-12 gap-2 items-center mb-5 bg-slate-100/80 p-3 sm:p-4 rounded-2xl border border-white">
+                
+                <!-- RED TEAM (Humans) -->
+                <div class="col-span-5 text-center flex flex-col items-center">
+                    <div class="flex items-center gap-1.5 text-rose-600 font-black text-base sm:text-2xl">
+                        <i class="fa-solid fa-fire text-rose-500"></i>
+                        <span>레드 팀 (사람)</span>
+                    </div>
+                    <div class="text-xs text-rose-400 font-bold mb-1">1P (나) + 2P (친구)</div>
+                    <div id="redScoreText" class="text-3xl sm:text-5xl font-black text-rose-600">0점</div>
+                </div>
+
+                <!-- VS & Target Gauge -->
+                <div class="col-span-2 text-center flex flex-col items-center justify-center">
+                    <span class="text-2xl sm:text-4xl font-black text-amber-500 animate-pulse">VS</span>
+                    <span class="text-[10px] sm:text-xs font-black text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200 mt-1">
+                        목표 5점
+                    </span>
+                </div>
+
+                <!-- BLUE TEAM (AI) -->
+                <div class="col-span-5 text-center flex flex-col items-center">
+                    <div class="flex items-center gap-1.5 text-sky-600 font-black text-base sm:text-2xl">
+                        <span>블루 팀 (AI)</span>
+                        <i class="fa-solid fa-robot text-sky-500"></i>
+                    </div>
+                    <div class="text-xs text-sky-400 font-bold mb-1">알파 봇 + 베타 봇</div>
+                    <div id="blueScoreText" class="text-3xl sm:text-5xl font-black text-sky-600">0점</div>
+                </div>
+
+            </div>
+
+            <!-- Controls Grid: 1P & 2P Human Selection Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                
+                <!-- 1P Human Panel -->
+                <div class="bg-rose-50/90 border-2 border-rose-200 rounded-2xl p-4 flex flex-col items-center">
+                    <div class="flex items-center justify-between w-full mb-3 border-b border-rose-200 pb-2">
+                        <span class="font-black text-rose-700 text-base sm:text-lg flex items-center gap-1">
+                            👤 1P 플레이어
+                        </span>
+                        <span id="p1StatusBadge" class="bg-rose-200 text-rose-800 text-xs px-2.5 py-1 rounded-full font-bold">
+                            선택대기 중...
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full mb-2">
+                        <button onclick="selectChoice(1, 'scissors')" id="btnP1_scissors" class="btn-choice bg-white text-rose-600 border-2 border-rose-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">✌️</span>
+                            <span>가위</span>
+                        </button>
+                        <button onclick="selectChoice(1, 'rock')" id="btnP1_rock" class="btn-choice bg-white text-rose-600 border-2 border-rose-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">✊</span>
+                            <span>바위</span>
+                        </button>
+                        <button onclick="selectChoice(1, 'paper')" id="btnP1_paper" class="btn-choice bg-white text-rose-600 border-2 border-rose-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">🖐️</span>
+                            <span>보</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2P Human Panel -->
+                <div class="bg-orange-50/90 border-2 border-orange-200 rounded-2xl p-4 flex flex-col items-center">
+                    <div class="flex items-center justify-between w-full mb-3 border-b border-orange-200 pb-2">
+                        <span class="font-black text-orange-700 text-base sm:text-lg flex items-center gap-1">
+                            🧑 2P 플레이어
+                        </span>
+                        <span id="p2StatusBadge" class="bg-orange-200 text-orange-800 text-xs px-2.5 py-1 rounded-full font-bold">
+                            선택대기 중...
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full mb-2">
+                        <button onclick="selectChoice(2, 'scissors')" id="btnP2_scissors" class="btn-choice bg-white text-orange-600 border-2 border-orange-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">✌️</span>
+                            <span>가위</span>
+                        </button>
+                        <button onclick="selectChoice(2, 'rock')" id="btnP2_rock" class="btn-choice bg-white text-orange-600 border-2 border-orange-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">✊</span>
+                            <span>바위</span>
+                        </button>
+                        <button onclick="selectChoice(2, 'paper')" id="btnP2_paper" class="btn-choice bg-white text-orange-600 border-2 border-orange-200 py-3 rounded-2xl font-black text-base sm:text-xl flex flex-col items-center gap-1">
+                            <span class="text-2xl sm:text-3xl">🖐️</span>
+                            <span>보</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Start Battle Button -->
+            <button id="startBattleBtn" disabled onclick="startRound()" class="w-full bg-gray-300 text-gray-500 font-black text-xl sm:text-2xl py-4 rounded-2xl shadow-lg border-2 border-white transition-all cursor-not-allowed flex items-center justify-center gap-2">
+                <span>1P와 2P의 선택을 완료해주세요!</span>
+            </button>
+
+            <!-- Battle Result Reveal Stage Overlay -->
+            <div id="battleStageModal" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-between z-20 animate-pop">
+                
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-800 flex items-center gap-2 mt-1">
+                    <span>🥊</span> <span id="roundTitleText">가위~ 바위~ 보!</span> <span>🥊</span>
+                </h2>
+
+                <!-- Duel Matchups Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl my-2">
+                    
+                    <!-- Match 1: 1P vs AI Alpha -->
+                    <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-3 flex flex-col items-center text-center">
+                        <div class="text-xs font-black text-rose-600 mb-2">매치 1: 1P(나) VS 블루 봇 알파</div>
+                        <div class="flex items-center justify-center gap-4 my-2">
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs text-gray-500 font-bold mb-1">1P</span>
+                                <span id="m1_p1Emoji" class="text-4xl sm:text-5xl animate-shake">❓</span>
+                            </div>
+                            <span class="text-lg font-black text-gray-400">VS</span>
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs text-gray-500 font-bold mb-1">알파 봇</span>
+                                <span id="m1_ai1Emoji" class="text-4xl sm:text-5xl animate-shake">❓</span>
+                            </div>
+                        </div>
+                        <div id="m1_resultBadge" class="mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-200 text-gray-600">
+                            결과 대기 중...
+                        </div>
+                    </div>
+
+                    <!-- Match 2: 2P vs AI Beta -->
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 flex flex-col items-center text-center">
+                        <div class="text-xs font-black text-sky-600 mb-2">매치 2: 2P(친구) VS 블루 봇 베타</div>
+                        <div class="flex items-center justify-center gap-4 my-2">
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs text-gray-500 font-bold mb-1">2P</span>
+                                <span id="m2_p2Emoji" class="text-4xl sm:text-5xl animate-shake">❓</span>
+                            </div>
+                            <span class="text-lg font-black text-gray-400">VS</span>
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs text-gray-500 font-bold mb-1">베타 봇</span>
+                                <span id="m2_ai2Emoji" class="text-4xl sm:text-5xl animate-shake">❓</span>
+                            </div>
+                        </div>
+                        <div id="m2_resultBadge" class="mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-200 text-gray-600">
+                            결과 대기 중...
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Round Result Summary Box -->
+                <div id="roundSummaryBox" class="bg-amber-100 border-2 border-amber-300 text-amber-900 font-black text-sm sm:text-base px-4 py-2.5 rounded-2xl text-center w-full max-w-md">
+                    과연 승리는 어느 팀에게?
+                </div>
+
+                <!-- Next Round Button -->
+                <button id="nextRoundBtn" disabled onclick="closeStageAndNext()" class="w-full max-w-xs bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-lg py-3 rounded-2xl shadow-md cursor-pointer transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <span>다음 라운드 준비</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Final Victory Modal -->
+    <div id="victoryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md w-full text-center border-4 border-yellow-300 animate-pop">
+            <div id="victoryEmoji" class="text-6xl sm:text-7xl mb-2">🏆</div>
+            <h2 id="victoryTitle" class="text-3xl sm:text-4xl font-black text-rose-600 mb-2">레드 팀 승리!</h2>
+            <p id="victoryDesc" class="text-gray-600 font-bold text-sm mb-5">사람 팀의 완벽한 단합! AI 팀을 꺾고 우승했습니다!</p>
+            
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-gray-900 font-black text-xl py-3.5 rounded-2xl border-2 border-white shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>새 게임 시작하기</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-xs text-slate-600 font-bold text-center my-2">
+        🥊 사람 2명과 AI 2명의 2v2 팀 맞대결! 먼저 5점을 얻는 팀이 최종 승리합니다!
+    </footer>
+
+    <script>
+        // Web Audio Synthesizer
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'win') {
+                    // C5 -> E5 -> G5
+                    [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
+                        gain.gain.setValueAtTime(0.25, now + (idx * 0.12));
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + (idx * 0.12) + 0.25);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + (idx * 0.12));
+                        osc.stop(now + (idx * 0.12) + 0.25);
+                    });
+                } else if (type === 'lose') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.log("Audio Error:", e);
+            }
+        }
+
+        // Game State Variables
+        let p1Choice = null;
+        let p2Choice = null;
+        let redScore = 0;
+        let blueScore = 0;
+        const TARGET_SCORE = 5;
+
+        const CHOICES = ['scissors', 'rock', 'paper'];
+        const EMOJIS = {
+            scissors: '✌️',
+            rock: '✊',
+            paper: '🖐️'
+        };
+
+        // Player Choice Selection
+        function selectChoice(playerNum, choice) {
+            playSound('click');
+
+            if (playerNum === 1) {
+                p1Choice = choice;
+                ['scissors', 'rock', 'paper'].forEach(c => {
+                    const btn = document.getElementById(`btnP1_${c}`);
+                    if (c === choice) {
+                        btn.classList.add('selected', 'bg-rose-100');
+                    } else {
+                        btn.classList.remove('selected', 'bg-rose-100');
+                    }
+                });
+                document.getElementById('p1StatusBadge').textContent = `선택완료! (${EMOJIS[choice]})`;
+                document.getElementById('p1StatusBadge').className = "bg-rose-500 text-white text-xs px-2.5 py-1 rounded-full font-bold";
+            } else if (playerNum === 2) {
+                p2Choice = choice;
+                ['scissors', 'rock', 'paper'].forEach(c => {
+                    const btn = document.getElementById(`btnP2_${c}`);
+                    if (c === choice) {
+                        btn.classList.add('selected', 'bg-orange-100');
+                    } else {
+                        btn.classList.remove('selected', 'bg-orange-100');
+                    }
+                });
+                document.getElementById('p2StatusBadge').textContent = `선택완료! (${EMOJIS[choice]})`;
+                document.getElementById('p2StatusBadge').className = "bg-orange-500 text-white text-xs px-2.5 py-1 rounded-full font-bold";
+            }
+
+            checkBattleReady();
+        }
+
+        // Check if both 1P and 2P made selections
+        function checkBattleReady() {
+            const startBtn = document.getElementById('startBattleBtn');
+            if (p1Choice && p2Choice) {
+                startBtn.disabled = false;
+                startBtn.className = "w-full bg-gradient-to-r from-rose-500 via-amber-500 to-orange-500 text-white font-black text-xl sm:text-2xl py-4 rounded-2xl shadow-xl border-2 border-white cursor-pointer transition transform active:scale-98 animate-bounce-slow flex items-center justify-center gap-2";
+                startBtn.innerHTML = `
+                    <span>⚔️ 대결 시작! (준비 완료)</span>
+                    <i class="fa-solid fa-play"></i>
+                `;
+            } else {
+                startBtn.disabled = true;
+                startBtn.className = "w-full bg-gray-300 text-gray-500 font-black text-xl sm:text-2xl py-4 rounded-2xl shadow-lg border-2 border-white transition-all cursor-not-allowed flex items-center justify-center gap-2";
+                startBtn.innerHTML = `<span>1P와 2P의 선택을 완료해주세요!</span>`;
+            }
+        }
+
+        // Determine 1v1 winner
+        // Returns: 1 (Player win), -1 (AI win), 0 (Draw)
+        function judgeMatchup(humanChoice, aiChoice) {
+            if (humanChoice === aiChoice) return 0;
+            if (
+                (humanChoice === 'scissors' && aiChoice === 'paper') ||
+                (humanChoice === 'rock' && aiChoice === 'scissors') ||
+                (humanChoice === 'paper' && aiChoice === 'rock')
+            ) {
+                return 1; // Human win
+            }
+            return -1; // AI win
+        }
+
+        // Start Round Battle
+        function startRound() {
+            if (!p1Choice || !p2Choice) return;
+
+            const modal = document.getElementById('battleStageModal');
+            modal.classList.remove('hidden');
+
+            // Reset emojis & badges to question marks
+            document.getElementById('m1_p1Emoji').textContent = '❓';
+            document.getElementById('m1_ai1Emoji').textContent = '❓';
+            document.getElementById('m1_resultBadge').textContent = '결과 계산 중...';
+            document.getElementById('m1_resultBadge').className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-200 text-gray-600';
+
+            document.getElementById('m2_p2Emoji').textContent = '❓';
+            document.getElementById('m2_ai2Emoji').textContent = '❓';
+            document.getElementById('m2_resultBadge').textContent = '결과 계산 중...';
+            document.getElementById('m2_resultBadge').className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-200 text-gray-600';
+
+            document.getElementById('nextRoundBtn').disabled = true;
+            document.getElementById('roundTitleText').textContent = '가위~ 바위~ 보!';
+
+            // Generate AI Choices
+            const ai1Choice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+            const ai2Choice = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+
+            // Reveal after 1 second countdown
+            setTimeout(() => {
+                document.getElementById('m1_p1Emoji').textContent = EMOJIS[p1Choice];
+                document.getElementById('m1_ai1Emoji').textContent = EMOJIS[ai1Choice];
+
+                document.getElementById('m2_p2Emoji').textContent = EMOJIS[p2Choice];
+                document.getElementById('m2_ai2Emoji').textContent = EMOJIS[ai2Choice];
+
+                // Calculate Results
+                const res1 = judgeMatchup(p1Choice, ai1Choice); // 1P vs AI1
+                const res2 = judgeMatchup(p2Choice, ai2Choice); // 2P vs AI2
+
+                let roundRedGained = 0;
+                let roundBlueGained = 0;
+
+                // Match 1 Badge
+                const m1Badge = document.getElementById('m1_resultBadge');
+                if (res1 === 1) {
+                    roundRedGained++;
+                    m1Badge.textContent = '1P 승리! (+1 레드팀)';
+                    m1Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-rose-500 text-white';
+                } else if (res1 === -1) {
+                    roundBlueGained++;
+                    m1Badge.textContent = '알파 봇 승리! (+1 블루팀)';
+                    m1Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-sky-500 text-white';
+                } else {
+                    m1Badge.textContent = '무승부 (0점)';
+                    m1Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-300 text-gray-700';
+                }
+
+                // Match 2 Badge
+                const m2Badge = document.getElementById('m2_resultBadge');
+                if (res2 === 1) {
+                    roundRedGained++;
+                    m2Badge.textContent = '2P 승리! (+1 레드팀)';
+                    m2Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-rose-500 text-white';
+                } else if (res2 === -1) {
+                    roundBlueGained++;
+                    m2Badge.textContent = '베타 봇 승리! (+1 블루팀)';
+                    m2Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-sky-500 text-white';
+                } else {
+                    m2Badge.textContent = '무승부 (0점)';
+                    m2Badge.className = 'mt-1 px-3 py-1 rounded-full text-xs font-black bg-gray-300 text-gray-700';
+                }
+
+                // Update Overall Scores
+                redScore += roundRedGained;
+                blueScore += roundBlueGained;
+
+                document.getElementById('redScoreText').textContent = `${redScore}점`;
+                document.getElementById('blueScoreText').textContent = `${blueScore}점`;
+
+                // Summary Text
+                const summaryBox = document.getElementById('roundSummaryBox');
+                if (roundRedGained > roundBlueGained) {
+                    playSound('win');
+                    summaryBox.textContent = `🎉 이번 라운드는 레드 팀이 +${roundRedGained - roundBlueGained}점 더 획득!`;
+                    summaryBox.className = "bg-rose-100 border-2 border-rose-300 text-rose-900 font-black text-sm sm:text-base px-4 py-2.5 rounded-2xl text-center w-full max-w-md";
+                } else if (roundBlueGained > roundRedGained) {
+                    playSound('lose');
+                    summaryBox.textContent = `🤖 이번 라운드는 블루 팀이 +${roundBlueGained - roundRedGained}점 더 획득!`;
+                    summaryBox.className = "bg-sky-100 border-2 border-sky-300 text-sky-900 font-black text-sm sm:text-base px-4 py-2.5 rounded-2xl text-center w-full max-w-md";
+                } else {
+                    summaryBox.textContent = `🤝 치열한 접전! 팽팽한 무승부 라운드!`;
+                    summaryBox.className = "bg-amber-100 border-2 border-amber-300 text-amber-900 font-black text-sm sm:text-base px-4 py-2.5 rounded-2xl text-center w-full max-w-md";
+                }
+
+                document.getElementById('nextRoundBtn').disabled = false;
+
+                // Check Game Over Condition
+                if (redScore >= TARGET_SCORE || blueScore >= TARGET_SCORE) {
+                    setTimeout(showVictory, 1200);
+                }
+
+            }, 800);
+        }
+
+        // Close Reveal Stage Modal & Prepare Next Round
+        function closeStageAndNext() {
+            document.getElementById('battleStageModal').classList.add('hidden');
+
+            // Reset Selection State for next round
+            p1Choice = null;
+            p2Choice = null;
+
+            ['scissors', 'rock', 'paper'].forEach(c => {
+                document.getElementById(`btnP1_${c}`).classList.remove('selected', 'bg-rose-100');
+                document.getElementById(`btnP2_${c}`).classList.remove('selected', 'bg-orange-100');
+            });
+
+            document.getElementById('p1StatusBadge').textContent = '선택대기 중...';
+            document.getElementById('p1StatusBadge').className = 'bg-rose-200 text-rose-800 text-xs px-2.5 py-1 rounded-full font-bold';
+
+            document.getElementById('p2StatusBadge').textContent = '선택대기 중...';
+            document.getElementById('p2StatusBadge').className = 'bg-orange-200 text-orange-800 text-xs px-2.5 py-1 rounded-full font-bold';
+
+            checkBattleReady();
+        }
+
+        // Show Final Victory Modal
+        function showVictory() {
+            const victoryModal = document.getElementById('victoryModal');
+            const victoryEmoji = document.getElementById('victoryEmoji');
+            const victoryTitle = document.getElementById('victoryTitle');
+            const victoryDesc = document.getElementById('victoryDesc');
+
+            if (redScore >= TARGET_SCORE && redScore > blueScore) {
+                victoryEmoji.textContent = '🏆';
+                victoryTitle.textContent = '레드 팀 (사람) 최종 우승!';
+                victoryTitle.className = 'text-3xl sm:text-4xl font-black text-rose-600 mb-2';
+                victoryDesc.textContent = `축하합니다! 1P와 2P의 완벽한 단합으로 블루팀 AI를 ${redScore} 대 ${blueScore}로 격파했습니다!`;
+
+                confetti({
+                    particleCount: 200,
+                    spread: 120,
+                    origin: { y: 0.5 }
+                });
+            } else {
+                victoryEmoji.textContent = '🤖';
+                victoryTitle.textContent = '블루 팀 (AI) 최종 우승!';
+                victoryTitle.className = 'text-3xl sm:text-4xl font-black text-sky-600 mb-2';
+                victoryDesc.textContent = `아쉽게도 AI 팀이 ${blueScore} 대 ${redScore}로 5점을 먼저 달성했습니다. 다시 도전해 보세요!`;
+            }
+
+            victoryModal.classList.remove('hidden');
+            victoryModal.classList.add('flex');
+        }
+
+        // Reset Entire Game
+        function resetGame() {
+            redScore = 0;
+            blueScore = 0;
+            document.getElementById('redScoreText').textContent = '0점';
+            document.getElementById('blueScoreText').textContent = '0점';
+
+            document.getElementById('victoryModal').classList.add('hidden');
+            document.getElementById('victoryModal').classList.remove('flex');
+
+            closeStageAndNext();
+        }
+    </script>
+</body>
+</html>
