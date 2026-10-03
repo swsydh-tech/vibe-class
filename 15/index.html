@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>두더지 잡기 미니게임</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Jua) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            background-color: #86efac; /* Tailwind green-300 */
+            background-image: radial-gradient(#4ade80 20%, transparent 20%), radial-gradient(#4ade80 20%, transparent 20%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        /* 두더지 튀어오르는 애니메이션 관련 클래스 */
+        .mole-up {
+            transform: translate(-50%, 0) !important;
+        }
+
+        .mole-whacked {
+            transform: translate(-50%, 20%) scale(1.1, 0.6) !important;
+            filter: brightness(0.7) sepia(1) hue-rotate(-50deg) saturate(3);
+        }
+
+        /* 통통 튀는 모달 애니메이션 */
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-modal {
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 타이머 깜빡임 경고 */
+        @keyframes flashRed {
+            0%, 100% { color: #f87171; }
+            50% { color: #fee2e2; }
+        }
+        .timer-warning {
+            animation: flashRed 1s infinite;
+        }
+
+        /* 커스텀 마우스 커서 (망치) - 데스크톱용 */
+        @media (pointer: fine) {
+            .hammer-cursor {
+                cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="%23654321" stroke="%23000" stroke-width="1.5"><path d="M11 20h2v-8h-2v8zm-2-8h6V8H9v4zm1-6h4V4h-4v2z"/></svg>') 16 16, pointer;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-5 hammer-cursor overflow-hidden relative">
+
+    <header class="w-full max-w-md text-center z-10 mb-4 bg-white/80 backdrop-blur rounded-3xl p-4 shadow-xl border-4 border-green-500/30">
+        <h1 class="text-3xl sm:text-4xl font-bold text-green-700 tracking-wide mb-3 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-hammer text-amber-700 -rotate-12"></i>
+            두더지 잡기!
+        </h1>
+        
+        <div class="flex justify-between items-center px-4 bg-green-100 rounded-2xl py-2 border-2 border-green-300">
+            <div class="flex flex-col items-center">
+                <span class="text-green-600 text-sm">점수</span>
+                <span id="score" class="text-3xl font-bold text-amber-600">0</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-green-600 text-sm">남은 시간</span>
+                <span id="time" class="text-3xl font-bold text-rose-500">30</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md bg-green-700 p-4 sm:p-6 rounded-[2.5rem] shadow-[0_10px_0_#15803d,0_15px_20px_rgba(0,0,0,0.4)] border-4 border-green-800 z-10">
+        <!-- 3x3 그리드 -->
+        <div class="grid grid-cols-3 gap-3 sm:gap-4" id="game-board">
+            <!-- 자바스크립트로 9개의 구멍과 두더지가 생성됩니다 -->
+        </div>
+    </main>
+
+    <div id="start-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
+        <div class="bg-amber-100 border-4 border-amber-600 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl animate-modal relative overflow-hidden">
+            <div class="text-6xl mb-4 text-amber-700">
+                <i class="fa-solid fa-otter"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-amber-900 mb-2">두더지 잡기</h2>
+            <p class="text-amber-700 font-bold mb-6">제한 시간 30초 동안<br>튀어나오는 두더지를 잡으세요!</p>
+            
+            <button onclick="startGame()" class="w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-2xl rounded-2xl shadow-[0_6px_0_#b45309] active:shadow-[0_0px_0_#b45309] active:translate-y-[6px] transition-all">
+                게임 시작!
+            </button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="bg-white border-4 border-green-500 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl animate-modal">
+            <div class="text-5xl text-rose-500 mb-2">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-2">타임 오버!</h2>
+            
+            <div class="bg-green-50 rounded-2xl p-4 my-6 border-2 border-green-200">
+                <p class="text-gray-500 mb-1">최종 점수</p>
+                <div class="text-5xl font-extrabold text-amber-600 mb-2" id="final-score">0</div>
+                <p class="text-sm font-bold text-green-600" id="result-message">참 잘했어요!</p>
+            </div>
+            
+            <button onclick="startGame()" class="w-full py-4 bg-green-500 hover:bg-green-400 text-white font-extrabold text-2xl rounded-2xl shadow-[0_6px_0_#166534] active:shadow-[0_0px_0_#166534] active:translate-y-[6px] transition-all flex justify-center items-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> 다시 하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 전역 상태 변수
+        let score = 0;
+        let timeLeft = 30;
+        let lastHole = -1;
+        let timeUp = false;
+        let gameTimer = null;
+        let moleTimeout = null;
+        let audioCtx = null;
+
+        const GAME_DURATION = 30;
+        const BOARD_SIZE = 9;
+
+        // DOM 요소 가져오기
+        const scoreBoard = document.getElementById('score');
+        const timeBoard = document.getElementById('time');
+        const gameBoard = document.getElementById('game-board');
+        const startModal = document.getElementById('start-modal');
+        const resultModal = document.getElementById('result-modal');
+        const finalScore = document.getElementById('final-score');
+        const resultMessage = document.getElementById('result-message');
+
+        // Web Audio API 초기화
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // 효과음: 두더지 나올 때 (뾱!)
+        function playPopSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        // 효과음: 두더지 때렸을 때 (퍽!)
+        function playWhackSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                // 둔탁한 소리를 위해 타격감 있는 파형 사용
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        // 효과음: 게임 종료음
+        function playGameOverSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(200, audioCtx.currentTime + 0.5);
+                
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch(e) {}
+        }
+
+        // 9개의 구멍 및 두더지 요소 생성
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                // 구멍 컨테이너
+                const holeContainer = document.createElement('div');
+                holeContainer.className = 'relative w-full aspect-square bg-[#3f6212] rounded-2xl overflow-hidden shadow-inner flex justify-center items-end border-b-4 border-[#14532d]';
+                
+                // 두더지 요소
+                const mole = document.createElement('div');
+                // 초기 상태: 아래로 숨어있음 (translate-y-[120%])
+                mole.className = 'mole absolute bottom-2 left-1/2 -translate-x-1/2 translate-y-[120%] w-[60%] h-[75%] bg-[#92400e] rounded-t-full transition-transform duration-200 cursor-pointer flex flex-col items-center justify-start pt-3 z-10';
+                
+                // 두더지 얼굴 꾸미기 (눈과 코)
+                mole.innerHTML = `
+                    <div class="flex gap-2 mb-1">
+                        <div class="w-2.5 h-2.5 bg-black rounded-full"></div>
+                        <div class="w-2.5 h-2.5 bg-black rounded-full"></div>
+                    </div>
+                    <div class="w-4 h-3 bg-pink-300 rounded-full"></div>
+                `;
+                
+                // 터치 및 클릭 이벤트 등록
+                mole.addEventListener('mousedown', whack);
+                mole.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // 더블 탭 줌 방지
+                    whack.call(this, e);
+                });
+
+                // 앞쪽 흙 (두더지가 이 뒤에서 나옴)
+                const dirt = document.createElement('div');
+                dirt.className = 'absolute bottom-[-15%] left-[-10%] w-[120%] h-[40%] bg-[#451a03] rounded-[50%] z-20 shadow-[0_-3px_5px_rgba(0,0,0,0.3)]';
+
+                holeContainer.appendChild(mole);
+                holeContainer.appendChild(dirt);
+                gameBoard.appendChild(holeContainer);
+            }
+        }
+
+        // 무작위 시간 생성 (난이도 조절용)
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        // 무작위 구멍 선택 (이전 구멍과 겹치지 않게)
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            if (idx === lastHole) {
+                return randomHole(holes);
+            }
+            lastHole = idx;
+            return holes[idx];
+        }
+
+        // 두더지 튀어나오게 하기
+        function peep() {
+            if (timeUp) return;
+
+            // 점수가 오를수록 두더지가 더 빨리 들어감 (난이도 증가)
+            const minTime = Math.max(300, 700 - (score * 15));
+            const maxTime = Math.max(500, 1200 - (score * 15));
+            const time = randomTime(minTime, maxTime);
+            
+            const holes = document.querySelectorAll('.mole');
+            const mole = randomHole(holes);
+
+            mole.classList.remove('translate-y-[120%]');
+            mole.classList.add('mole-up');
+            playPopSound();
+
+            moleTimeout = setTimeout(() => {
+                mole.classList.remove('mole-up');
+                mole.classList.add('translate-y-[120%]');
+                if (!timeUp) peep();
+            }, time);
+        }
+
+        // 두더지 때리기 처리
+        function whack(e) {
+            // e.isTrusted: 스크립트가 아닌 실제 사용자의 클릭인지 확인
+            if (e.type === 'mousedown' && !e.isTrusted) return; 
+            
+            // 이미 숨었거나 맞은 상태면 무시
+            if (this.classList.contains('translate-y-[120%]') || this.classList.contains('mole-whacked')) return;
+
+            score++;
+            scoreBoard.textContent = score;
+            playWhackSound();
+
+            // 맞은 애니메이션 적용 및 클래스 변경
+            this.classList.remove('mole-up');
+            this.classList.add('mole-whacked');
+            
+            // 약간의 지연 후 완전히 숨기기
+            setTimeout(() => {
+                this.classList.remove('mole-whacked');
+                this.classList.add('translate-y-[120%]');
+            }, 150);
+        }
+
+        // 타이머 카운트다운 로직
+        function startTimer() {
+            timeBoard.textContent = timeLeft;
+            timeBoard.classList.remove('timer-warning');
+
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                timeBoard.textContent = timeLeft;
+
+                if (timeLeft <= 5) {
+                    timeBoard.classList.add('timer-warning');
+                }
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // 게임 시작
+        function startGame() {
+            initAudio(); // 사용자 인터랙션 시 오디오 컨텍스트 활성화
+            
+            // 상태 초기화
+            score = 0;
+            timeLeft = GAME_DURATION;
+            timeUp = false;
+            lastHole = -1;
+            
+            scoreBoard.textContent = score;
+            timeBoard.textContent = timeLeft;
+            
+            // 모달 닫기
+            startModal.classList.add('hidden');
+            resultModal.classList.remove('flex');
+            resultModal.classList.add('hidden');
+
+            // 기존 타이머 클리어
+            clearInterval(gameTimer);
+            clearTimeout(moleTimeout);
+
+            // 모든 두더지 숨기기
+            const holes = document.querySelectorAll('.mole');
+            holes.forEach(mole => {
+                mole.classList.remove('mole-up', 'mole-whacked');
+                mole.classList.add('translate-y-[120%]');
+            });
+
+            // 게임 시작
+            setTimeout(() => {
+                startTimer();
+                peep();
+            }, 500);
+        }
+
+        // 게임 종료 처리
+        function endGame() {
+            timeUp = true;
+            clearInterval(gameTimer);
+            playGameOverSound();
+
+            // 결과 모달 세팅
+            finalScore.textContent = score;
+            if (score > 30) resultMessage.textContent = "최고의 사냥꾼! 🏆";
+            else if (score > 15) resultMessage.textContent = "반사신경이 좋네요! 👍";
+            else resultMessage.textContent = "조금 더 분발해볼까요! 💪";
+
+            // 약간의 딜레이 후 결과창 띄우기
+            setTimeout(() => {
+                resultModal.classList.remove('hidden');
+                resultModal.classList.add('flex');
+            }, 1000);
+        }
+
+        // 초기 실행 (보드만 미리 그려두기)
+        window.addEventListener('DOMContentLoaded', () => {
+            createBoard();
+        });
+    </script>
+</body>
+</html>
