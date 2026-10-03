@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알록달록 어린이 상식 퀴즈왕 🌿📜🎨🌍</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Jua, Gaegu) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Jua&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Jua', cursive, sans-serif;
+            background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 25%, #fed6e3 50%, #a1c4fd 75%, #e0c3fc 100%);
+            background-size: 250% 250%;
+            animation: gradientBG 14s ease infinite;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-choice {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-choice:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.02);
+            filter: brightness(1.05);
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-choice:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        /* Pop animation for result overlay */
+        @keyframes popIn {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            70% { transform: scale(1.1) rotate(3deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Bounce animation */
+        @keyframes bounceSlow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounceSlow 2s infinite ease-in-out;
+        }
+
+        /* Active tab state */
+        .tab-active {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Hell mode pulse glow */
+        .hell-glow {
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+            animation: hellPulse 1.5s infinite alternate;
+        }
+
+        @keyframes hellPulse {
+            0% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.9); }
+        }
+
+        /* God mode golden aura glow */
+        .god-glow {
+            box-shadow: 0 0 18px rgba(234, 179, 8, 0.8);
+            animation: godPulse 1.2s infinite alternate;
+        }
+
+        @keyframes godPulse {
+            0% { shadow: 0 0 10px rgba(234, 179, 8, 0.6); }
+            100% { box-shadow: 0 0 25px rgba(250, 204, 21, 1); }
+        }
+
+        /* Nullify mode cosmic void glow */
+        .nullify-glow {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.9), 0 0 30px rgba(6, 182, 212, 0.8);
+            animation: nullifyPulse 1s infinite alternate;
+        }
+
+        @keyframes nullifyPulse {
+            0% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.7), 0 0 15px rgba(6, 182, 212, 0.6); }
+            100% { box-shadow: 0 0 25px rgba(217, 70, 239, 1), 0 0 35px rgba(34, 211, 238, 1); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-3 sm:p-6 min-h-screen">
+
+    <!-- Header -->
+    <header class="w-full max-w-3xl text-center mb-3">
+        <h1 class="text-3xl sm:text-5xl font-black text-indigo-900 drop-shadow-md tracking-wide flex items-center justify-center gap-2">
+            <span>✨</span> 알록달록 어린이 상식 퀴즈왕 <span>✨</span>
+        </h1>
+        <p class="text-sm sm:text-base font-extrabold text-indigo-700/80 mt-1">
+            재미있는 상식도 배우고 무효화 난이도까지 도전해보세요! 🚀
+        </p>
+    </header>
+
+    <!-- Main Quiz App Container -->
+    <main class="w-full max-w-3xl my-auto">
+        <div class="glass-card rounded-3xl p-4 sm:p-7 relative overflow-hidden transition-all duration-300">
+            
+            <!-- Category & Difficulty Navigation Controls -->
+            <div class="flex flex-col gap-2.5 mb-4 pb-3 border-b border-gray-200/80">
+                <!-- Topic Filter Tabs -->
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                    <span class="text-xs sm:text-sm font-black text-gray-700 shrink-0 flex items-center gap-1">
+                        <i class="fa-solid fa-layer-group text-indigo-500"></i> 주제 선택:
+                    </span>
+                    <div class="flex flex-wrap gap-1">
+                        <button onclick="changeTopic('all')" id="btnTopicAll" class="tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border">
+                            🎒 전체
+                        </button>
+                        <button onclick="changeTopic('science')" id="btnTopicScience" class="tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border">
+                            🌿 과학·자연
+                        </button>
+                        <button onclick="changeTopic('history')" id="btnTopicHistory" class="tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border">
+                            📜 사회·역사
+                        </button>
+                        <button onclick="changeTopic('art')" id="btnTopicArt" class="tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border">
+                            🎨 예체능·동화
+                        </button>
+                        <button onclick="changeTopic('life')" id="btnTopicLife" class="tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border">
+                            🌍 지구·생활
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Difficulty Selector (7-Level System) -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-1.5 border-t border-gray-200/80">
+                    <span class="text-xs sm:text-sm font-black text-gray-700 shrink-0 flex items-center gap-1">
+                        <i class="fa-solid fa-fire text-rose-500"></i> 난이도:
+                    </span>
+                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-1 w-full max-w-2xl">
+                        <button onclick="changeDifficulty('easy')" id="btnDiffEasy" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            🌱 쉬움
+                        </button>
+                        <button onclick="changeDifficulty('normal')" id="btnDiffNormal" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            🌿 보통
+                        </button>
+                        <button onclick="changeDifficulty('hard')" id="btnDiffHard" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            🔬 어려움
+                        </button>
+                        <button onclick="changeDifficulty('extreme')" id="btnDiffExtreme" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            😈 극악
+                        </button>
+                        <button onclick="changeDifficulty('hell')" id="btnDiffHell" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            💀 지옥
+                        </button>
+                        <button onclick="changeDifficulty('god')" id="btnDiffGod" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            ⚡ 신
+                        </button>
+                        <button onclick="changeDifficulty('nullify')" id="btnDiffNullify" class="tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center">
+                            🌀 무효화
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Progress & Score Board -->
+            <div class="flex justify-between items-center mb-3 border-b-2 border-indigo-100 pb-3">
+                <!-- Question Counter & Badge -->
+                <div class="flex items-center gap-2">
+                    <span id="questionNumBadge" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black text-xs sm:text-sm px-3 py-1 rounded-full shadow-sm">
+                        문제 1 / 5
+                    </span>
+                    <span id="categoryBadge" class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full border border-amber-300">
+                        🌿 과학·자연
+                    </span>
+                </div>
+
+                <!-- Score Board -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 text-emerald-600 font-extrabold text-lg sm:text-xl">
+                        <i class="fa-solid fa-star text-yellow-400"></i>
+                        <span id="scoreText">0</span>점
+                    </div>
+                    <div class="flex items-center gap-1 text-indigo-500 font-extrabold text-xs sm:text-sm bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                        🔥 연속 <span id="comboText">0</span>회
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200/80 rounded-full h-3 mb-5 overflow-hidden p-0.5 border border-white">
+                <div id="progressBar" class="bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: 5%;"></div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="min-h-[100px] flex flex-col justify-center items-center text-center my-2 px-2">
+                <p id="questionText" class="text-lg sm:text-2xl font-black text-gray-800 leading-relaxed break-keep">
+                    문제를 불러오는 중입니다...
+                </p>
+            </div>
+
+            <!-- Answer Options Grid -->
+            <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+                <!-- Dynamic Choice Buttons -->
+            </div>
+
+            <!-- Result Banner Overlay -->
+            <div id="resultOverlay" class="hidden absolute inset-0 bg-white/95 backdrop-blur-md rounded-3xl p-6 flex flex-col items-center justify-center text-center z-20 animate-pop">
+                
+                <div id="resultIcon" class="text-7xl sm:text-8xl mb-2 animate-bounce-slow">
+                    ⭕
+                </div>
+                
+                <h2 id="resultTitle" class="text-4xl sm:text-5xl font-black mb-3 text-emerald-500">
+                    정답!
+                </h2>
+
+                <!-- Explanation Box -->
+                <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 max-w-md w-full mb-5 shadow-inner">
+                    <p class="text-xs text-indigo-700 font-extrabold mb-1">💡 알고 있었나요?</p>
+                    <p id="explanationText" class="text-sm sm:text-base text-gray-700 font-bold leading-snug break-keep">
+                        설명 내용이 들어갑니다.
+                    </p>
+                </div>
+
+                <!-- Next Button -->
+                <button onclick="nextQuestion()" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black text-lg px-8 py-3.5 rounded-2xl shadow-lg border-2 border-white transition transform active:scale-95 flex items-center gap-2 cursor-pointer">
+                    <span>다음 문제 풀기</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md w-full text-center border-4 border-yellow-300 animate-pop">
+            <div id="gameOverEmoji" class="text-6xl sm:text-7xl mb-3">🏆</div>
+            <h2 id="gameOverTitle" class="text-3xl sm:text-4xl font-black text-indigo-600 mb-1">상식 탐구 완료!</h2>
+            <p id="gameOverSub" class="text-gray-600 font-bold text-sm mb-4">멋져요! 당신은 자랑스러운 어린이 상식 박사님!</p>
+            
+            <div class="bg-yellow-50 rounded-2xl p-4 border border-yellow-200 mb-6 flex justify-around items-center">
+                <div>
+                    <div class="text-xs text-gray-500 font-bold">최종 점수</div>
+                    <div id="finalScore" class="text-3xl font-black text-indigo-600">0점</div>
+                </div>
+                <div class="h-8 w-0.5 bg-yellow-200"></div>
+                <div>
+                    <div class="text-xs text-gray-500 font-bold">맞힌 문제</div>
+                    <div id="finalCorrectCount" class="text-3xl font-black text-emerald-600">0 / 0</div>
+                </div>
+            </div>
+
+            <button onclick="restartQuiz()" class="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-gray-900 font-black text-xl py-3.5 rounded-2xl border-2 border-white shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>다시 도전하기</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-xs text-indigo-900/80 font-bold text-center my-2">
+        🌿 과학 · 📜 역사 · 🎨 예술 · 🌍 지구촌 · 😈 극악 · 💀 지옥 · ⚡ 신 · 🌀 무효화까지 완전 정복!
+    </footer>
+
+    <script>
+        // 상식 문제 데이터베이스
+        const ALL_QUESTIONS = [
+            // ==================== [🌿 과학·자연] ====================
+            {
+                id: 1, topic: "science", difficulty: "easy", category: "🌞 자연 / 하늘",
+                question: "낮에 따뜻한 햇살을 비추며 밝게 떠 있는 것은 무엇일까요?",
+                options: ["달", "태양 (해)", "구름", "별"], answer: 1,
+                explanation: "태양은 스스로 빛과 열을 내며 낮 동안 세상을 환하게 밝혀 줘요!"
+            },
+            {
+                id: 2, topic: "science", difficulty: "easy", category: "🧲 과학 / 자석",
+                question: "자석에 찰싹 하고 잘 붙는 물건은 무엇일까요?",
+                options: ["지우개", "나무 연필", "철못", "종이컵"], answer: 2,
+                explanation: "자석은 철이나 니켈 같은 금속 성분을 강하게 당기는 성질이 있어요."
+            },
+            {
+                id: 3, topic: "science", difficulty: "normal", category: "🌈 자연 / 날씨",
+                question: "비가 내린 뒤 햇빛이 비칠 때 하늘에 곱게 뜨는 7색 다리는?",
+                options: ["무지개", "은하수", "먹구름", "소나기"], answer: 0,
+                explanation: "공기 중의 작은 물방울들이 햇빛을 나누어 알록달록 무지개를 만들어요."
+            },
+            {
+                id: 4, topic: "science", difficulty: "normal", category: "🌱 식물 / 영양",
+                question: "식물이 햇빛과 물을 받아 스스로 영양분을 만드는 작용은?",
+                options: ["소화 작용", "광합성", "호흡 작용", "증발 작용"], answer: 1,
+                explanation: "식물은 초록색 엽록소에서 광합성을 통해 산소와 먹이를 만들어요."
+            },
+            {
+                id: 5, topic: "science", difficulty: "hard", category: "⚡ 물리 / 속도",
+                question: "우주에서 가장 빠른 '빛의 속도'와 '소리의 속도' 중 더 빠른 것은?",
+                options: ["소리의 속도", "빛의 속도", "둘 다 같다", "바람의 속도"], answer: 1,
+                explanation: "빛은 1초에 약 30만km를 달려서 소리(1초에 약 340m)보다 훨씬 빠릅니다."
+            },
+            {
+                id: 6, topic: "science", difficulty: "extreme", category: "🌌 지질 / 지구과학",
+                question: "[😈 극악] 지구 지각을 구성하는 원소 중 가장 많은 비율을 차지하는 것은?",
+                options: ["철(Fe)", "규소(Si)", "산소(O)", "알루미늄(Al)"], answer: 2,
+                explanation: "지구 지각 질량의 약 46.6%는 산소(O)이며, 두 번째는 규소(약 27.7%)입니다."
+            },
+            {
+                id: 7, topic: "science", difficulty: "extreme", category: "🪐 천문 / 태양계",
+                question: "[😈 극악] 태양계 행성 중 밀도가 가장 낮아 물에 띄울 수 있는 행성은?",
+                options: ["목성", "토성", "천왕성", "해왕성"], answer: 1,
+                explanation: "가스로 이루어진 토성의 평균 밀도는 약 0.69g/cm³로, 물(1.0g/cm³)보다 낮아 물에 뜹니다!"
+            },
+            {
+                id: 8, topic: "science", difficulty: "hell", category: "🧬 생물 / 세포",
+                question: "[💀 지옥] 세포 내 생명 활동의 에너지 통화라 불리는 물질 'ATP'의 풀네임은?",
+                options: ["아데노신 삼인산", "아세틸콜린 수용체", "아미노산 합성체", "아데닌 리보오스"], answer: 0,
+                explanation: "ATP는 Adenosine Triphosphate(아데노신 삼인산)의 약어로 세포의 에너지 공급원입니다."
+            },
+            {
+                id: 9, topic: "science", difficulty: "hell", category: "⚛️ 물리 / 상대성 이론",
+                question: "[💀 지옥] 아인슈타인의 정물질 에너지 질량 등가 공식으로 옳은 것은?",
+                options: ["E = mc²", "F = ma", "PV = nRT", "E = hν"], answer: 0,
+                explanation: "E = mc² (에너지 = 질량 × 빛의 속도 제곱)은 특수상대성이론의 핵심 정리입니다."
+            },
+            {
+                id: 100, topic: "science", difficulty: "god", category: "⚡ 양자물리 / 입자",
+                question: "[⚡ 신] 모든 입자에 질량을 부여하여 '신의 입자'로 불리는 입자의 명칭은?",
+                options: ["힉스 보손 (Higgs boson)", "글루온", "타우 중성미자", "쿼크"], answer: 0,
+                explanation: "힉스 보손은 표준 모형에서 입자들이 질량을 갖게 만드는 메커니즘을 설명하는 결정적 입자입니다."
+            },
+            {
+                id: 101, topic: "science", difficulty: "god", category: "⚡ 우주 / 천문학",
+                question: "[⚡ 신] 은하 중심에 위치하며 빛조차 빠져나갈 수 없는 블랙홀의 경계면 명칭은?",
+                options: ["사건의 지평선 (Event Horizon)", "슈바르츠실트 반지름", "광자구", "특이점"], answer: 0,
+                explanation: "사건의 지평선 내부에서는 脱出 속도가 빛의 속도를 초과하여 외부로 어떤 정보도 빠져나갈 수 없습니다."
+            },
+
+            // ==================== [📜 사회·역사] ====================
+            {
+                id: 10, topic: "history", difficulty: "easy", category: "📜 역사 / 한글",
+                question: "세종대왕께서 백성들을 위해 만드신 우리나라의 자랑스러운 글자는?",
+                options: ["한자", "훈민정음 (한글)", "영어", "가타카나"], answer: 1,
+                explanation: "세종대왕은 글을 몰라 슬퍼하는 백성을 위해 1443년에 한글을 만드셨어요!"
+            },
+            {
+                id: 11, topic: "history", difficulty: "normal", category: "🇰🇷 역사 / 독립운동",
+                question: "3·1 운동 때 태극기를 흔들며 독립만세를 외친 대표적 독립운동가는?",
+                options: ["신사임당", "유관순 열사", "허난설헌", "선덕여왕"], answer: 1,
+                explanation: "유관순 열사는 어린 나이에도 굴하지 않고 만세 운동을 주도하셨어요."
+            },
+            {
+                id: 12, topic: "history", difficulty: "hard", category: "📖 역사 / 문화재",
+                question: "고려 시대에 제작된 세계에서 가장 오래된 금속 활자 인쇄본 책은?",
+                options: ["팔만대장경", "직지심체요절", "조선왕조실록", "삼국유사"], answer: 1,
+                explanation: "'직지심체요절'은 서양 구텐베르크보다 약 78년 앞선 금속활자본이에요."
+            },
+            {
+                id: 13, topic: "history", difficulty: "extreme", category: "🏯 역사 / 조선",
+                question: "[😈 극악] 훈민정음의 제정 목적과 원리를 상세히 기록한 국보 제70호 해례본의 원본 소장처는?",
+                options: ["국립중앙박물관", "간송미술관", "규장각", "독립기념관"], answer: 1,
+                explanation: "훈민정음 해례본 상간본(국보 70호)은 간송 전형필 선생이 수집하여 간송미술관에 소장되어 있습니다."
+            },
+            {
+                id: 14, topic: "history", difficulty: "extreme", category: "⚔️ 역사 / 삼국시대",
+                question: "[😈 극악] 612년 살수대첩에서 을지문덕 장군에게 대패한 수나라의 장수는?",
+                options: ["우중문", "당태종", "소정방", "위징"], answer: 0,
+                explanation: "고구려 을지문덕 장군은 수나라 우중문·우문술이 이끄는 30만 대군을 살수에서 격퇴했습니다."
+            },
+            {
+                id: 15, topic: "history", difficulty: "hell", category: "📜 역사 / 고려시대",
+                question: "[💀 지옥] 1135년 서경(평양)으로 수도를 옮기고 칭제건원을 주장하며 난을 일으킨 승려는?",
+                options: ["의천", "묘청", "지눌", "원효"], answer: 1,
+                explanation: "묘청은 서경천도운동을 일으켰으나 김부식이 이끄는 관군에 의해 진압되었습니다."
+            },
+            {
+                id: 16, topic: "history", difficulty: "hell", category: "⚖️ 역사 / 조선 법제",
+                question: "[💀 지옥] 조선 시대 6조가 국왕에게 직접 보고하던 통치 체제는?",
+                options: ["의정부 서사제", "6조 직계제", "도병마사제", "집현전 제도"], answer: 1,
+                explanation: "6조 직계제는 왕권을 강화하기 위해 6조가 의정부를 거치지 않고 왕에게 직접 보고하는 제도입니다."
+            },
+            {
+                id: 102, topic: "history", difficulty: "god", category: "⚡ 역사 / 고대 외교",
+                question: "[⚡ 신] 백제 무령왕릉에서 발견된 매지권(땅을 사겠다는 계약서)에 등장하는 도교 신의 이름은?",
+                options: ["토지신 (토왕)", "염라대왕", "옥황상제", "환웅"], answer: 0,
+                explanation: "무령왕릉 지석에는 무령왕이 지하의 토지신에게 돈을 지불하고 무덤 부지를 샀다는 도교적 매지권이 적혀 있습니다."
+            },
+
+            // ==================== [🎨 예체능·동화] ====================
+            {
+                id: 17, topic: "art", difficulty: "easy", category: "🖼️ 미술 / 명화",
+                question: "신비로운 미소를 지은 '모나리자' 그림을 그린 천재 화가는?",
+                options: ["피카소", "레오나르도 다 빈치", "고흐", "모네"], answer: 1,
+                explanation: "레오나르도 다 빈치는 미술뿐만 아니라 과학에도 뛰어난 천재였어요."
+            },
+            {
+                id: 18, topic: "art", difficulty: "normal", category: "🥋 스포츠 / 무술",
+                question: "품새와 발차기 동작으로 마음과 몸을 단련하는 우리나라 전통 무도 스포츠는?",
+                options: ["유도", "태권도", "검도", "씨름"], answer: 1,
+                explanation: "태권도는 세계 수많은 사람이 배우는 올림픽 정식 종목입니다."
+            },
+            {
+                id: 19, topic: "art", difficulty: "hard", category: "🎼 음악 / 클래식",
+                question: "청력을 잃어 소리가 들리지 않는데도 '운명 교향곡'을 만든 음악 성인은?",
+                options: ["모차르트", "베토벤", "바하", "쇼팽"], answer: 1,
+                explanation: "베토벤은 귀가 들리지 않는 큰 장애를 극복하고 불후의 명곡들을 남겼어요."
+            },
+            {
+                id: 20, topic: "art", difficulty: "extreme", category: "🎨 미술 / 사조",
+                question: "[😈 극악] 사물을 다각도에서 해체하여 형태를 파괴한 피카소의 입체파 기법 영문명은?",
+                options: ["인프레셔니즘", "큐비즘 (Cubism)", "수리얼리즘", "포비즘"], answer: 1,
+                explanation: "피카소와 브라크가 시작한 입체주의는 '큐비즘(Cubism)'이라고 부릅니다."
+            },
+            {
+                id: 21, topic: "art", difficulty: "hell", category: "🎼 음악 / 클래식 기법",
+                question: "[💀 지옥] 현대 음악가 쇤베르크가 개발한 12개의 음을 동등하게 사용하는 작곡법은?",
+                options: ["12음기법 (Dodecaphony)", "대위법", "소나타 형식", "통성 기법"], answer: 0,
+                explanation: "쇤베르크의 12음기법은 장조와 단조의 조성 체계를 깨고 무조성 음악을 확립했습니다."
+            },
+            {
+                id: 103, topic: "art", difficulty: "god", category: "⚡ 미술 / 르네상스",
+                question: "[⚡ 신] 미켈란젤로가 바티칸 시스티나 성당 천장에 그린 대작 원화의 미술 기법은?",
+                options: ["프레스코 (Fresco)", "템페라", "유화", "수묵화"], answer: 0,
+                explanation: "프레스코 기법은 덜 마른 석고 회벽 위에 수성 물감으로 그려 벽과 그림이 하나가 되게 만드는 기법입니다."
+            },
+
+            // ==================== [🌍 지구·생활상식] ====================
+            {
+                id: 22, topic: "life", difficulty: "easy", category: "🗣️ 속담 / 언어",
+                question: "'가는 말이 고와야 ( ? ) 곱다' 빈칸에 들어갈 맞춤 속담은?",
+                options: ["오는 말이", "뛰는 말이", "듣는 말이", "아는 말이"], answer: 0,
+                explanation: "내가 먼저 남에게 예쁜 말을 해야 남도 나에게 좋게 대한다는 뜻이에요."
+            },
+            {
+                id: 23, topic: "life", difficulty: "normal", category: "📏 단위 / 수학",
+                question: "무게를 나타내는 단위 중 1 킬로그램(kg)은 몇 그램(g)과 같을까요?",
+                options: ["10g", "100g", "1000g", "10000g"], answer: 2,
+                explanation: "'킬로(k)'는 1000 배를 뜻하므로 1kg은 정확히 1000g과 같습니다."
+            },
+            {
+                id: 24, topic: "life", difficulty: "hard", category: "🌐 지구 / 지리",
+                question: "지구를 남반구와 북반구로 똑같이 나누는 가상의 중앙선은?",
+                options: ["자도선", "적도", "날짜변경선", "북극선"], answer: 1,
+                explanation: "적도는 위도 0도의 가상선으로 햇볕을 많이 받아 따뜻해요."
+            },
+            {
+                id: 25, topic: "life", difficulty: "extreme", category: "🌊 바다 / 지구과학",
+                question: "[😈 극악] 세계에서 가장 깊은 수심(약 11,000m)을 자랑하는 해구는?",
+                options: ["마리아나 해구", "푸에르토리코 해구", "자바 해구", "일본 해구"], answer: 0,
+                explanation: "태평양의 마리아나 해구 비티아즈 해연은 지구상에서 가장 깊은 바다 골짜기입니다."
+            },
+            {
+                id: 26, topic: "life", difficulty: "hell", category: "🌍 지리 / 세계 기록",
+                question: "[💀 지옥] 남미 베네수엘라에 위치한 낙차 979m의 세계에서 가장 높은 폭포는?",
+                options: ["앙헬 폭포 (엔젤 폭포)", "나이아가라 폭포", "이구아수 폭포", "빅토리아 폭포"], answer: 0,
+                explanation: "앙헬 폭포(Angel Falls)는 낙차가 너무 커서 물이 떨어지다가 안개로 바뀔 정도입니다."
+            },
+            {
+                id: 104, topic: "life", difficulty: "god", category: "⚡ 지구 / 지질학",
+                question: "[⚡ 신] 지구 내핵과 외핵을 구분하는 지진파 불연속면의 이름은?",
+                options: ["레만 불연속면", "모호로비치치 불연속면", "구텐베르크 불연속면", "콘라트 불연속면"], answer: 0,
+                explanation: "지구 내부에서 지진파 p파의 반사를 관측해 외핵(액체)과 내핵(고체)의 경계를 밝혀낸 것은 '레만 불연속면'입니다."
+            },
+
+            // ==================== [🌀 무효화 난이도] ====================
+            {
+                id: 200, topic: "science", difficulty: "nullify", category: "🌀 물리학 / 양자",
+                question: "[🌀 무효화] 물질과 반물질이 만나 충돌할 때 질량이 100% 에너지로 상쇄·전환되는 현상은?",
+                options: ["쌍소멸 (Pair Annihilation)", "핵융합", "광전효과", "양자 얽힘"], answer: 0,
+                explanation: "쌍소멸은 입자와 반입자가 충돌하여 질량이 빛과 감마선 에너지로 완전히 전환되며 서로를 지워버리는 궁극의 상쇄 현상입니다."
+            },
+            {
+                id: 201, topic: "science", difficulty: "nullify", category: "🌀 물리학 / 열역학",
+                question: "[🌀 무효화] 절대영도(-273.15℃) 부근에서 원자들의 입자성이 무효화되어 하나의 거대한 파동으로 행동하는 물질 상태는?",
+                options: ["보스-아인슈타인 응축 (BEC)", "플라즈마", "초전도체", "초유체"], answer: 0,
+                explanation: "보스-아인슈타인 응축(BEC)은 개별 원자의 무질서함이 완전히 상쇄되고 단 하나의 거대한 양자 상태로 응집하는 제5의 물질 상태입니다."
+            },
+            {
+                id: 202, topic: "history", difficulty: "nullify", category: "🌀 수학·논리학 / 역설",
+                question: "[🌀 무효화] 시공간을 무한히 분할함으로써 화살의 운동 자체를 논리적으로 무효화한 고대 역설 학자는?",
+                options: ["제논 (Zenon)", "아리스토텔레스", "피타고라스", "유클리드"], answer: 0,
+                explanation: "제논의 역설은 관념적으로 운동의 연속성을 무한 분할로 파괴하여 운동이라는 물리 법칙을 거꾸로 물어본 고대 논리학입니다."
+            },
+            {
+                id: 203, topic: "art", difficulty: "nullify", category: "🌀 기하학 / 착시 예술",
+                question: "[🌀 무효화] 올라가도 올라가도 제자리로 돌아오는 불가능한 구조를 그려 3차원 공간 법칙을 종이 위에서 무효화한 판화가는?",
+                options: ["에셔 (M.C. Escher)", "피카소", "살바도르 달리", "몬드리안"], answer: 0,
+                explanation: "에셔는 펜로즈 계단처럼 현실에서는 불가능한 기하학 착시 구조를 통해 유클리드 공간 법칙을 시각적으로 무효화했습니다."
+            },
+            {
+                id: 204, topic: "life", difficulty: "nullify", category: "🌀 지구과학 / 생물사",
+                question: "[🌀 무효화] 약 2억 5천만 년 전 지구상 생물종의 약 96%가 한순간에 소멸하여 기존 생태계를 리셋한 사건은?",
+                options: ["페름기 대멸종", "백악기 대멸종", "삼첩기 대멸종", "오르도비스기 대멸종"], answer: 0,
+                explanation: "페름기 대멸종(Permian Extinction)은 지구 역사상 가장 치명적인 생명체 리셋 사건으로, 당시 고생대 생물계를 완전히 무효화시켰습니다."
+            }
+        ];
+
+        // 게임 상태 변수
+        let currentTopic = 'all'; // 'all', 'science', 'history', 'art', 'life'
+        let currentDifficulty = 'normal'; // 'easy', 'normal', 'hard', 'extreme', 'hell', 'god', 'nullify'
+        let filteredQuizList = [];
+        let currentIdx = 0;
+        let score = 0;
+        let combo = 0;
+        let correctAnswersCount = 0;
+
+        // Web Audio API 효과음 생성기
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // 정답 효과음: '딩동 🔔'
+        function playDingDong() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                // 솔 (G4: 392Hz)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(392, now);
+                gain1.gain.setValueAtTime(0.35, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+
+                // 도 (C5: 523.25Hz)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(523.25, now + 0.22);
+                gain2.gain.setValueAtTime(0.35, now + 0.22);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.22);
+                osc2.stop(now + 0.7);
+            } catch (e) {
+                console.log("Audio Error:", e);
+            }
+        }
+
+        // 오답 효과음: '삐익 🚨'
+        function playBuzzer() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.setValueAtTime(130, now + 0.15);
+
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } catch (e) {
+                console.log("Audio Error:", e);
+            }
+        }
+
+        // 주제 영역 변경
+        function changeTopic(topic) {
+            currentTopic = topic;
+            updateTabUI();
+            initQuiz();
+        }
+
+        // 난이도 변경
+        function changeDifficulty(diff) {
+            currentDifficulty = diff;
+            updateTabUI();
+            initQuiz();
+        }
+
+        // 탭 UI 스타일 업데이트
+        function updateTabUI() {
+            const topicBtns = {
+                all: document.getElementById('btnTopicAll'),
+                science: document.getElementById('btnTopicScience'),
+                history: document.getElementById('btnTopicHistory'),
+                art: document.getElementById('btnTopicArt'),
+                life: document.getElementById('btnTopicLife')
+            };
+
+            const inactiveStyle = "bg-white/80 text-gray-600 border-gray-200 hover:bg-white";
+
+            Object.keys(topicBtns).forEach(key => {
+                if (topicBtns[key]) {
+                    const isSelected = (currentTopic === key);
+                    let activeBg = "bg-indigo-600 border-indigo-700 text-white";
+                    if (key === 'science') activeBg = "bg-emerald-500 border-emerald-600 text-white";
+                    if (key === 'history') activeBg = "bg-amber-500 border-amber-600 text-white";
+                    if (key === 'art') activeBg = "bg-pink-500 border-pink-600 text-white";
+                    if (key === 'life') activeBg = "bg-sky-500 border-sky-600 text-white";
+
+                    topicBtns[key].className = `tab-btn py-1 px-2 rounded-xl text-xs font-black transition-all border ${isSelected ? activeBg + ' tab-active shadow-md' : inactiveStyle}`;
+                }
+            });
+
+            // 7단계 난이도 버튼
+            const diffBtns = {
+                easy: document.getElementById('btnDiffEasy'),
+                normal: document.getElementById('btnDiffNormal'),
+                hard: document.getElementById('btnDiffHard'),
+                extreme: document.getElementById('btnDiffExtreme'),
+                hell: document.getElementById('btnDiffHell'),
+                god: document.getElementById('btnDiffGod'),
+                nullify: document.getElementById('btnDiffNullify')
+            };
+
+            const diffActiveStyles = {
+                easy: 'bg-teal-500 text-white border-teal-600 tab-active shadow-md',
+                normal: 'bg-indigo-500 text-white border-indigo-600 tab-active shadow-md',
+                hard: 'bg-purple-600 text-white border-purple-700 tab-active shadow-md',
+                extreme: 'bg-amber-600 text-white border-amber-700 tab-active shadow-md',
+                hell: 'bg-rose-600 text-white border-rose-700 tab-active hell-glow',
+                god: 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-gray-900 border-yellow-200 tab-active god-glow',
+                nullify: 'bg-gradient-to-r from-purple-900 via-indigo-900 to-cyan-800 text-cyan-200 border-cyan-400 tab-active nullify-glow'
+            };
+
+            Object.keys(diffBtns).forEach(key => {
+                if (diffBtns[key]) {
+                    const isSelected = (currentDifficulty === key);
+                    diffBtns[key].className = `tab-btn py-1 px-1 rounded-xl text-xs font-black transition-all border text-center ${isSelected ? diffActiveStyles[key] : inactiveStyle}`;
+                }
+            });
+        }
+
+        // 퀴즈 초기화 및 필터링
+        function initQuiz() {
+            score = 0;
+            combo = 0;
+            currentIdx = 0;
+            correctAnswersCount = 0;
+
+            // 주제 & 난이도 필터링
+            filteredQuizList = ALL_QUESTIONS.filter(q => {
+                const matchTopic = (currentTopic === 'all' || q.topic === currentTopic);
+                const matchDiff = (q.difficulty === currentDifficulty);
+                return matchTopic && matchDiff;
+            });
+
+            // 필터링 결과가 부족할 경우 해당 주제 문제 전체 fallback
+            if (filteredQuizList.length === 0) {
+                filteredQuizList = ALL_QUESTIONS.filter(q => (currentTopic === 'all' || q.topic === currentTopic));
+            }
+
+            updateScoreboard();
+            loadQuestion();
+        }
+
+        // 현재 문제 화면 출력
+        function loadQuestion() {
+            if (filteredQuizList.length === 0) return;
+
+            const q = filteredQuizList[currentIdx];
+            const totalCount = filteredQuizList.length;
+            
+            // UI 업데이트
+            document.getElementById('questionNumBadge').textContent = `문제 ${currentIdx + 1} / ${totalCount}`;
+            document.getElementById('categoryBadge').textContent = q.category;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('progressBar').style.width = `${((currentIdx + 1) / totalCount) * 100}%`;
+
+            // 결과 오버레이 숨기기
+            document.getElementById('resultOverlay').classList.add('hidden');
+
+            // 보기 버튼 생성
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            const btnColors = [
+                "from-emerald-400 to-teal-500 text-white border-emerald-300",
+                "from-sky-400 to-indigo-500 text-white border-sky-300",
+                "from-amber-400 to-yellow-500 text-white border-amber-300",
+                "from-rose-400 to-pink-500 text-white border-rose-300"
+            ];
+
+            const optionLabels = ["①", "②", "③", "④"];
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-choice bg-gradient-to-r ${btnColors[idx % btnColors.length]} font-black text-base sm:text-lg p-3.5 sm:p-4 rounded-2xl border-2 shadow-md flex items-center justify-start gap-3 cursor-pointer text-left w-full`;
+                btn.onclick = () => checkAnswer(idx);
+
+                btn.innerHTML = `
+                    <span class="bg-white/30 px-2.5 py-1 rounded-xl text-sm">${optionLabels[idx]}</span>
+                    <span class="flex-1 break-keep">${optText}</span>
+                `;
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        // 정답 검사
+        function checkAnswer(selectedIdx) {
+            const q = filteredQuizList[currentIdx];
+            const isCorrect = (selectedIdx === q.answer);
+
+            const overlay = document.getElementById('resultOverlay');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const explanationText = document.getElementById('explanationText');
+
+            if (isCorrect) {
+                // 정답 로직
+                playDingDong();
+                let basePoint = 10;
+                if (currentDifficulty === 'extreme') basePoint = 20;
+                if (currentDifficulty === 'hell') basePoint = 30;
+                if (currentDifficulty === 'god') basePoint = 50;
+                if (currentDifficulty === 'nullify') basePoint = 100;
+
+                score += basePoint + (combo * 3);
+                combo++;
+                correctAnswersCount++;
+
+                resultIcon.textContent = "⭕";
+                resultTitle.textContent = "정답!";
+                resultTitle.className = "text-4xl sm:text-5xl font-black mb-3 text-emerald-500";
+                
+                // 축하 폭죽 효과
+                confetti({
+                    particleCount: 60,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+            } else {
+                // 오답 로직
+                playBuzzer();
+                combo = 0;
+
+                resultIcon.textContent = "❌";
+                resultTitle.textContent = "오답!";
+                resultTitle.className = "text-4xl sm:text-5xl font-black mb-3 text-rose-500";
+            }
+
+            explanationText.textContent = q.explanation;
+            updateScoreboard();
+
+            // 결과 오버레이 노출
+            overlay.classList.remove('hidden');
+        }
+
+        // 다음 문제 진행
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < filteredQuizList.length) {
+                loadQuestion();
+            } else {
+                showGameOver();
+            }
+        }
+
+        // 점수판 업데이트
+        function updateScoreboard() {
+            document.getElementById('scoreText').textContent = score;
+            document.getElementById('comboText').textContent = combo;
+        }
+
+        // 완료 결과 모달창
+        function showGameOver() {
+            const totalCount = filteredQuizList.length;
+            const emojiEl = document.getElementById('gameOverEmoji');
+            const titleEl = document.getElementById('gameOverTitle');
+            const subEl = document.getElementById('gameOverSub');
+
+            if (currentDifficulty === 'nullify') {
+                emojiEl.textContent = '🌀';
+                titleEl.textContent = '차원 무효화 성공!';
+                subEl.textContent = '우주의 모든 법칙과 역설을 상쇄한 신화 속 정복자입니다!';
+            } else if (currentDifficulty === 'god') {
+                emojiEl.textContent = '⚡';
+                titleEl.textContent = '신의 영역 강림!';
+                subEl.textContent = '인간의 한계를 넘어선 지식의 신! 우주 최고 박사님입니다!';
+            } else if (currentDifficulty === 'extreme') {
+                emojiEl.textContent = '😈';
+                titleEl.textContent = '극악 난이도 정복!';
+                subEl.textContent = '전설의 상식 마스터! 놀라운 직관력과 지식입니다!';
+            } else if (currentDifficulty === 'hell') {
+                emojiEl.textContent = '💀';
+                titleEl.textContent = '지옥 난이도 생존!';
+                subEl.textContent = '천재 중의 천재! 지옥 상식 테스트를 돌파하셨습니다!';
+            } else {
+                emojiEl.textContent = '🏆';
+                titleEl.textContent = '상식 탐구 완료!';
+                subEl.textContent = '멋져요! 자랑스러운 어린이 상식 박사님!';
+            }
+
+            document.getElementById('finalScore').textContent = `${score}점`;
+            document.getElementById('finalCorrectCount').textContent = `${correctAnswersCount} / ${totalCount}`;
+            
+            const modal = document.getElementById('gameOverModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 축하 대형 폭죽 연출
+            confetti({
+                particleCount: 250,
+                spread: 140,
+                origin: { y: 0.5 }
+            });
+        }
+
+        // 퀴즈 재시작
+        function restartQuiz() {
+            const modal = document.getElementById('gameOverModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            initQuiz();
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTabUI();
+            initQuiz();
+        });
+    </script>
+</body>
+</html>
