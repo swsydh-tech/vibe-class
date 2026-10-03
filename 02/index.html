@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>운석 떨어뜨리기</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js for Sound Synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000428, #004e92); /* Night sky background */
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            user-select: none;
+        }
+
+        #game-area {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #ui-layer {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .btn-meteor {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255, 75, 43, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        .btn-meteor:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 25px rgba(255, 75, 43, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-meteor:active {
+            transform: translateY(2px) scale(0.98);
+            box-shadow: 0 5px 10px rgba(255, 75, 43, 0.3), inset 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .meteor-container {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .meteor-head {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #fff 10%, #ffd700 40%, #ff8c00 80%, #8b0000 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ff8c00, 0 0 40px #ff4500, inset 0 0 10px #fff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .meteor-tail {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 150px;
+            background: linear-gradient(to top, rgba(255, 140, 0, 0) 0%, rgba(255, 69, 0, 0.8) 50%, rgba(255, 255, 255, 1) 100%);
+            transform-origin: top center;
+            border-radius: 4px;
+            z-index: 1;
+            filter: blur(2px);
+        }
+
+        .explosion {
+            position: absolute;
+            pointer-events: none;
+            z-index: 60;
+            width: 10px;
+            height: 10px;
+            background: transparent;
+            border-radius: 50%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            opacity: 1;
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(var(--scale)) translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+
+        #houses-container {
+            position: absolute;
+            bottom: 50px; /* 바닥 바로 위에 위치 */
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            padding: 0 2vw;
+            box-sizing: border-box;
+            z-index: 45;
+            pointer-events: none;
+        }
+
+        .house {
+            position: relative;
+            width: 40px;
+            height: 35px;
+            background-color: #e0e0e0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s, opacity 0.2s;
+            transform-origin: bottom center;
+        }
+
+        .house::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -5px;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 20px solid #d32f2f; /* 빨간 지붕 */
+        }
+
+        .house::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 12px;
+            width: 16px;
+            height: 20px;
+            background-color: #5d4037; /* 갈색 문 */
+        }
+
+        .house.destroyed {
+            transform: scaleY(0.1) scaleX(1.4) translateY(10px);
+            filter: grayscale(100%) brightness(50%);
+            opacity: 0.7;
+            transition: transform 0.1s ease-out, filter 0.1s, opacity 0.1s;
+        }
+
+        /* Ground visual */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(to bottom, #2b3a4a, #1a252f);
+            border-top: 2px solid #4a5a6a;
+            z-index: 40;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            opacity: 0.8;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* Screen shake effect */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-screen {
+            animation: shake 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-area">
+        <div id="instructions">버튼을 눌러 운석을 소환하세요!</div>
+        <div id="houses-container"></div>
+        <div id="ground"></div>
+    </div>
+
+    <div id="ui-layer">
+        <button id="summon-btn" class="btn-meteor">운석 투하</button>
+    </div>
+
+    <script>
+        const btn = document.getElementById('summon-btn');
+        const gameArea = document.getElementById('game-area');
+        let audioContextStarted = false;
+
+        const housesContainer = document.getElementById('houses-container');
+        // 10개의 집 생성
+        for (let i = 0; i < 10; i++) {
+            const house = document.createElement('div');
+            house.className = 'house';
+            housesContainer.appendChild(house);
+        }
+
+        // Sound Engine using Tone.js
+        const SoundEngine = {
+            init: async function() {
+                if (!audioContextStarted) {
+                    await Tone.start();
+                    audioContextStarted = true;
+                    console.log('Audio context started');
+                }
+            },
+
+            playFallingSound: function() {
+                // A synth that sweeps down in frequency to simulate falling
+                const fallingSynth = new Tone.Synth({
+                    oscillator: { type: "sine" },
+                    envelope: {
+                        attack: 0.1,
+                        decay: 0.2,
+                        sustain: 1,
+                        release: 0.5
+                    }
+                }).toDestination();
+                
+                // Add some noise for the roaring sound of entering atmosphere
+                const noise = new Tone.Noise("pink").start();
+                const noiseFilter = new Tone.Filter(1000, "lowpass");
+                const noiseEnv = new Tone.AmplitudeEnvelope({
+                    attack: 0.5,
+                    decay: 0.1,
+                    sustain: 1,
+                    release: 0.5
+                }).toDestination();
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseEnv);
+                
+                // Pitch sweep down
+                fallingSynth.triggerAttack("C5");
+                fallingSynth.frequency.exponentialRampToValueAtTime("C2", Tone.now() + 1.5); // Sweeps down over 1.5s
+                noiseEnv.triggerAttack();
+
+                // Stop sounds after 1.5 seconds (estimated fall time)
+                setTimeout(() => {
+                    fallingSynth.triggerRelease();
+                    noiseEnv.triggerRelease();
+                    setTimeout(() => {
+                        fallingSynth.dispose();
+                        noise.dispose();
+                        noiseFilter.dispose();
+                        noiseEnv.dispose();
+                    }, 1000);
+                }, 1500);
+            },
+
+            playExplosionSound: function() {
+                // Synthesize an explosion sound
+                const explosionNoise = new Tone.Noise("white").start();
+                const noiseEnv = new Tone.AmplitudeEnvelope({
+                    attack: 0.01,
+                    decay: 0.3,
+                    sustain: 0.1,
+                    release: 0.8
+                }).toDestination();
+                
+                const filter = new Tone.Filter(400, "lowpass").toDestination();
+                
+                // Sub-bass thump for the impact
+                const thump = new Tone.MembraneSynth({
+                    pitchDecay: 0.05,
+                    octaves: 10,
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4 }
+                }).toDestination();
+
+                explosionNoise.connect(filter);
+                filter.connect(noiseEnv);
+
+                noiseEnv.triggerAttackRelease("1n");
+                thump.triggerAttackRelease("C1", "8n");
+                
+                // Cleanup
+                setTimeout(() => {
+                    explosionNoise.dispose();
+                    noiseEnv.dispose();
+                    filter.dispose();
+                    thump.dispose();
+                }, 2000);
+            }
+        };
+
+        function createMeteor() {
+            // Setup DOM elements
+            const container = document.createElement('div');
+            container.className = 'meteor-container';
+            
+            const head = document.createElement('div');
+            head.className = 'meteor-head';
+            
+            const tail = document.createElement('div');
+            tail.className = 'meteor-tail';
+            
+            container.appendChild(tail);
+            container.appendChild(head);
+            gameArea.appendChild(container);
+
+            // Starting position (top, random X)
+            const startX = Math.random() * (window.innerWidth - 100) + 50;
+            const startY = -100;
+            
+            // Target position (bottom, slightly varied X)
+            const groundY = window.innerHeight - 50; // Adjust based on ground height
+            
+            let targetX;
+            const houses = Array.from(document.querySelectorAll('.house'));
+            const intactHouses = houses.filter(h => !h.classList.contains('destroyed'));
+            
+            if (intactHouses.length > 0) {
+                // 부서지지 않은 집 중 하나를 무작위 목표로 설정
+                const targetHouse = intactHouses[Math.floor(Math.random() * intactHouses.length)];
+                const rect = targetHouse.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+            } else if (houses.length > 0) {
+                // 모두 부서졌다면 아무 집이나 목표로 설정
+                const targetHouse = houses[Math.floor(Math.random() * houses.length)];
+                const rect = targetHouse.getBoundingClientRect();
+                targetX = rect.left + rect.width / 2;
+            } else {
+                targetX = startX + (Math.random() * 200 - 100);
+            }
+
+            // Calculate angle for the tail
+            const dx = targetX - startX;
+            const dy = groundY - startY;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // Apply initial rotation so tail points up relative to fall direction
+            tail.style.transform = `translate(-50%, -50%) rotate(${angle - 90}deg)`;
+
+            container.style.left = `${startX}px`;
+            container.style.top = `${startY}px`;
+
+            // Play falling sound
+            SoundEngine.playFallingSound();
+
+            // Animation variables
+            const duration = 1500; // 1.5 seconds fall time
+            const startTime = performance.now();
+
+            function animateFall(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function (accelerate downwards)
+                const easeProgress = progress * progress;
+
+                const currentX = startX + (targetX - startX) * progress;
+                const currentY = startY + (groundY - startY) * easeProgress;
+
+                container.style.left = `${currentX}px`;
+                container.style.top = `${currentY}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateFall);
+                } else {
+                    // Hit the ground
+                    container.remove();
+                    createExplosion(currentX, currentY);
+                    document.body.classList.add('shake-screen');
+                    setTimeout(() => document.body.classList.remove('shake-screen'), 500);
+
+                    // 운석 폭발 반경 내의 집을 파괴
+                    houses.forEach(house => {
+                        const rect = house.getBoundingClientRect();
+                        const houseCenterX = rect.left + rect.width / 2;
+                        
+                        // 폭발 중심지에서 60px 이내에 있고, 아직 파괴되지 않은 집 파괴
+                        if (Math.abs(currentX - houseCenterX) < 60 && !house.classList.contains('destroyed')) {
+                            house.classList.add('destroyed');
+                            
+                            // 2초(2000ms) 후 집 복구
+                            setTimeout(() => {
+                                house.classList.remove('destroyed');
+                            }, 2000);
+                        }
+                    });
+                }
+            }
+
+            requestAnimationFrame(animateFall);
+        }
+
+        function createExplosion(x, y) {
+            SoundEngine.playExplosionSound();
+
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${x}px`;
+            explosion.style.top = `${y}px`;
+            gameArea.appendChild(explosion);
+
+            const colors = ['#ff0000', '#ff8c00', '#ffd700', '#ffffff', '#555555'];
+            const particleCount = 40;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random properties for particles
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 150 + 50; // Speed of spread
+                const tx = Math.cos(angle) * speed;
+                const ty = Math.sin(angle) * speed - 50; // Bias upwards slightly
+                const scale = Math.random() * 2 + 0.5;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                particle.style.backgroundColor = color;
+                // Use CSS variables to pass random values to keyframes
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                particle.style.setProperty('--scale', scale);
+                
+                // Randomize animation duration slightly
+                particle.style.animationDuration = `${Math.random() * 0.5 + 0.5}s`;
+
+                explosion.appendChild(particle);
+            }
+
+            // Clean up explosion DOM after animation
+            setTimeout(() => {
+                explosion.remove();
+            }, 1000);
+        }
+
+        btn.addEventListener('click', async () => {
+            await SoundEngine.init(); // Initialize Tone.js on first user interaction
+            
+            // 한 번에 5개의 운석을 약간의 시간차를 두고 생성합니다.
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createMeteor();
+                }, Math.random() * 600); // 0 ~ 600ms(0.6초) 사이의 무작위 딜레이
+            }
+            
+            // Add a little visual feedback to the button
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => btn.style.transform = '', 100);
+        });
+        
+        // Hide instructions after first click
+        btn.addEventListener('click', function hideInstructions() {
+             const inst = document.getElementById('instructions');
+             if(inst) {
+                 inst.style.transition = 'opacity 0.5s';
+                 inst.style.opacity = '0';
+                 setTimeout(() => inst.remove(), 500);
+             }
+             btn.removeEventListener('click', hideInstructions);
+        });
+
+    </script>
+</body>
+</html>

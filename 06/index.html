@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>말랑이 터치 게임</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:system-ui,sans-serif}
+#game{height:100%;position:relative;overflow:hidden;background:#000;color:#fff}
+#hud{height:70px;display:flex;align-items:center;justify-content:space-around;font-size:20px;font-weight:900}
+#score{color:#ffe56b}.time{color:#83cfff}
+#arena{position:absolute;top:70px;bottom:0;left:0;right:0;overflow:hidden}
+.squishy{
+ position:absolute;width:78px;height:78px;border-radius:48% 52% 45% 55%;
+ display:flex;align-items:center;justify-content:center;
+ border:3px solid #111;color:#111;font-weight:900;
+ box-shadow:inset -8px -10px 0 #0002,inset 7px 6px 0 #fff3;
+ transition:transform .08s;
+ touch-action:none;user-select:none
+}
+.pink{background:#ff8fb3}.yellow{background:#ffe56b}.blue{background:#83cfff}
+.green{background:#9be58d}.purple{background:#c49cff}
+.wakk{width:96px;height:96px;border-radius:50%;background:#f4c27a}
+.hit{transform:scale(.7,.62) rotate(5deg)!important}
+#start,#over{
+position:absolute;inset:0;background:#000;display:flex;flex-direction:column;
+align-items:center;justify-content:center;z-index:10;text-align:center
+}
+#over{display:none}
+h1{font-size:38px;margin:0 0 14px}
+p{font-size:18px}
+button{
+border:3px solid #fff;background:#fff;color:#000;border-radius:18px;
+padding:14px 28px;font-size:20px;font-weight:900
+}
+#message{position:absolute;pointer-events:none;font-weight:900;font-size:24px;animation:up .45s forwards}
+@keyframes up{to{transform:translateY(-50px);opacity:0}}
+</style>
+</head>
+<body>
+<div id="game">
+ <div id="hud"><div>⭐ <span id="score">0</span></div><div class="time">⏱️ <span id="time">30</span></div></div>
+ <div id="arena"></div>
+ <div id="start"><h1>말랑이 게임 🎮</h1><p>말랑이를 최대한 많이 눌러봐!</p><button id="startBtn">게임 시작</button></div>
+ <div id="over"><h1>게임 끝! 🎉</h1><p>점수: <b id="final">0</b></p><button id="again">다시 하기</button></div>
+</div>
+<script>
+const arena=document.querySelector('#arena'),scoreEl=document.querySelector('#score'),
+timeEl=document.querySelector('#time'),start=document.querySelector('#start'),
+over=document.querySelector('#over'),final=document.querySelector('#final');
+let score=0,time=30,running=false,timer,spawnTimer;
+const colors=['pink','yellow','blue','green','purple'];
+
+function spawn(type=Math.random()<.15?'wakk':'normal'){
+ if(!running)return;
+ const e=document.createElement('div');
+ e.className='squishy '+(type==='wakk'?'wakk':colors[Math.floor(Math.random()*colors.length)]);
+ e.textContent=type==='wakk'?'왁뿌볼':'말랑이';
+ const maxX=Math.max(0,arena.clientWidth-(type==='wakk'?96:78));
+ const maxY=Math.max(0,arena.clientHeight-(type==='wakk'?96:78));
+ e.style.left=Math.random()*maxX+'px'; e.style.top=Math.random()*maxY+'px';
+ e.onpointerdown=(ev)=>{
+   if(!running)return;
+   ev.preventDefault(); e.classList.add('hit');
+   const gain=type==='wakk'?5:1; score+=gain; scoreEl.textContent=score;
+   pop(ev.clientX,ev.clientY,gain===5?'+5!':'+'+gain);
+   setTimeout(()=>e.remove(),90);
+ };
+ arena.appendChild(e);
+ setTimeout(()=>{if(e.isConnected)e.remove()},1800);
+}
+function pop(x,y,t){
+ const p=document.createElement('div');p.id='message';p.textContent=t;
+ p.style.left=(x-20)+'px';p.style.top=(y-40)+'px';document.body.appendChild(p);
+ setTimeout(()=>p.remove(),500);
+}
+function startGame(){
+ score=0;time=30;running=true;scoreEl.textContent=0;timeEl.textContent=30;
+ start.style.display='none';over.style.display='none';arena.innerHTML='';
+ for(let i=0;i<12;i++)spawn();
+ clearInterval(timer);clearInterval(spawnTimer);
+ timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0)endGame()},1000);
+ spawnTimer=setInterval(()=>spawn(),500);
+}
+function endGame(){
+ running=false;clearInterval(timer);clearInterval(spawnTimer);
+ arena.innerHTML='';final.textContent=score;over.style.display='flex';
+}
+document.querySelector('#startBtn').onclick=startGame;
+document.querySelector('#again').onclick=startGame;
+</script>
+</body>
+</html>

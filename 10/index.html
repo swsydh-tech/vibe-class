@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가위바위보 아바타 꾸미기 게임</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Jua for playful and readable Korean text -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #fff0f5; /* 부드러운 연한 핑크빛 배경 */
+            color: #4a4a4a;
+        }
+        .pastel-card {
+            background-color: #ffffff;
+            border: 3px solid #ffb6c1;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(255, 182, 193, 0.4);
+        }
+        .btn-pink {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+        }
+        .btn-pink:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 154, 158, 0.6);
+        }
+        .btn-pink:active {
+            transform: translateY(1px);
+        }
+        .tab-btn.active {
+            background-color: #ff85a2;
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 133, 162, 0.4);
+        }
+        @keyframes floatEffect {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .floating-avatar {
+            animation: floatEffect 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-4 sm:p-6">
+
+    <header class="w-full max-w-md text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold text-[#ff6b8b] mb-2 drop-shadow-sm">💖 가위바위보 아바타 꾸미기 💖</h1>
+        <p class="text-lg text-gray-600">이겨서 하트를 모으고 나만의 아바타를 꾸며보세요!</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="flex justify-center gap-4 mb-6 w-full max-w-md">
+        <button id="tabGame" onclick="switchTab('game')" class="tab-btn active flex-1 py-3 px-6 rounded-2xl text-xl font-bold bg-white text-[#ff6b8b] border-2 border-[#ffb6c1] transition-all">
+            🎮 게임하기
+        </button>
+        <button id="tabShop" onclick="switchTab('shop')" class="tab-btn flex-1 py-3 px-6 rounded-2xl text-xl font-bold bg-white text-[#ff6b8b] border-2 border-[#ffb6c1] transition-all">
+            ✨ 아바타 상점
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-md flex flex-col gap-6">
+
+        <div id="gameView" class="flex flex-col gap-6">
+            <!-- Stats Bar (Hearts & Score) -->
+            <div class="pastel-card p-4 flex justify-around items-center text-xl font-bold">
+                <div class="flex items-center gap-2 text-[#ff477e]">
+                    <span class="text-2xl animate-pulse">❤️</span>
+                    <span id="heartCount">0</span> 개
+                </div>
+                <div class="h-6 w-px bg-pink-200"></div>
+                <div class="text-gray-700">
+                    승리: <span id="winCount" class="text-[#ff6b8b]">0</span>승
+                </div>
+            </div>
+
+            <!-- Avatar Preview & Battle Stage -->
+            <div class="pastel-card p-6 flex flex-col items-center relative overflow-hidden">
+                <!-- Avatar Display Box -->
+                <div id="avatarContainer" class="w-36 h-36 bg-pink-50 rounded-full border-4 border-pink-200 flex items-center justify-center relative mb-4 shadow-inner floating-avatar transition-all">
+                    <!-- Base Character / Face -->
+                    <div id="baseCharacter" class="text-6xl select-none relative z-10">🐰</div>
+                    <!-- Equipped Items Overlays -->
+                    <div id="equippedHat" class="absolute -top-3 text-4xl z-25 hidden"></div>
+                    <div id="equippedGlasses" class="absolute top-10 text-3xl z-20 hidden"></div>
+                    <div id="equippedOutfit" class="absolute bottom-2 text-4xl z-20 hidden"></div>
+                </div>
+                <p class="text-lg font-bold text-gray-700 mb-2">나의 아바타</p>
+
+                <!-- Battle Result Arena -->
+                <div class="w-full bg-pink-50 rounded-2xl p-4 text-center border border-pink-100 mt-2">
+                    <div class="flex justify-around items-center mb-3">
+                        <div class="flex flex-col items-center">
+                            <span class="text-sm text-gray-500 mb-1">나</span>
+                            <span id="myChoiceDisplay" class="text-4xl bg-white p-3 rounded-2xl shadow-sm border border-pink-200">❓</span>
+                        </div>
+                        <span class="text-2xl font-bold text-pink-400">VS</span>
+                        <div class="flex flex-col items-center">
+                            <span class="text-sm text-gray-500 mb-1">컴퓨터</span>
+                            <span id="comChoiceDisplay" class="text-4xl bg-white p-3 rounded-2xl shadow-sm border border-pink-200">❓</span>
+                        </div>
+                    </div>
+                    <div id="battleResultText" class="text-xl font-bold text-[#ff6b8b] min-h-[32px]">
+                        가위, 바위, 보 중 하나를 선택하세요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Choice Buttons -->
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="playGame('scissors')" class="btn-pink py-5 px-2 rounded-2xl text-2xl font-bold text-white flex flex-col items-center gap-1">
+                    <span class="text-4xl">✌️</span>
+                    <span>가위</span>
+                </button>
+                <button onclick="playGame('rock')" class="btn-pink py-5 px-2 rounded-2xl text-2xl font-bold text-white flex flex-col items-center gap-1">
+                    <span class="text-4xl">✊</span>
+                    <span>바위</span>
+                </button>
+                <button onclick="playGame('paper')" class="btn-pink py-5 px-2 rounded-2xl text-2xl font-bold text-white flex flex-col items-center gap-1">
+                    <span class="text-4xl">🖐️</span>
+                    <span>보</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="shopView" class="hidden flex flex-col gap-6">
+            <!-- Hearts Summary Banner -->
+            <div class="pastel-card p-4 flex justify-between items-center text-xl font-bold bg-pink-50">
+                <span class="text-gray-700">보유한 하트:</span>
+                <div class="flex items-center gap-2 text-[#ff477e]">
+                    <span class="text-2xl">❤️</span>
+                    <span id="shopHeartCount">0</span> 개
+                </div>
+            </div>
+
+            <!-- Avatar Character Selector -->
+            <div class="pastel-card p-4 flex flex-col gap-2 bg-white">
+                <h3 class="text-lg font-bold text-gray-700">🐰 기본 캐릭터 선택</h3>
+                <div class="flex gap-3 justify-around">
+                    <button onclick="setBaseCharacter('🐰')" class="text-3xl p-3 bg-pink-50 hover:bg-pink-100 rounded-2xl border-2 border-pink-200 transition-all">🐰 토끼</button>
+                    <button onclick="setBaseCharacter('🐱')" class="text-3xl p-3 bg-pink-50 hover:bg-pink-100 rounded-2xl border-2 border-pink-200 transition-all">🐱 고양이</button>
+                    <button onclick="setBaseCharacter('🐻')" class="text-3xl p-3 bg-pink-50 hover:bg-pink-100 rounded-2xl border-2 border-pink-200 transition-all">🐻 곰돌이</button>
+                    <button onclick="setBaseCharacter('🐶')" class="text-3xl p-3 bg-pink-50 hover:bg-pink-100 rounded-2xl border-2 border-pink-200 transition-all">🐶 강아지</button>
+                </div>
+            </div>
+
+            <!-- Shop Items Category List -->
+            <div class="pastel-card p-6 flex flex-col gap-4 max-h-[420px] overflow-y-auto">
+                <h2 class="text-2xl font-bold text-[#ff6b8b] mb-1">🎁 아바타 상점 및 옷장</h2>
+                <p class="text-sm text-gray-500 mb-2">아이템을 구매하고 착용해보세요!</p>
+
+                <div id="itemList" class="flex flex-col gap-4">
+                    <!-- Dynamic Items populated by JS -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="customModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="pastel-card bg-white p-6 max-w-sm w-full text-center flex flex-col items-center gap-4 animate-bounce-in">
+            <div id="modalEmoji" class="text-6xl">🎉</div>
+            <h3 id="modalTitle" class="text-2xl font-bold text-[#ff6b8b]">축하합니다!</h3>
+            <p id="modalMessage" class="text-lg text-gray-600">하트를 획득하셨습니다!</p>
+            <button onclick="closeModal()" class="btn-pink w-full py-3 rounded-xl text-lg font-bold text-white mt-2">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game State structure
+        let gameState = {
+            hearts: 5, // Start with 5 hearts as a welcoming bonus
+            wins: 0,
+            baseChar: '🐰',
+            equipped: {
+                hat: null,
+                glasses: null,
+                outfit: null
+            },
+            inventory: [], // IDs of purchased items
+            items: [
+                { id: 'hat_ribbon', type: 'hat', name: '핑크 리본', icon: '🎀', price: 5 },
+                { id: 'hat_crown', type: 'hat', name: '황금 왕관', icon: '👑', price: 10 },
+                { id: 'hat_party', type: 'hat', name: '파티 모자', icon: '🎩', price: 8 },
+                { id: 'glasses_sunglasses', type: 'glasses', name: '멋쟁이 선글라스', icon: '🕶️', price: 6 },
+                { id: 'glasses_star', type: 'glasses', name: '별 안경', icon: '⭐', price: 7 },
+                { id: 'outfit_cape', type: 'outfit', name: '슈퍼 망토', icon: '🦸', price: 12 },
+                { id: 'outfit_angel', type: 'outfit', name: '천사 날개', icon: '👼', price: 15 }
+            ]
+        };
+
+        // Load data from localStorage
+        function loadGameData() {
+            const saved = localStorage.getItem('rps_avatar_game_save');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Failed to parse save data', e);
+                }
+            }
+            updateUI();
+        }
+
+        // Save data to localStorage
+        function saveGameData() {
+            localStorage.setItem('rps_avatar_game_save', JSON.stringify(gameState));
+        }
+
+        // Switch between Game and Shop tabs
+        function switchTab(tab) {
+            const gameView = document.getElementById('gameView');
+            const shopView = document.getElementById('shopView');
+            const tabGame = document.getElementById('tabGame');
+            const tabShop = document.getElementById('tabShop');
+
+            if (tab === 'game') {
+                gameView.classList.remove('hidden');
+                shopView.classList.add('hidden');
+                tabGame.classList.add('active');
+                tabShop.classList.remove('active');
+            } else {
+                gameView.classList.add('hidden');
+                shopView.classList.remove('hidden');
+                tabShop.classList.add('active');
+                tabGame.classList.remove('active');
+                renderShop();
+            }
+        }
+
+        // Choice representations
+        const choices = {
+            scissors: { name: '가위', emoji: '✌️' },
+            rock: { name: '바위', emoji: '✊' },
+            paper: { name: '보', emoji: '🖐️' }
+        };
+
+        // Main Rock-Paper-Scissors game logic
+        function playGame(myChoice) {
+            const keys = Object.keys(choices);
+            const comChoiceKey = keys[Math.floor(Math.random() * keys.length)];
+            
+            const myData = choices[myChoice];
+            const comData = choices[comChoiceKey];
+
+            document.getElementById('myChoiceDisplay').innerText = myData.emoji;
+            document.getElementById('comChoiceDisplay').innerText = comData.emoji;
+
+            const resultText = document.getElementById('battleResultText');
+
+            // Determine outcome
+            if (myChoice === comChoiceKey) {
+                resultText.innerText = "비겼습니다! 다시 도전해보세요.";
+                resultText.className = "text-xl font-bold text-gray-500 min-h-[32px]";
+            } else if (
+                (myChoice === 'scissors' && comChoiceKey === 'paper') ||
+                (myChoice === 'rock' && comChoiceKey === 'scissors') ||
+                (myChoice === 'paper' && comChoiceKey === 'rock')
+            ) {
+                // WIN: Grant random hearts between 1 and 3
+                const earnedHearts = Math.floor(Math.random() * 3) + 1;
+                gameState.hearts += earnedHearts;
+                gameState.wins += 1;
+                saveGameData();
+                updateUI();
+
+                resultText.innerText = `🎉 승리! 하트 +${earnedHearts}개 획득!`;
+                resultText.className = "text-xl font-bold text-[#ff477e] min-h-[32px]";
+
+                showModal("축하합니다!", `가위바위보 승리! ❤ 하트를 ${earnedHearts}개 받았어요!`, "🎁");
+            } else {
+                resultText.innerText = "아쉽네요! 컴퓨터가 이겼습니다.";
+                resultText.className = "text-xl font-bold text-blue-500 min-h-[32px]";
+            }
+        }
+
+        // Change base avatar character
+        function setBaseCharacter(charEmoji) {
+            gameState.baseChar = charEmoji;
+            saveGameData();
+            updateUI();
+        }
+
+        // Update UI elements and avatar display
+        function updateUI() {
+            document.getElementById('heartCount').innerText = gameState.hearts;
+            document.getElementById('shopHeartCount').innerText = gameState.hearts;
+            document.getElementById('winCount').innerText = gameState.wins;
+            document.getElementById('baseCharacter').innerText = gameState.baseChar;
+
+            // Render Equipped Items
+            const hatEl = document.getElementById('equippedHat');
+            const glassesEl = document.getElementById('equippedGlasses');
+            const outfitEl = document.getElementById('equippedOutfit');
+
+            if (gameState.equipped.hat) {
+                const item = gameState.items.find(i => i.id === gameState.equipped.hat);
+                hatEl.innerText = item ? item.icon : '';
+                hatEl.classList.remove('hidden');
+            } else {
+                hatEl.classList.add('hidden');
+            }
+
+            if (gameState.equipped.glasses) {
+                const item = gameState.items.find(i => i.id === gameState.equipped.glasses);
+                glassesEl.innerText = item ? item.icon : '';
+                glassesEl.classList.remove('hidden');
+            } else {
+                glassesEl.classList.add('hidden');
+            }
+
+            if (gameState.equipped.outfit) {
+                const item = gameState.items.find(i => i.id === gameState.equipped.outfit);
+                outfitEl.innerText = item ? item.icon : '';
+                outfitEl.classList.remove('hidden');
+            } else {
+                outfitEl.classList.add('hidden');
+            }
+        }
+
+        // Render Shop & Inventory list
+        function renderShop() {
+            const listEl = document.getElementById('itemList');
+            listEl.innerHTML = '';
+
+            gameState.items.forEach(item => {
+                const isOwned = gameState.inventory.includes(item.id);
+                const isEquipped = (
+                    gameState.equipped.hat === item.id ||
+                    gameState.equipped.glasses === item.id ||
+                    gameState.equipped.outfit === item.id
+                );
+
+                let actionButtonHTML = '';
+                if (!isOwned) {
+                    actionButtonHTML = `<button onclick="buyItem('${item.id}')" class="btn-pink px-4 py-2 rounded-xl text-white font-bold text-sm">구매 (${item.price}개)</button>`;
+                } else if (isEquipped) {
+                    actionButtonHTML = `<button onclick="unequipItem('${item.id}')" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl text-gray-700 font-bold text-sm transition-all">벗기</button>`;
+                } else {
+                    actionButtonHTML = `<button onclick="equipItem('${item.id}')" class="bg-pink-100 hover:bg-pink-200 text-[#ff6b8b] px-4 py-2 rounded-xl font-bold text-sm transition-all">착용하기</button>`;
+                }
+
+                const cardHTML = `
+                    <div class="flex items-center justify-between p-3 bg-pink-50/60 rounded-2xl border border-pink-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl bg-white p-2 rounded-xl border border-pink-200 shadow-sm">${item.icon}</span>
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800">${item.name}</h3>
+                                <p class="text-sm text-gray-500 flex items-center gap-1">
+                                    <span>❤ ${item.price}개</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            ${actionButtonHTML}
+                        </div>
+                    </div>
+                `;
+                listEl.innerHTML += cardHTML;
+            });
+        }
+
+        // Buy item logic
+        function buyItem(itemId) {
+            const item = gameState.items.find(i => i.id === itemId);
+            if (gameState.hearts < item.price) {
+                showModal("하트 부족", "하트가 부족해요! 가위바위보를 이기고 하트를 모아보세요.", "😢");
+                return;
+            }
+
+            gameState.hearts -= item.price;
+            gameState.inventory.push(item.id);
+            equipItem(itemId); // Automatically equip upon purchase
+            saveGameData();
+            updateUI();
+            renderShop();
+            showModal("구매 완료!", `${item.name}을(를) 구매하고 착용했습니다!`, "🛍️");
+        }
+
+        // Equip item
+        function equipItem(itemId) {
+            const item = gameState.items.find(i => i.id === itemId);
+            gameState.equipped[item.type] = item.id;
+            saveGameData();
+            updateUI();
+            renderShop();
+        }
+
+        // Unequip item
+        function unequipItem(itemId) {
+            const item = gameState.items.find(i => i.id === itemId);
+            if (gameState.equipped[item.type] === itemId) {
+                gameState.equipped[item.type] = null;
+            }
+            saveGameData();
+            updateUI();
+            renderShop();
+        }
+
+        // Custom Modal handlers
+        function showModal(title, message, emoji) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('modalEmoji').innerText = emoji;
+            document.getElementById('customModal').classList.remove('hidden');
+            document.getElementById('customModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+            document.getElementById('customModal').classList.remove('flex');
+        }
+
+        // Initialize on window load
+        window.onload = function() {
+            loadGameData();
+        };
+    </script>
+</body>
+</html>

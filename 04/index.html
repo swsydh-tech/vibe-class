@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>숫자 야구 (0000 ~ 9999)</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Jua, Outfit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* 숫자 타일 입체 팝 애니메이션 */
+        @keyframes tilePop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 타일 뒤집기 애니메이션 (결과 확인용) */
+        @keyframes flipTile {
+            0% { transform: rotateX(0deg); }
+            50% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0deg); }
+        }
+
+        .animate-pop {
+            animation: tilePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .animate-flip {
+            animation: flipTile 0.5s ease-in-out forwards;
+        }
+
+        /* 승리 축하 모달 애니메이션 */
+        @keyframes modalBounce {
+            0% { transform: scale(0.5) translateY(-50px); opacity: 0; }
+            70% { transform: scale(1.05) translateY(10px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .animate-modal {
+            animation: modalBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 신나는 빛 반짝임 효과 */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(34, 197, 94, 0.9); }
+        }
+
+        .glow-effect {
+            animation: pulseGlow 1.5s infinite ease-in-out;
+        }
+
+        /* 커스텀 스크롤바 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-between p-3 sm:p-5">
+
+    <header class="w-full max-w-md text-center mt-2 z-10">
+        <!-- 상단 타이틀 바 -->
+        <div class="flex items-center justify-between bg-slate-800/80 backdrop-blur px-5 py-3 rounded-2xl border border-slate-700 shadow-lg">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-baseball-bat-ball text-emerald-400 text-2xl"></i>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-wide text-white">숫자 야구</h1>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- 새 게임 버튼 -->
+                <button onclick="confirmRestart()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-bold rounded-xl transition flex items-center gap-1.5 border border-slate-600 active:scale-95">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>재시작</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 상태 정보 (시도 횟수, 힌트) -->
+        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div class="bg-slate-800/60 rounded-xl p-2 border border-slate-700/60 flex items-center justify-center gap-2">
+                <span class="text-slate-400">시도 횟수:</span>
+                <span id="attempt-count" class="font-outfit font-extrabold text-emerald-400 text-lg">0</span>
+            </div>
+            <div class="bg-slate-800/60 rounded-xl p-2 border border-slate-700/60 flex items-center justify-center gap-2">
+                <span class="text-slate-400">상태:</span>
+                <span id="game-status" class="font-bold text-amber-400">게임 중</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md my-auto py-3 flex flex-col items-center justify-center gap-4 flex-1">
+
+        <!-- 색상 범례(규칙) 가이드 -->
+        <div class="w-full bg-slate-800/40 rounded-xl p-2.5 border border-slate-700/50 flex justify-around text-xs sm:text-sm">
+            <div class="flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded bg-emerald-500 inline-block shadow"></span>
+                <span class="text-slate-300">위치+숫자 일치</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded bg-amber-500 inline-block shadow"></span>
+                <span class="text-slate-300">숫자만 일치</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-4 h-4 rounded bg-slate-600 inline-block shadow"></span>
+                <span class="text-slate-300">불일치</span>
+            </div>
+        </div>
+
+        <!-- 이전 추측 기록 목록 영역 -->
+        <div id="history-container" class="w-full bg-slate-800/80 rounded-2xl p-4 border border-slate-700 shadow-xl flex-1 min-h-[200px] max-h-[35vh] overflow-y-auto custom-scrollbar flex flex-col gap-2.5">
+            <!-- 초기 상태 안내문 -->
+            <div id="empty-state" class="m-auto text-center text-slate-500 py-8 flex flex-col items-center gap-2">
+                <i class="fa-solid fa-unlock-keyhole text-4xl text-slate-600"></i>
+                <p class="text-sm">0000 ~ 9999 사이의 4자리 숫자를 입력하세요!<br>(숫자 중복은 없습니다)</p>
+            </div>
+            <!-- 추측 이력 아이템들이 동적으로 추가됨 -->
+        </div>
+
+        <!-- 현재 입력 중인 4자리 숫자 표시 타일 -->
+        <div class="w-full bg-slate-800 rounded-2xl p-3 border-2 border-emerald-500/40 shadow-lg relative">
+            <div class="text-center text-xs text-slate-400 mb-2 font-bold">입력 중인 숫자</div>
+            <div class="flex justify-center gap-3">
+                <div id="digit-0" class="w-14 h-16 sm:w-16 sm:h-20 bg-slate-900 border-2 border-slate-600 rounded-xl flex items-center justify-center text-3xl sm:text-4xl font-extrabold font-outfit text-white shadow-inner transition-colors"></div>
+                <div id="digit-1" class="w-14 h-16 sm:w-16 sm:h-20 bg-slate-900 border-2 border-slate-600 rounded-xl flex items-center justify-center text-3xl sm:text-4xl font-extrabold font-outfit text-white shadow-inner transition-colors"></div>
+                <div id="digit-2" class="w-14 h-16 sm:w-16 sm:h-20 bg-slate-900 border-2 border-slate-600 rounded-xl flex items-center justify-center text-3xl sm:text-4xl font-extrabold font-outfit text-white shadow-inner transition-colors"></div>
+                <div id="digit-3" class="w-14 h-16 sm:w-16 sm:h-20 bg-slate-900 border-2 border-slate-600 rounded-xl flex items-center justify-center text-3xl sm:text-4xl font-extrabold font-outfit text-white shadow-inner transition-colors"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 하단 숫자 키패드 -->
+    <footer class="w-full max-w-md z-10 mb-2">
+        <div class="bg-slate-800/90 backdrop-blur rounded-2xl p-3 border border-slate-700 shadow-xl">
+            <!-- 키패드 그리드 (1~9, 0, 지우기, 제출) -->
+            <div class="grid grid-cols-4 gap-2 text-xl font-outfit font-bold">
+                <button onclick="pressNum('1')" id="key-1" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">1</button>
+                <button onclick="pressNum('2')" id="key-2" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">2</button>
+                <button onclick="pressNum('3')" id="key-3" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">3</button>
+                <button onclick="pressDelete()" class="h-12 bg-rose-900/60 hover:bg-rose-800 active:scale-95 text-rose-200 rounded-xl transition-all flex items-center justify-center shadow border border-rose-700/50">
+                    <i class="fa-solid fa-delete-left"></i>
+                </button>
+
+                <button onclick="pressNum('4')" id="key-4" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">4</button>
+                <button onclick="pressNum('5')" id="key-5" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">5</button>
+                <button onclick="pressNum('6')" id="key-6" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">6</button>
+                <button onclick="pressNum('0')" id="key-0" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">0</button>
+
+                <button onclick="pressNum('7')" id="key-7" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">7</button>
+                <button onclick="pressNum('8')" id="key-8" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">8</button>
+                <button onclick="pressNum('9')" id="key-9" class="key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow">9</button>
+                
+                <!-- 제출(Enter) 버튼 -->
+                <button onclick="submitGuess()" id="submit-btn" class="h-12 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold rounded-xl transition flex items-center justify-center shadow border border-emerald-400/30">
+                    <i class="fa-solid fa-arrow-turn-down transform rotate-90 text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 승리 클리어 모달 (신나는 음악 & 메시지) -->
+    <div id="clear-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center z-50 p-4 transition-opacity">
+        <div class="bg-slate-900 border-2 border-emerald-400 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl animate-modal glow-effect relative overflow-hidden">
+            <!-- 축하 빛 효과 배경 -->
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-emerald-500/20 rounded-full blur-xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-amber-500/20 rounded-full blur-xl"></div>
+
+            <div class="text-6xl text-emerald-400 mb-3 animate-bounce">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 class="text-4xl font-extrabold text-white mb-2 tracking-wider">CLEAR!</h2>
+            <p class="text-emerald-400 font-bold text-lg mb-5">정답을 맞추셨습니다!</p>
+
+            <!-- 맞춘 정답 번호 카드 -->
+            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 mb-5 shadow-inner">
+                <div class="text-xs text-slate-400 mb-2 font-bold">정답 번호</div>
+                <div id="modal-secret-digits" class="flex justify-center gap-2 font-outfit text-4xl font-extrabold text-emerald-300">
+                    <!-- 정답 숫자가 JS로 삽입됨 -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 text-sm text-slate-300">
+                    총 <span id="modal-attempts" class="font-bold text-emerald-400 text-lg">0</span> 번 만에 성공!
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center gap-2 text-xs text-amber-300 mb-6 bg-amber-500/10 py-2 rounded-xl border border-amber-500/30">
+                <i class="fa-solid fa-music animate-pulse"></i>
+                <span>신나는 승리 팡파레 재생 중!</span>
+            </div>
+
+            <button onclick="startNewGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xl rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i>
+                <span>다시 도전하기</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 확인 모달 (초기화 시) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-xs w-full text-center shadow-xl animate-pop">
+            <i class="fa-solid fa-circle-exclamation text-4xl text-amber-400 mb-3"></i>
+            <h3 class="text-lg font-bold text-white mb-2">새 게임 시작</h3>
+            <p class="text-slate-400 text-sm mb-5">진행 중인 기록이 사라집니다.<br>다시 시작하시겠습니까?</p>
+            <div class="flex gap-2">
+                <button onclick="closeConfirmModal()" class="flex-1 py-2 bg-slate-700 text-slate-300 rounded-xl font-bold hover:bg-slate-600 transition">취소</button>
+                <button onclick="forceRestart()" class="flex-1 py-2 bg-emerald-500 text-slate-900 rounded-xl font-bold hover:bg-emerald-400 transition shadow">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 전역 상태 변수 ---
+        let secretNum = "0123";       // 0000 ~ 9999 정답 (중복 없음)
+        let currentGuess = "";        // 현재 입력 중인 4자리 문자열
+        let attemptsCount = 0;        // 시도 횟수
+        let isGameOver = false;       // 게임 종료 여부
+        let keyStatusMap = {};        // 키보드 자판 색상 상태 ('green', 'yellow', 'gray')
+        let audioCtx = null;          // 효과음을 위한 Web Audio API 컨텍스트
+
+        // 앱 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            startNewGame();
+
+            // PC 키보드 입력 지원
+            window.addEventListener('keydown', (e) => {
+                if (isGameOver) return;
+                if (e.key >= '0' && e.key <= '9') {
+                    pressNum(e.key);
+                } else if (e.key === 'Backspace') {
+                    pressDelete();
+                } else if (e.key === 'Enter') {
+                    submitGuess();
+                }
+            });
+        });
+
+        // Web Audio API 초기화 (사용자 상호작용 시 호출)
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- 게임 진행 함수 ---
+
+        // 새 게임 시작
+        function startNewGame() {
+            // 정답 번호 랜덤 생성 (중복 없는 4자리 숫자)
+            let digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            secretNum = "";
+            for (let i = 0; i < 4; i++) {
+                const randomIndex = Math.floor(Math.random() * digits.length);
+                secretNum += digits[randomIndex];
+                digits.splice(randomIndex, 1);
+            }
+            
+            // 상태 초기화
+            currentGuess = "";
+            attemptsCount = 0;
+            isGameOver = false;
+            keyStatusMap = {};
+
+            // UI 초기화
+            document.getElementById('attempt-count').textContent = '0';
+            document.getElementById('game-status').textContent = '게임 중';
+            document.getElementById('game-status').className = 'font-bold text-amber-400';
+            
+            // 모달 닫기
+            document.getElementById('clear-modal').classList.add('hidden');
+            closeConfirmModal();
+            
+            // 키패드 색상 초기화
+            for (let i = 0; i <= 9; i++) {
+                const btn = document.getElementById(`key-${i}`);
+                if (btn) {
+                    btn.className = "key-btn h-12 bg-slate-700 hover:bg-slate-600 active:scale-95 rounded-xl transition-all flex items-center justify-center text-white shadow";
+                }
+            }
+
+            // 히스토리 초기화
+            const historyContainer = document.getElementById('history-container');
+            historyContainer.innerHTML = `
+                <div id="empty-state" class="m-auto text-center text-slate-500 py-8 flex flex-col items-center gap-2 animate-pop">
+                    <i class="fa-solid fa-unlock-keyhole text-4xl text-slate-600"></i>
+                    <p class="text-sm">0000 ~ 9999 사이의 4자리 숫자를 입력하세요!<br>(숫자 중복은 없습니다)</p>
+                </div>
+            `;
+
+            updateInputDisplay();
+        }
+
+        // 재시작 확인 모달 관련
+        function confirmRestart() {
+            if (attemptsCount > 0 && !isGameOver) {
+                document.getElementById('confirm-modal').classList.remove('hidden');
+            } else {
+                startNewGame();
+            }
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+        function forceRestart() {
+            startNewGame();
+        }
+
+        // 숫자 입력 처리
+        function pressNum(digit) {
+            if (isGameOver) return;
+            
+            // 중복 숫자 입력 방지
+            if (currentGuess.includes(digit)) {
+                playErrorSound();
+                return;
+            }
+
+            initAudio();
+            playClickSound(300 + parseInt(digit) * 30);
+
+            if (currentGuess.length < 4) {
+                currentGuess += digit;
+                updateInputDisplay();
+            }
+        }
+
+        // 지우기 처리
+        function pressDelete() {
+            if (isGameOver) return;
+            initAudio();
+            playClickSound(220);
+
+            if (currentGuess.length > 0) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateInputDisplay();
+            }
+        }
+
+        // 입력 중인 숫자 UI 업데이트
+        function updateInputDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const tile = document.getElementById(`digit-${i}`);
+                if (i < currentGuess.length) {
+                    tile.textContent = currentGuess[i];
+                    tile.classList.add('border-emerald-400', 'text-emerald-400');
+                    tile.classList.remove('border-slate-600', 'text-white');
+                    // 입력될 때 살짝 팝 효과
+                    tile.classList.remove('animate-pop');
+                    void tile.offsetWidth; // reflow
+                    tile.classList.add('animate-pop');
+                } else {
+                    tile.textContent = '';
+                    tile.classList.remove('border-emerald-400', 'text-emerald-400', 'animate-pop');
+                    tile.classList.add('border-slate-600', 'text-white');
+                }
+            }
+        }
+
+        // 제출 및 판정 처리
+        function submitGuess() {
+            if (isGameOver) return;
+            initAudio();
+
+            // 4자리가 안 채워졌을 때 거부 효과
+            if (currentGuess.length !== 4) {
+                playErrorSound();
+                const tilesContainer = document.getElementById('digit-0').parentElement;
+                tilesContainer.classList.add('translate-x-1', 'border-rose-500');
+                setTimeout(() => {
+                    tilesContainer.classList.remove('translate-x-1', 'border-rose-500');
+                    tilesContainer.classList.add('-translate-x-1');
+                    setTimeout(() => tilesContainer.classList.remove('-translate-x-1'), 100);
+                }, 100);
+                return;
+            }
+
+            attemptsCount++;
+            document.getElementById('attempt-count').textContent = attemptsCount;
+
+            // 판정 로직 실행
+            const result = evaluateGuess(secretNum, currentGuess);
+
+            // 기록 UI 추가
+            addHistoryRecord(currentGuess, result);
+
+            // 키보드 색상 힌트 갱신
+            updateKeypadColors(currentGuess, result);
+
+            // 정답 확인
+            const isWin = result.every(res => res === 'green');
+
+            if (isWin) {
+                isGameOver = true;
+                document.getElementById('game-status').textContent = '클리어!';
+                document.getElementById('game-status').className = 'font-bold text-emerald-400 animate-pulse';
+                
+                // 성공 효과음 후 모달 오픈
+                setTimeout(() => {
+                    showVictoryModal();
+                }, 800);
+            } else {
+                playSubmitSound();
+            }
+
+            // 입력칸 비우기
+            currentGuess = "";
+            updateInputDisplay();
+        }
+
+        // 정답과 추측값 비교 (Wordle 방식 로직)
+        function evaluateGuess(secret, guess) {
+            const results = new Array(4).fill('gray');
+            const secretArr = secret.split('');
+            const guessArr = guess.split('');
+            const secretUsed = new Array(4).fill(false);
+            const guessUsed = new Array(4).fill(false);
+
+            // 1차 검사: 숫자와 위치 모두 일치 (Green)
+            for (let i = 0; i < 4; i++) {
+                if (guessArr[i] === secretArr[i]) {
+                    results[i] = 'green';
+                    secretUsed[i] = true;
+                    guessUsed[i] = true;
+                }
+            }
+
+            // 2차 검사: 숫자는 일치하나 위치가 다름 (Yellow)
+            for (let i = 0; i < 4; i++) {
+                if (guessUsed[i]) continue;
+                for (let j = 0; j < 4; j++) {
+                    if (!secretUsed[j] && guessArr[i] === secretArr[j]) {
+                        results[i] = 'yellow';
+                        secretUsed[j] = true;
+                        break;
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        // 히스토리에 기록 추가
+        function addHistoryRecord(guessStr, results) {
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) emptyState.remove();
+
+            const historyContainer = document.getElementById('history-container');
+
+            const itemElem = document.createElement('div');
+            itemElem.className = 'flex items-center justify-between bg-slate-900/90 rounded-xl p-2.5 border border-slate-700/80 mt-1';
+
+            // 회차 표시
+            const countLabel = document.createElement('div');
+            countLabel.className = 'text-xs text-slate-400 font-bold px-2 w-10';
+            countLabel.textContent = `#${attemptsCount}`;
+
+            // 타일 컨테이너
+            const tilesContainer = document.createElement('div');
+            tilesContainer.className = 'flex gap-2 font-outfit font-extrabold text-xl sm:text-2xl flex-1 justify-center';
+
+            for (let i = 0; i < 4; i++) {
+                const char = guessStr[i];
+                const res = results[i];
+                const tile = document.createElement('div');
+                
+                // 결과에 따른 색상 클래스
+                let colorClasses = 'bg-slate-700 text-slate-300 border-slate-600';
+                if (res === 'green') {
+                    colorClasses = 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-900/40';
+                } else if (res === 'yellow') {
+                    colorClasses = 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-900/40';
+                }
+
+                tile.className = `w-10 h-11 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center animate-flip ${colorClasses}`;
+                // 순차적 뒤집기 애니메이션 딜레이
+                tile.style.animationDelay = `${i * 0.15}s`;
+                tile.textContent = char;
+                tilesContainer.appendChild(tile);
+            }
+
+            itemElem.appendChild(countLabel);
+            itemElem.appendChild(tilesContainer);
+            
+            // 빈 더미 공간 맞추기용 (Flex 균형)
+            const spacer = document.createElement('div');
+            spacer.className = 'w-10';
+            itemElem.appendChild(spacer);
+
+            // 최신 항목이 맨 위에 오도록 삽입
+            historyContainer.insertBefore(itemElem, historyContainer.firstChild);
+        }
+
+        // 키패드 색상 업데이트
+        function updateKeypadColors(guessStr, results) {
+            const priority = { 'green': 3, 'yellow': 2, 'gray': 1, 'none': 0 };
+
+            for (let i = 0; i < 4; i++) {
+                const digit = guessStr[i];
+                const res = results[i];
+                const currentStatus = keyStatusMap[digit] || 'none';
+
+                // 더 높은 우선순위의 색상으로만 덮어쓰기 (예: 노랑 -> 초록 가능, 초록 -> 노랑 불가)
+                if (priority[res] > priority[currentStatus]) {
+                    keyStatusMap[digit] = res;
+                }
+            }
+
+            // 실제 DOM 업데이트
+            for (let i = 0; i <= 9; i++) {
+                const btn = document.getElementById(`key-${i}`);
+                if (!btn) continue;
+                const status = keyStatusMap[i.toString()];
+
+                if (status === 'green') {
+                    btn.className = "key-btn h-12 bg-emerald-600 text-white font-bold rounded-xl transition-all flex items-center justify-center shadow border-2 border-emerald-400";
+                } else if (status === 'yellow') {
+                    btn.className = "key-btn h-12 bg-amber-500 text-white font-bold rounded-xl transition-all flex items-center justify-center shadow border-2 border-amber-300";
+                } else if (status === 'gray') {
+                    btn.className = "key-btn h-12 bg-slate-800 text-slate-500 font-bold rounded-xl transition-all flex items-center justify-center shadow opacity-50 border border-slate-700";
+                }
+            }
+        }
+
+        // --- 모달 및 오디오 이펙트 ---
+
+        function showVictoryModal() {
+            const modal = document.getElementById('clear-modal');
+            const secretContainer = document.getElementById('modal-secret-digits');
+            const modalAttempts = document.getElementById('modal-attempts');
+
+            // 정답 표시 타일 생성
+            secretContainer.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'w-12 h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center border-2 border-emerald-300 shadow-lg';
+                tile.textContent = secretNum[i];
+                secretContainer.appendChild(tile);
+            }
+
+            modalAttempts.textContent = attemptsCount;
+            modal.classList.remove('hidden');
+
+            // 신나는 클리어 음악 재생
+            playVictoryMusic();
+        }
+
+        // 기본 틱 소리
+        function playClickSound(freq = 400) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e){}
+        }
+
+        // 에러 소리 (4자리 미만 제출 시)
+        function playErrorSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } catch(e){}
+        }
+
+        // 일반 제출 핑 소리
+        function playSubmitSound() {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e){}
+        }
+
+        // 신나는 승리 팡파레 음악 (Web Audio API)
+        function playVictoryMusic() {
+            if (!audioCtx) return;
+            
+            // 멜로디 시퀀스 [주파수, 지속시간, 딜레이]
+            const melody = [
+                [523.25, 0.15, 0],    // C5
+                [659.25, 0.15, 0.15], // E5
+                [783.99, 0.15, 0.3],  // G5
+                [1046.50, 0.3, 0.45], // C6
+                [783.99, 0.15, 0.75], // G5
+                [1046.50, 0.4, 0.9]   // C6
+            ];
+
+            const now = audioCtx.currentTime;
+
+            melody.forEach(note => {
+                const [freq, duration, delay] = note;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                // 밝고 신나는 느낌의 파형 조합
+                osc.type = 'square'; 
+
+                osc.frequency.setValueAtTime(freq, now + delay);
+                
+                // 엔벨로프 설정
+                gain.gain.setValueAtTime(0, now + delay);
+                gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.05); // Attack
+                gain.gain.exponentialRampToValueAtTime(0.01, now + delay + duration); // Decay
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now + delay);
+                osc.stop(now + delay + duration);
+            });
+        }
+    </script>
+</body>
+</html>

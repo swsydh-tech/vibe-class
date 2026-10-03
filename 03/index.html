@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가위바위보 딱밤 내기 💥</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Jua', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            touch-action: manipulation;
+        }
+
+        /* Hit animation effect */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-12px, 8px) rotate(-5deg); }
+            40% { transform: translate(12px, -8px) rotate(5deg); }
+            60% { transform: translate(-8px, -4px) rotate(-3deg); }
+            80% { transform: translate(8px, 4px) rotate(3deg); }
+        }
+
+        @keyframes flickRight {
+            0% { transform: translateX(-100px) scale(0.5) rotate(-30deg); opacity: 0; }
+            50% { transform: translateX(20px) scale(1.3) rotate(15deg); opacity: 1; }
+            70% { transform: translateX(0) scale(1.1) rotate(0deg); opacity: 1; }
+            100% { transform: translateX(150px) scale(0.8) rotate(20deg); opacity: 0; }
+        }
+
+        @keyframes flickLeft {
+            0% { transform: translateX(100px) scale(0.5) rotate(30deg); opacity: 0; }
+            50% { transform: translateX(-20px) scale(1.3) rotate(-15deg); opacity: 1; }
+            70% { transform: translateX(0) scale(1.1) rotate(0deg); opacity: 1; }
+            100% { transform: translateX(-150px) scale(0.8) rotate(-20deg); opacity: 0; }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+        }
+
+        .animate-shake {
+            animation: shake 0.45s ease-in-out;
+        }
+
+        .animate-flick-right {
+            animation: flickRight 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .animate-flick-left {
+            animation: flickLeft 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .flash-red {
+            background-color: rgba(239, 68, 68, 0.25) !important;
+            transition: background-color 0.1s;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-between p-3 md:p-6 select-none overflow-x-hidden">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-2xl text-center mb-2">
+        <div class="inline-block bg-slate-800/80 backdrop-blur border border-slate-700 px-6 py-2 rounded-full shadow-lg mb-2">
+            <h1 class="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 tracking-wider">
+                💥 딱밤 내기 가위바위보 💥
+            </h1>
+        <!-- Subtitle -->
+        <p class="text-sm md:text-base text-slate-400">지면 이마에 딱밤 찰싹! 상대방 HP를 0으로 만들어라! (⚡10% 확률 크리티컬 대미지 30!)</p>
+    </header>
+
+    <!-- Main Game Container -->
+    <main id="gameContainer" class="w-full max-w-2xl bg-slate-800/90 border border-slate-700/80 rounded-3xl p-4 md:p-6 shadow-2xl backdrop-blur-md my-auto relative transition-all duration-300">
+        
+        <!-- HP Gauge Section -->
+        <div class="grid grid-cols-2 gap-4 md:gap-8 mb-6">
+            <!-- Player HP -->
+            <div class="bg-slate-900/80 p-3 md:p-4 rounded-2xl border border-blue-500/30 relative">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-bold text-blue-400 text-sm md:text-lg flex items-center gap-1">
+                        <i class="fa-solid font-bold fa-user"></i> 나 (플레이어)
+                    </span>
+                    <span id="playerHpText" class="font-black text-blue-300 text-sm md:text-base">100 / 100</span>
+                </div>
+                <div class="w-full bg-slate-950 h-5 md:h-6 rounded-full overflow-hidden p-1 border border-slate-700">
+                    <div id="playerHpBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-500 w-full"></div>
+                </div>
+            </div>
+
+            <!-- AI HP -->
+            <div class="bg-slate-900/80 p-3 md:p-4 rounded-2xl border border-red-500/30 relative">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-bold text-red-400 text-sm md:text-lg flex items-center gap-1">
+                        <i class="fa-solid fa-robot"></i> 인공지능 (AI)
+                    </span>
+                    <span id="aiHpText" class="font-black text-red-300 text-sm md:text-base">100 / 100</span>
+                </div>
+                <div class="w-full bg-slate-950 h-5 md:h-6 rounded-full overflow-hidden p-1 border border-slate-700">
+                    <div id="aiHpBar" class="bg-gradient-to-r from-red-500 to-rose-400 h-full rounded-full transition-all duration-500 w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battlefield / Character Visual Stage -->
+        <div class="relative bg-gradient-to-b from-slate-950 to-slate-900 border border-slate-700/60 rounded-2xl p-4 md:p-6 mb-6 min-h-[220px] md:min-h-[260px] flex items-center justify-between overflow-hidden shadow-inner">
+            
+            <!-- Flick Impact VFX Overlay Left -->
+            <div id="flickVfxLeft" class="hidden absolute left-1/4 top-1/2 -translate-y-1/2 z-30 pointer-events-none text-6xl md:text-8xl animate-flick-left">
+                👈💥
+            </div>
+            <!-- Flick Impact VFX Overlay Right -->
+            <div id="flickVfxRight" class="hidden absolute right-1/4 top-1/2 -translate-y-1/2 z-30 pointer-events-none text-6xl md:text-8xl animate-flick-right">
+                💥👉
+            </div>
+
+            <!-- Player Character Box -->
+            <div id="playerBox" class="flex flex-col items-center z-10 w-1/3 transition-transform duration-300">
+                <div id="playerAvatar" class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-blue-600 to-indigo-800 border-4 border-blue-400 flex items-center justify-center text-4xl md:text-6xl shadow-lg relative mb-2">
+                    😀
+                    <span id="playerHitMark" class="hidden absolute -top-3 -right-2 bg-red-600 text-yellow-300 font-extrabold text-xs md:text-sm px-2 py-0.5 rounded-full border border-white animate-bounce">
+                        딱! 💥
+                    </span>
+                </div>
+                <div id="playerChoiceDisplay" class="bg-slate-800 border border-blue-500/50 rounded-xl px-3 py-1 text-2xl md:text-3xl font-bold shadow min-w-[50px] text-center min-h-[46px] flex items-center justify-center">
+                    ❓
+                </div>
+            </div>
+
+            <!-- VS Badge & Round Info -->
+            <div class="flex flex-col items-center justify-center z-10 my-auto">
+                <div class="bg-yellow-500 text-slate-950 text-xs md:text-sm font-black px-3 py-1 rounded-full shadow-lg mb-2">
+                    VS
+                </div>
+                <div id="roundStatusText" class="text-xs md:text-sm text-yellow-300 font-bold text-center bg-slate-900/90 border border-slate-700 px-3 py-1 rounded-lg">
+                    준비 완료!
+                </div>
+            </div>
+
+            <!-- AI Character Box -->
+            <div id="aiBox" class="flex flex-col items-center z-10 w-1/3 transition-transform duration-300">
+                <div id="aiAvatar" class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-rose-600 to-red-800 border-4 border-red-400 flex items-center justify-center text-4xl md:text-6xl shadow-lg relative mb-2">
+                    🤖
+                    <span id="aiHitMark" class="hidden absolute -top-3 -left-2 bg-yellow-400 text-slate-950 font-extrabold text-xs md:text-sm px-2 py-0.5 rounded-full border border-white animate-bounce">
+                        딱! 💥
+                    </span>
+                </div>
+                <div id="aiChoiceDisplay" class="bg-slate-800 border border-red-500/50 rounded-xl px-3 py-1 text-2xl md:text-3xl font-bold shadow min-w-[50px] text-center min-h-[46px] flex items-center justify-center">
+                    ❓
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="mb-4">
+            <p class="text-center text-sm md:text-base font-bold text-slate-300 mb-3">
+                무엇을 내시겠습니까? 아래 버튼을 누르세요!
+            </p>
+            <div class="grid grid-cols-3 gap-3 md:gap-4">
+                <button onclick="playRound('scissors')" id="btnScissors" class="game-btn group relative bg-gradient-to-b from-indigo-500 to-indigo-700 hover:from-indigo-400 hover:to-indigo-600 active:scale-95 text-white p-3 md:p-4 rounded-2xl shadow-xl border-b-4 border-indigo-900 flex flex-col items-center justify-center transition-all duration-150">
+                    <span class="text-4xl md:text-5xl mb-1 group-hover:scale-125 transition-transform duration-200">✌️</span>
+                    <span class="font-extrabold text-sm md:text-lg">가위</span>
+                </button>
+
+                <button onclick="playRound('rock')" id="btnRock" class="game-btn group relative bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 active:scale-95 text-white p-3 md:p-4 rounded-2xl shadow-xl border-b-4 border-amber-900 flex flex-col items-center justify-center transition-all duration-150">
+                    <span class="text-4xl md:text-5xl mb-1 group-hover:scale-125 transition-transform duration-200">✊</span>
+                    <span class="font-extrabold text-sm md:text-lg">바위</span>
+                </button>
+
+                <button onclick="playRound('paper')" id="btnPaper" class="game-btn group relative bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 active:scale-95 text-white p-3 md:p-4 rounded-2xl shadow-xl border-b-4 border-emerald-900 flex flex-col items-center justify-center transition-all duration-150">
+                    <span class="text-4xl md:text-5xl mb-1 group-hover:scale-125 transition-transform duration-200">🖐️</span>
+                    <span class="font-extrabold text-sm md:text-lg">보</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- History Log Toggle / Area -->
+        <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-700/50">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs md:text-sm font-bold text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-list-ul"></i> 대결 기록
+                </span>
+                <button onclick="resetGame()" class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded transition border border-slate-600">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 처음부터 다시
+                </button>
+            </div>
+            <div id="historyLog" class="h-20 overflow-y-auto text-xs md:text-sm space-y-1 text-slate-300 pr-1">
+                <div class="text-center text-slate-500 py-2">가위, 바위, 보 중 하나를 선택해 게임을 시작하세요!</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Game Over Modal Overlay -->
+    <div id="gameOverModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-800 border-2 border-slate-600 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300">
+            <div id="modalEmoji" class="text-7xl mb-3 animate-bounce">🏆</div>
+            <h2 id="modalTitle" class="text-3xl font-black mb-2 text-yellow-400">최종 승리!</h2>
+            <p id="modalDesc" class="text-slate-300 text-sm md:text-base mb-6">AI에게 통쾌한 딱밤 세례를 퍼부어 승리했습니다!</p>
+            
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-slate-950 font-black text-lg py-3 rounded-2xl shadow-lg transition transform active:scale-95">
+                다시 한 판 더! 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Synth Logic -->
+    <script>
+        // Web Audio API Sound Synthesizer (No external audio asset required)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play sharp forehead flick sound "딱!" (Supports critical hit sound effect)
+        function playFlickSound(isCrit = false) {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const hitCount = isCrit ? 2 : 1;
+
+                for (let c = 0; c < hitCount; c++) {
+                    const delay = c * 0.08;
+                    const bufferSize = audioCtx.sampleRate * (isCrit ? 0.12 : 0.08);
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+
+                    const whiteNoise = audioCtx.createBufferSource();
+                    whiteNoise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(isCrit ? 3200 : 2200, now + delay);
+                    filter.Q.setValueAtTime(isCrit ? 4 : 3, now + delay);
+
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.setValueAtTime(isCrit ? 1.5 : 1.0, now + delay);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + delay + (isCrit ? 0.1 : 0.07));
+
+                    whiteNoise.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    whiteNoise.start(now + delay);
+                }
+            } catch(e) {
+                console.log("Audio not supported or blocked", e);
+            }
+        }
+
+        // Play Win Chime
+        function playWinSound() {
+            try {
+                initAudio();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.1);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.1 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + idx * 0.1);
+                    osc.stop(audioCtx.currentTime + idx * 0.1 + 0.3);
+                });
+            } catch(e) {}
+        }
+
+        // Play Lose Sound
+        function playLoseSound() {
+            try {
+                initAudio();
+                const notes = [300, 260, 220, 180];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + idx * 0.12);
+                    osc.stop(audioCtx.currentTime + idx * 0.12 + 0.25);
+                });
+            } catch(e) {}
+        }
+
+        // Game Constants & State
+        const MAX_HP = 100;
+        const BASE_DAMAGE = 20; // 기본 딱밤 대미지
+        const CRIT_DAMAGE = 30; // 크리티컬 딱밤 대미지
+        const CRIT_CHANCE = 0.10; // 10% 확률
+
+        let playerHp = MAX_HP;
+        let aiHp = MAX_HP;
+        let isPlaying = false;
+        let roundCount = 0;
+
+        const CHOICES = {
+            rock: { emoji: '✊', name: '바위' },
+            paper: { emoji: '🖐️', name: '보' },
+            scissors: { emoji: '✌️️', name: '가위' }
+        };
+
+        // DOM Elements
+        const playerHpBar = document.getElementById('playerHpBar');
+        const playerHpText = document.getElementById('playerHpText');
+        const aiHpBar = document.getElementById('aiHpBar');
+        const aiHpText = document.getElementById('aiHpText');
+
+        const playerAvatar = document.getElementById('playerAvatar');
+        const aiAvatar = document.getElementById('aiAvatar');
+        const playerChoiceDisplay = document.getElementById('playerChoiceDisplay');
+        const aiChoiceDisplay = document.getElementById('aiChoiceDisplay');
+
+        const playerHitMark = document.getElementById('playerHitMark');
+        const aiHitMark = document.getElementById('aiHitMark');
+
+        const flickVfxLeft = document.getElementById('flickVfxLeft');
+        const flickVfxRight = document.getElementById('flickVfxRight');
+
+        const gameContainer = document.getElementById('gameContainer');
+        const roundStatusText = document.getElementById('roundStatusText');
+        const historyLog = document.getElementById('historyLog');
+
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalEmoji = document.getElementById('modalEmoji');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+
+        // Main Round Execution Function
+        function playRound(playerChoiceKey) {
+            if (isPlaying || playerHp <= 0 || aiHp <= 0) return;
+            
+            isPlaying = true;
+            initAudio();
+            disableButtons(true);
+
+            roundCount++;
+            playerChoiceDisplay.textContent = CHOICES[playerChoiceKey].emoji;
+            aiChoiceDisplay.textContent = '❓';
+            
+            // Reset facial expressions & marks
+            playerAvatar.textContent = '🤔';
+            aiAvatar.textContent = '🤖';
+            playerHitMark.classList.add('hidden');
+            aiHitMark.classList.add('hidden');
+
+            roundStatusText.textContent = "가위... 바위...";
+            
+            // AI Shuffle Animation
+            const choicesKeys = ['scissors', 'rock', 'paper'];
+            let shuffleCount = 0;
+            const shuffleInterval = setInterval(() => {
+                const randomChoice = choicesKeys[Math.floor(Math.random() * choicesKeys.length)];
+                aiChoiceDisplay.textContent = CHOICES[randomChoice].emoji;
+                shuffleCount++;
+                if (shuffleCount > 8) {
+                    clearInterval(shuffleInterval);
+                    
+                    // Determine AI final choice
+                    const aiChoiceKey = choicesKeys[Math.floor(Math.random() * choicesKeys.length)];
+                    aiChoiceDisplay.textContent = CHOICES[aiChoiceKey].emoji;
+
+                    evaluateResult(playerChoiceKey, aiChoiceKey);
+                }
+            }, 80);
+        }
+
+        // Evaluate Win/Loss and Apply Damages
+        function evaluateResult(playerKey, aiKey) {
+            let result = 'draw'; // 'win', 'lose', 'draw'
+
+            if (playerKey === aiKey) {
+                result = 'draw';
+            } else if (
+                (playerKey === 'rock' && aiKey === 'scissors') ||
+                (playerKey === 'scissors' && aiKey === 'paper') ||
+                (playerKey === 'paper' && aiKey === 'rock')
+            ) {
+                result = 'win';
+            } else {
+                result = 'lose';
+            }
+
+            // Calculate Critical Hit (10% Chance)
+            const isCrit = Math.random() < CRIT_CHANCE;
+            const damage = isCrit ? CRIT_DAMAGE : BASE_DAMAGE;
+
+            if (result === 'win') {
+                // Player wins -> AI gets hit with flick
+                aiHp = Math.max(0, aiHp - damage);
+
+                if (isCrit) {
+                    roundStatusText.textContent = "⚡ 크리티컬 딱밤!! AI에게 30 대미지! 💥💥";
+                    roundStatusText.className = "text-xs md:text-sm text-yellow-300 font-extrabold text-center bg-amber-950/90 border border-amber-500 px-3 py-1 rounded-lg animate-pulse";
+                    aiHitMark.textContent = "⚡크리티컬 30!💥";
+                } else {
+                    roundStatusText.textContent = "승리! AI 이마에 딱밤 찰싹! 💥";
+                    roundStatusText.className = "text-xs md:text-sm text-yellow-300 font-bold text-center bg-green-950/80 border border-green-600 px-3 py-1 rounded-lg";
+                    aiHitMark.textContent = "딱! 💥";
+                }
+
+                playerAvatar.textContent = isCrit ? '😈' : '😎';
+                aiAvatar.textContent = isCrit ? '😵' : '😱';
+
+                // Trigger Flick VFX Left to Right (Player hits AI)
+                flickVfxRight.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    playFlickSound(isCrit);
+                    aiHitMark.classList.remove('hidden');
+                    document.getElementById('aiBox').classList.add('animate-shake');
+                    gameContainer.classList.add('flash-red');
+                }, 250);
+
+                setTimeout(() => {
+                    flickVfxRight.classList.add('hidden');
+                    document.getElementById('aiBox').classList.remove('animate-shake');
+                    gameContainer.classList.remove('flash-red');
+                }, 700);
+
+            } else if (result === 'lose') {
+                // Player loses -> Player gets hit with flick
+                playerHp = Math.max(0, playerHp - damage);
+
+                if (isCrit) {
+                    roundStatusText.textContent = "⚡ 크리티컬 딱밤 맞음!! 30 대미지! 😱💥";
+                    roundStatusText.className = "text-xs md:text-sm text-red-200 font-extrabold text-center bg-red-950/90 border border-red-500 px-3 py-1 rounded-lg animate-pulse";
+                    playerHitMark.textContent = "⚡크리티컬 30!💥";
+                } else {
+                    roundStatusText.textContent = "패배! 딱밤을 맞았습니다! 😭";
+                    roundStatusText.className = "text-xs md:text-sm text-red-300 font-bold text-center bg-red-950/80 border border-red-600 px-3 py-1 rounded-lg";
+                    playerHitMark.textContent = "딱! 💥";
+                }
+
+                playerAvatar.textContent = isCrit ? '😵' : '🤕';
+                aiAvatar.textContent = isCrit ? '😈' : '🤖';
+
+                // Trigger Flick VFX Right to Left (AI hits Player)
+                flickVfxLeft.classList.remove('hidden');
+
+                setTimeout(() => {
+                    playFlickSound(isCrit);
+                    playerHitMark.classList.remove('hidden');
+                    document.getElementById('playerBox').classList.add('animate-shake');
+                    gameContainer.classList.add('flash-red');
+                }, 250);
+
+                setTimeout(() => {
+                    flickVfxLeft.classList.add('hidden');
+                    document.getElementById('playerBox').classList.remove('animate-shake');
+                    gameContainer.classList.remove('flash-red');
+                }, 700);
+
+            } else {
+                // Draw
+                roundStatusText.textContent = "비겼습니다! 아쉬운 노란 불! 🤝";
+                roundStatusText.className = "text-xs md:text-sm text-slate-300 font-bold text-center bg-slate-800 border border-slate-600 px-3 py-1 rounded-lg";
+                playerAvatar.textContent = '😐';
+                aiAvatar.textContent = '🤖';
+            }
+
+            // Update Visual HP Bars
+            updateHpBars();
+
+            // Add Entry to Log
+            addLogEntry(roundCount, playerKey, aiKey, result, isCrit, damage);
+
+            // Check End Game Condition after animation completes
+            setTimeout(() => {
+                if (playerHp <= 0 || aiHp <= 0) {
+                    endGame();
+                } else {
+                    isPlaying = false;
+                    disableButtons(false);
+                }
+            }, 800);
+        }
+
+        // Update UI HP Indicators
+        function updateHpBars() {
+            playerHpBar.style.width = `${playerHp}%`;
+            playerHpText.textContent = `${playerHp} / ${MAX_HP}`;
+
+            aiHpBar.style.width = `${aiHp}%`;
+            aiHpText.textContent = `${aiHp} / ${MAX_HP}`;
+
+            // Color adjustments when HP is low
+            if (playerHp <= 30) {
+                playerHpBar.className = "bg-gradient-to-r from-red-600 to-rose-500 h-full rounded-full transition-all duration-500 w-full animate-pulse";
+            }
+            if (aiHp <= 30) {
+                aiHpBar.className = "bg-gradient-to-r from-red-600 to-rose-500 h-full rounded-full transition-all duration-500 w-full animate-pulse";
+            }
+        }
+
+        // Append log to history section
+        function addLogEntry(round, playerKey, aiKey, result, isCrit, damage) {
+            const entry = document.createElement('div');
+            entry.className = "flex items-center justify-between border-b border-slate-800 py-1";
+            
+            let resultBadge = '';
+            if (result === 'win') {
+                resultBadge = isCrit 
+                    ? `<span class="text-amber-400 font-black animate-pulse">[⚡크리티컬 -30]</span>`
+                    : `<span class="text-green-400 font-bold">[승리 -20]</span>`;
+            } else if (result === 'lose') {
+                resultBadge = isCrit
+                    ? `<span class="text-red-400 font-black animate-pulse">[⚡크리티컬 -30]</span>`
+                    : `<span class="text-red-400 font-bold">[패배 -20]</span>`;
+            } else {
+                resultBadge = `<span class="text-slate-400">[무승부]</span>`;
+            }
+
+            entry.innerHTML = `
+                <span><b class="text-yellow-400">R${round}</b> 나(${CHOICES[playerKey].emoji}) vs AI(${CHOICES[aiKey].emoji})</span>
+                ${resultBadge}
+            `;
+
+            // Remove placeholder if present
+            if (historyLog.children.length === 1 && historyLog.children[0].classList.contains('text-center')) {
+                historyLog.innerHTML = '';
+            }
+
+            historyLog.prepend(entry);
+        }
+
+        // Enable/Disable Action Buttons
+        function disableButtons(disabled) {
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.disabled = disabled;
+                if (disabled) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        // Game Over Trigger
+        function endGame() {
+            isPlaying = true;
+            disableButtons(true);
+
+            if (aiHp <= 0) {
+                // Player Won
+                playWinSound();
+                modalEmoji.textContent = '🏆👑';
+                modalTitle.textContent = '최종 KO 승리!';
+                modalTitle.className = 'text-3xl font-black mb-2 text-yellow-400';
+                modalDesc.textContent = `축하합니다! 총 ${roundCount}라운드 만에 AI를 KO시키고 딱밤 내기에서 승리했습니다!`;
+                playerAvatar.textContent = '🥳';
+                aiAvatar.textContent = '😵';
+            } else {
+                // AI Won
+                playLoseSound();
+                modalEmoji.textContent = '💀💥';
+                modalTitle.textContent = '최종 KO 패배...';
+                modalTitle.className = 'text-3xl font-black mb-2 text-red-500';
+                modalDesc.textContent = `이마가 빨갛게 부어올랐습니다! AI의 연속 딱밤에 HP가 0이 되었습니다.`;
+                playerAvatar.textContent = '😵';
+                aiAvatar.textContent = '👑';
+            }
+
+            setTimeout(() => {
+                gameOverModal.classList.remove('hidden');
+            }, 600);
+        }
+
+        // Reset Game
+        function resetGame() {
+            playerHp = MAX_HP;
+            aiHp = MAX_HP;
+            isPlaying = false;
+            roundCount = 0;
+
+            playerHpBar.className = "bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-500 w-full";
+            aiHpBar.className = "bg-gradient-to-r from-red-500 to-rose-400 h-full rounded-full transition-all duration-500 w-full";
+            
+            updateHpBars();
+
+            playerChoiceDisplay.textContent = '❓';
+            aiChoiceDisplay.textContent = '❓';
+
+            playerAvatar.textContent = '😀';
+            aiAvatar.textContent = '🤖';
+
+            playerHitMark.classList.add('hidden');
+            aiHitMark.classList.add('hidden');
+
+            roundStatusText.textContent = "준비 완료!";
+            roundStatusText.className = "text-xs md:text-sm text-yellow-300 font-bold text-center bg-slate-900/90 border border-slate-700 px-3 py-1 rounded-lg";
+
+            historyLog.innerHTML = '<div class="text-center text-slate-500 py-2">가위, 바위, 보 중 하나를 선택해 게임을 시작하세요!</div>';
+
+            gameOverModal.classList.add('hidden');
+            disableButtons(false);
+        }
+    </script>
+</body>
+</html>
