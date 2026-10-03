@@ -2,45 +2,61 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 모바일: 화면 폭에 맞추고, 두 번 탭 확대를 막음 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>핀볼 게임</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
         body {
             background-color: #87CEEB; /* 하늘색 배경 */
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
+            font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            padding: 16px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #game-container {
             position: relative;
             display: flex;
             gap: 20px;
+            align-items: flex-start;
         }
 
         /* 핀볼 기계 기본 색상 (하얀색) */
         #pinball-board {
-            background-color: white; 
+            background-color: white;
             border: 5px solid #333;
             border-radius: 20px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.3);
             position: relative;
             overflow: hidden;
-            transition: background-color 0.5s ease; /* 스킨 변경 시 부드러운 전환 */
+            transition: background-color 0.5s ease;
+            touch-action: none;            /* 보드를 터치해도 화면이 움직이지 않게 */
+            -webkit-touch-callout: none;
+            flex-shrink: 0;
         }
 
-        /* 스킨 테마 색상 클래스 */
         .theme-grass { background-color: #7CFC00 !important; }
         .theme-gold { background-color: #FFD700 !important; }
         .theme-diamond { background-color: #E0FFFF !important; }
 
+        /* 캔버스 내부 크기는 400x600 그대로, 화면에 보이는 크기만 늘리고 줄임 */
         canvas {
             display: block;
+            width: min(400px, calc((100vh - 50px) * 2 / 3));
+            width: min(400px, calc((100dvh - 50px) * 2 / 3));
+            height: auto;
+            aspect-ratio: 2 / 3;
         }
 
         #ui-panel {
@@ -54,12 +70,9 @@
             width: 250px;
         }
 
-        /* 컨트롤 스타일 */
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+        .stats { display: flex; flex-direction: column; gap: 10px; }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
 
         input[type=range] {
             width: 100%;
@@ -68,18 +81,25 @@
             border-radius: 4px;
             outline: none;
             -webkit-appearance: none;
+            appearance: none;
+            touch-action: pan-x;
         }
-
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #ef4444;
+            cursor: pointer;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 26px; height: 26px; border: none;
             border-radius: 50%;
             background: #ef4444;
             cursor: pointer;
         }
 
-        /* 상점 스타일 */
+        button { touch-action: manipulation; }
+
         .shop-item {
             background: #f3f4f6;
             border: 1px solid #e5e7eb;
@@ -91,36 +111,53 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+        .shop-item:hover:not(:disabled) { background: #e5e7eb; transform: translateY(-2px); }
+        .shop-item:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .shop-item:hover:not(:disabled) {
-            background: #e5e7eb;
-            transform: translateY(-2px);
-        }
-
-        .shop-item:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
         .modal {
             display: none;
             position: fixed;
             z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background-color: rgba(0,0,0,0.4);
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
-
         .modal-content {
             background-color: white;
             padding: 20px;
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            max-width: 340px;
+        }
+
+        /* ===== 모바일(세로로 좁은 화면) ===== */
+        @media (max-width: 720px) {
+            body { align-items: flex-start; padding-left: 8px; padding-right: 8px; }
+            #game-container { flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+
+            /* 보드 + 점수줄 + 발사 버튼이 한 화면에 들어오도록 크기 계산 */
+            canvas {
+                width: min(400px, calc(100vw - 26px), calc((100vh - 230px) * 2 / 3));
+                width: min(400px, calc(100vw - 26px), calc((100dvh - 230px) * 2 / 3));
+            }
+
+            #ui-panel { width: min(400px, 100%); padding: 12px; gap: 10px; }
+            #ui-panel h1 { display: none; }
+            .stats { flex-direction: row; }
+            .stats > div { flex: 1; padding: 8px 12px !important; }
+            .control-group { flex-direction: row; align-items: center; gap: 10px; margin-top: 0 !important; }
+            .control-group .power { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+            #launchBtn { margin-top: 0 !important; padding: 12px 22px !important; font-size: 1.1rem; }
+            #shopTitle { margin-top: 4px; }
+        }
+
+        /* 가로로 눕힌 휴대폰(높이가 낮은 화면) */
+        @media (max-height: 520px) and (min-width: 721px) {
+            #ui-panel { padding: 12px; gap: 8px; max-height: calc(100dvh - 32px); overflow-y: auto; }
+            #ui-panel h1 { display: none; }
         }
     </style>
 </head>
@@ -135,19 +172,23 @@
         <!-- UI 패널 -->
         <div id="ui-panel">
             <h1 class="text-2xl font-bold text-center text-gray-800">핀볼</h1>
-            
-            <div class="bg-blue-100 p-3 rounded-lg flex justify-between items-center">
-                <span class="font-semibold">점수:</span>
-                <span id="scoreDisplay" class="text-xl font-bold text-blue-600">0</span>
-            </div>
-            <div class="bg-yellow-100 p-3 rounded-lg flex justify-between items-center">
-                <span class="font-semibold">코인:</span>
-                <span id="coinDisplay" class="text-xl font-bold text-yellow-600">0</span>
+
+            <div class="stats">
+                <div class="bg-blue-100 p-3 rounded-lg flex justify-between items-center">
+                    <span class="font-semibold">점수:</span>
+                    <span id="scoreDisplay" class="text-xl font-bold text-blue-600">0</span>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg flex justify-between items-center">
+                    <span class="font-semibold">코인:</span>
+                    <span id="coinDisplay" class="text-xl font-bold text-yellow-600">0</span>
+                </div>
             </div>
 
             <div class="control-group mt-2">
-                <label for="powerSlider" class="text-sm font-medium text-gray-700">발사 파워: <span id="powerValue">50</span>%</label>
-                <input type="range" id="powerSlider" min="10" max="100" value="50">
+                <div class="power">
+                    <label for="powerSlider" class="text-sm font-medium text-gray-700">발사 파워: <span id="powerValue">50</span>%</label>
+                    <input type="range" id="powerSlider" min="10" max="100" value="50">
+                </div>
                 <button id="launchBtn" class="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors">
                     발사!
                 </button>
@@ -155,13 +196,13 @@
 
             <hr class="my-2 border-gray-300">
 
-            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <h2 id="shopTitle" class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                 </svg>
                 스킨 상점
             </h2>
-            
+
             <div class="flex flex-col gap-2">
                 <button class="shop-item" data-price="1" data-theme="theme-grass" id="btn-grass">
                     <span>🌱 잔디 스킨</span>
@@ -175,13 +216,12 @@
                     <span>💎 다이아 스킨</span>
                     <span class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded">50 코인</span>
                 </button>
-                <!-- 기본 스킨으로 돌아가기 -->
                 <button class="shop-item" data-price="0" data-theme="default" id="btn-default">
                     <span>⚪ 기본 (하양)</span>
                     <span class="bg-gray-200 text-gray-800 text-xs font-bold px-2 py-1 rounded">보유중</span>
                 </button>
             </div>
-            
+
             <div class="mt-auto text-xs text-gray-500 text-center">
                 * 10점당 1코인 획득
             </div>
@@ -200,28 +240,41 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const board = document.getElementById('pinball-board');
-        
-        // UI 엘리먼트
+
         const scoreDisplay = document.getElementById('scoreDisplay');
         const coinDisplay = document.getElementById('coinDisplay');
         const powerSlider = document.getElementById('powerSlider');
         const powerValue = document.getElementById('powerValue');
         const launchBtn = document.getElementById('launchBtn');
         const shopButtons = document.querySelectorAll('.shop-item');
-        
-        // 모달 엘리먼트
+
         const alertModal = document.getElementById('alertModal');
         const modalMessage = document.getElementById('modalMessage');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
 
+        // 터치 화면인지 (안내 문구를 바꾸는 데 사용)
+        const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+
+        // 오래된 브라우저용: roundRect가 없으면 직접 만들어 줌
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                const rad = Array.isArray(r) ? r[0] : (r || 0);
+                this.moveTo(x + rad, y);
+                this.arcTo(x + w, y, x + w, y + h, rad);
+                this.arcTo(x + w, y + h, x, y + h, rad);
+                this.arcTo(x, y + h, x, y, rad);
+                this.arcTo(x, y, x + w, y, rad);
+                this.closePath();
+            };
+        }
+
         // 게임 상태
         let score = 0;
         let coins = 0;
-        let totalScoreAccumulator = 0; // 코인 변환을 위한 누적 점수
+        let totalScoreAccumulator = 0;
         let isBallInPlay = false;
         let animationId;
-        
-        // 보유한 스킨 목록
+
         const ownedSkins = ['default'];
 
         // 물리 상수
@@ -230,70 +283,52 @@
         const BOUNCE_DAMPING = 0.8;
         const FLIPPER_POWER = 15;
 
-        // 게임 객체 정의
         const ball = {
-            x: 370,
-            y: 550,
-            radius: 10,
-            vx: 0,
-            vy: 0,
-            color: '#ef4444',
-            isLaunched: false,
-            
-            reset: function() {
-                this.x = 370;
-                this.y = 550;
-                this.vx = 0;
-                this.vy = 0;
+            x: 370, y: 550, radius: 10, vx: 0, vy: 0, color: '#ef4444', isLaunched: false,
+
+            reset: function () {
+                this.x = 370; this.y = 550; this.vx = 0; this.vy = 0;
                 this.isLaunched = false;
                 isBallInPlay = false;
             },
-            
-            draw: function() {
+
+            draw: function () {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
-                
-                // 공의 광택 효과
                 ctx.beginPath();
                 ctx.arc(this.x - 3, this.y - 3, this.radius * 0.3, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
                 ctx.fill();
                 ctx.closePath();
             },
-            
-            update: function() {
+
+            update: function () {
                 if (!this.isLaunched) return;
 
                 this.vy += GRAVITY;
                 this.vx *= FRICTION;
                 this.vy *= FRICTION;
-                
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // 벽 충돌 (좌, 우, 상)
                 if (this.x - this.radius < 0) {
                     this.x = this.radius;
                     this.vx *= -BOUNCE_DAMPING;
                 } else if (this.x + this.radius > canvas.width) {
-                    // 발사 레인 분리벽 처리
-                    if(this.y > 100 && this.x > 350 && this.vx < 0) {
-                        // 발사 레인 왼쪽 벽에 부딪힘
+                    if (this.y > 100 && this.x > 350 && this.vx < 0) {
                         this.x = 350 + this.radius;
                         this.vx *= -BOUNCE_DAMPING;
                     } else if (this.x + this.radius > canvas.width) {
-                        // 실제 오른쪽 벽
                         this.x = canvas.width - this.radius;
                         this.vx *= -BOUNCE_DAMPING;
                     }
                 }
-                
-                // 발사 레인 왼쪽 벽 (내부)
+
                 if (this.x - this.radius < 350 && this.x > 340 && this.y > 100) {
-                     this.x = 350 - this.radius;
-                     this.vx *= -BOUNCE_DAMPING;
+                    this.x = 350 - this.radius;
+                    this.vx *= -BOUNCE_DAMPING;
                 }
 
                 if (this.y - this.radius < 0) {
@@ -301,29 +336,22 @@
                     this.vy *= -BOUNCE_DAMPING;
                 }
 
-                // 바닥으로 떨어짐 (게임 오버/리셋)
                 if (this.y - this.radius > canvas.height) {
                     this.reset();
                 }
             }
         };
 
-        // 범퍼 클래스
         class Bumper {
             constructor(x, y, radius, points, color) {
-                this.x = x;
-                this.y = y;
-                this.radius = radius;
-                this.points = points;
-                this.color = color;
-                this.isHit = false;
-                this.hitTimer = 0;
+                this.x = x; this.y = y; this.radius = radius;
+                this.points = points; this.color = color;
+                this.isHit = false; this.hitTimer = 0;
             }
 
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                
                 if (this.isHit) {
                     ctx.fillStyle = '#fff';
                     ctx.shadowBlur = 20;
@@ -333,19 +361,16 @@
                     ctx.shadowBlur = 5;
                     ctx.shadowColor = '#000';
                 }
-                
                 ctx.fill();
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-                
-                // 내부 장식
+
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius * 0.6, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fill();
-                
-                ctx.shadowBlur = 0; // 그림자 초기화
+                ctx.shadowBlur = 0;
             }
 
             checkCollision(ball) {
@@ -353,30 +378,22 @@
                 const dy = ball.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < ball.radius + this.radius) {
-                    // 충돌 해결 (밀어내기)
+                if (distance < ball.radius + this.radius && distance > 0) {
                     const overlap = (ball.radius + this.radius) - distance;
                     const nx = dx / distance;
                     const ny = dy / distance;
-                    
                     ball.x += nx * overlap;
                     ball.y += ny * overlap;
 
-                    // 반사 벡터 계산
                     const dotProduct = ball.vx * nx + ball.vy * ny;
-                    
-                    // 범퍼는 반발력이 높음 (1.5)
                     ball.vx = (ball.vx - 2 * dotProduct * nx) * 1.5;
                     ball.vy = (ball.vy - 2 * dotProduct * ny) * 1.5;
-                    
-                    // 최소 튕김 속도 보장
-                    const speed = Math.sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
-                    if(speed < 5) {
-                        ball.vx = nx * 5;
-                        ball.vy = ny * 5;
-                    }
 
-                    // 점수 및 효과
+                    const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+                    if (speed < 5) { ball.vx = nx * 5; ball.vy = ny * 5; }
+                    // 너무 빨라져서 벽을 뚫는 일이 없도록 최고 속도 제한
+                    if (speed > 22) { ball.vx *= 22 / speed; ball.vy *= 22 / speed; }
+
                     this.isHit = true;
                     this.hitTimer = 10;
                     addScore(this.points);
@@ -384,21 +401,16 @@
             }
 
             update() {
-                if (this.hitTimer > 0) {
-                    this.hitTimer--;
-                } else {
-                    this.isHit = false;
-                }
+                if (this.hitTimer > 0) this.hitTimer--;
+                else this.isHit = false;
             }
         }
-        
-        // 플리퍼 (단순화된 사각형 형태로 구현)
+
         const flippers = [
             { x: 80, y: 500, width: 80, height: 15, angle: 0.5, isUp: false, pivotX: 80, pivotY: 500, isLeft: true },
             { x: 230, y: 500, width: 80, height: 15, angle: -0.5, isUp: false, pivotX: 310, pivotY: 500, isLeft: false }
         ];
 
-        // 맵 요소 생성
         const bumpers = [
             new Bumper(120, 150, 25, 10, '#3b82f6'),
             new Bumper(230, 120, 25, 10, '#3b82f6'),
@@ -408,48 +420,33 @@
             new Bumper(175, 350, 25, 15, '#f59e0b')
         ];
 
-        // 경사진 벽 그리기
         function drawSlantedWalls() {
             ctx.fillStyle = '#6b7280';
-            
-            // 하단 왼쪽 경사면
+
             ctx.beginPath();
-            ctx.moveTo(0, 400);
-            ctx.lineTo(80, 500);
-            ctx.lineTo(0, 500);
+            ctx.moveTo(0, 400); ctx.lineTo(80, 500); ctx.lineTo(0, 500);
             ctx.fill();
 
-            // 하단 오른쪽 경사면
             ctx.beginPath();
-            ctx.moveTo(350, 400);
-            ctx.lineTo(270, 500);
-            ctx.lineTo(350, 500);
-            ctx.fill();
-            
-            // 상단 오른쪽 모서리 삼각형 (발사 레인 꼭대기로 이동)
-            ctx.beginPath();
-            ctx.moveTo(300, 0); // 윗면 시작점
-            ctx.lineTo(400, 0); // 캔버스 오른쪽 맨 끝
-            ctx.lineTo(400, 100); // 캔버스 오른쪽 벽
+            ctx.moveTo(350, 400); ctx.lineTo(270, 500); ctx.lineTo(350, 500);
             ctx.fill();
 
-            // 하단 경사면 충돌 처리 (x < 350 메인 영역 내부)
-            if(ball.x < 350) {
-                // 하단 왼쪽 경사면 충돌
+            ctx.beginPath();
+            ctx.moveTo(300, 0); ctx.lineTo(400, 0); ctx.lineTo(400, 100);
+            ctx.fill();
+
+            if (ball.x < 350) {
                 if (ball.x < 80 && ball.y > 400) {
                     let lineY = 400 + (ball.x / 80) * 100;
                     if (ball.y + ball.radius > lineY) {
                         ball.y = lineY - ball.radius;
-                        // 대략적인 법선 벡터로 반사
                         let nx = 0.8, ny = -0.6;
                         let dot = ball.vx * nx + ball.vy * ny;
                         ball.vx = ball.vx - 2 * dot * nx;
                         ball.vy = ball.vy - 2 * dot * ny;
                         ball.vx *= BOUNCE_DAMPING; ball.vy *= BOUNCE_DAMPING;
                     }
-                }
-                // 하단 오른쪽 경사면 (350 레인 안쪽) 충돌
-                else if (ball.x > 270 && ball.y > 400) {
+                } else if (ball.x > 270 && ball.y > 400) {
                     let lineY = 500 - ((ball.x - 270) / 80) * 100;
                     if (ball.y + ball.radius > lineY) {
                         ball.y = lineY - ball.radius;
@@ -461,274 +458,206 @@
                     }
                 }
             }
-            
-            // 상단 오른쪽 삼각형 벽 충돌 체크 (메인 영역 및 발사 레인 모두 적용되도록 밖으로 분리)
+
             if (ball.x > 300 && ball.y < 100) {
-                // 점 (300,0)과 (400,100)을 잇는 선분의 방정식: y = x - 300
-                let lineY = ball.x - 300; 
+                let lineY = ball.x - 300;
                 if (ball.y - ball.radius < lineY) {
-                    ball.y = lineY + ball.radius; // 벽 바깥으로 밀어내기
-                    
-                    // 법선 벡터: 기울기가 1인 직선의 법선 벡터는 대략 (-0.707, 0.707) 방향
+                    ball.y = lineY + ball.radius;
                     let nx = -0.707, ny = 0.707;
                     let dot = ball.vx * nx + ball.vy * ny;
                     ball.vx = ball.vx - 2 * dot * nx;
                     ball.vy = ball.vy - 2 * dot * ny;
-                    
-                    // 반발 계수 적용
-                    ball.vx *= BOUNCE_DAMPING; 
+                    ball.vx *= BOUNCE_DAMPING;
                     ball.vy *= BOUNCE_DAMPING;
-                    
-                    // 발사되어 빠른 속도로 부딪히는 경우 점수 획득 (발사 보너스)
-                    let speed = Math.sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
-                    if(speed > 5) {
-                        addScore(2);
-                    }
+                    let speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+                    if (speed > 5) addScore(2);
                 }
             }
         }
 
-        // 점수 및 코인 시스템
         function addScore(points) {
             score += points;
             totalScoreAccumulator += points;
             scoreDisplay.textContent = score;
-
-            // 10점당 1코인 변환
             if (totalScoreAccumulator >= 10) {
                 let newCoins = Math.floor(totalScoreAccumulator / 10);
                 coins += newCoins;
-                totalScoreAccumulator %= 10; // 나머지 점수 유지
+                totalScoreAccumulator %= 10;
                 coinDisplay.textContent = coins;
             }
         }
 
-        // 커스텀 알림창 함수
         function showAlert(message) {
             modalMessage.textContent = message;
             alertModal.style.display = 'flex';
         }
+        modalCloseBtn.addEventListener('click', () => { alertModal.style.display = 'none'; });
 
-        modalCloseBtn.addEventListener('click', () => {
-            alertModal.style.display = 'none';
-        });
-
-        // 상점 로직
         shopButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const price = parseInt(this.getAttribute('data-price'));
                 const themeClass = this.getAttribute('data-theme');
                 const isOwned = ownedSkins.includes(themeClass);
 
                 if (isOwned || themeClass === 'default') {
-                    // 이미 보유중이거나 기본 스킨인 경우 장착
                     applyTheme(themeClass);
                     updateShopUI();
+                } else if (coins >= price) {
+                    coins -= price;
+                    coinDisplay.textContent = coins;
+                    ownedSkins.push(themeClass);
+                    applyTheme(themeClass);
+                    updateShopUI();
+                    showAlert('스킨을 성공적으로 구매하고 장착했습니다!');
                 } else {
-                    // 구매 시도
-                    if (coins >= price) {
-                        coins -= price;
-                        coinDisplay.textContent = coins;
-                        ownedSkins.push(themeClass);
-                        applyTheme(themeClass);
-                        updateShopUI();
-                        showAlert('스킨을 성공적으로 구매하고 장착했습니다!');
-                    } else {
-                        showAlert(`코인이 부족합니다. (필요: ${price}코인, 현재: ${coins}코인)`);
-                    }
+                    showAlert(`코인이 부족합니다. (필요: ${price}코인, 현재: ${coins}코인)`);
                 }
             });
         });
 
         function applyTheme(themeClass) {
-            // 기존 테마 클래스 제거
             board.className = '';
-            
-            if (themeClass !== 'default') {
-                board.classList.add(themeClass);
-            }
+            if (themeClass !== 'default') board.classList.add(themeClass);
         }
-        
+
         function updateShopUI() {
             shopButtons.forEach(btn => {
                 const themeClass = btn.getAttribute('data-theme');
                 const priceSpan = btn.querySelector('span:last-child');
-                
                 if (ownedSkins.includes(themeClass) || themeClass === 'default') {
                     priceSpan.textContent = '장착하기';
                     priceSpan.className = 'bg-green-200 text-green-800 text-xs font-bold px-2 py-1 rounded';
-                    
-                    // 현재 적용된 테마 표시
-                    if(board.classList.contains(themeClass) || (themeClass === 'default' && board.className === '')) {
-                         priceSpan.textContent = '장착됨';
-                         priceSpan.className = 'bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded';
+                    if (board.classList.contains(themeClass) || (themeClass === 'default' && board.className === '')) {
+                        priceSpan.textContent = '장착됨';
+                        priceSpan.className = 'bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded';
                     }
                 }
             });
         }
 
-        // 입력 처리 (UI 및 키보드)
+        // ===== 입력 =====
         powerSlider.addEventListener('input', (e) => {
             powerValue.textContent = e.target.value;
-            // 장전 애니메이션을 위해 즉시 그리기 요청
-            if(!ball.isLaunched) requestAnimationFrame(draw); 
         });
 
-        launchBtn.addEventListener('click', () => {
+        function launchBall() {
             if (!ball.isLaunched && !isBallInPlay) {
                 const power = parseInt(powerSlider.value);
-                // 파워 값(10~100)을 Y축 속도(-8 ~ -25)로 매핑
                 ball.vy = -8 - (power / 100) * 17;
-                // 약간의 X축 변화를 주어 매번 똑같이 떨어지지 않게 함
-                ball.vx = (Math.random() - 0.5) * 2; 
+                ball.vx = (Math.random() - 0.5) * 2;
                 ball.isLaunched = true;
                 isBallInPlay = true;
             }
-        });
+        }
+        launchBtn.addEventListener('click', launchBall);
 
-        // 플리퍼 조작 (키보드 좌우 방향키 또는 A, D)
+        // 키보드: 좌우 방향키 / A, D, 스페이스바 발사
         window.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); // 화면 스크롤 방지
             if (e.code === 'ArrowLeft' || e.code === 'KeyA') flippers[0].isUp = true;
             if (e.code === 'ArrowRight' || e.code === 'KeyD') flippers[1].isUp = true;
-            // 스페이스바로 발사
-            if (e.code === 'Space' && !ball.isLaunched && !isBallInPlay) {
-                launchBtn.click();
-            }
+            if (e.code === 'Space') launchBall();
         });
-
         window.addEventListener('keyup', (e) => {
             if (e.code === 'ArrowLeft' || e.code === 'KeyA') flippers[0].isUp = false;
             if (e.code === 'ArrowRight' || e.code === 'KeyD') flippers[1].isUp = false;
         });
-        
-        // 마우스/터치로 플리퍼 조작 (모바일 대응)
-        board.addEventListener('mousedown', (e) => {
+
+        // 화면 크기가 바뀌어도 '보드의 왼쪽 절반/오른쪽 절반'으로 판단
+        function isLeftHalf(clientX) {
             const rect = board.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            if (x < 200) flippers[0].isUp = true;
+            return (clientX - rect.left) < rect.width / 2;
+        }
+
+        // 마우스
+        board.addEventListener('mousedown', (e) => {
+            if (isLeftHalf(e.clientX)) flippers[0].isUp = true;
             else flippers[1].isUp = true;
         });
-        board.addEventListener('mouseup', () => {
-            flippers[0].isUp = false;
-            flippers[1].isUp = false;
-        });
-        board.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // 스크롤 방지
-            const rect = board.getBoundingClientRect();
-            for(let i=0; i<e.touches.length; i++) {
-                const x = e.touches[i].clientX - rect.left;
-                if (x < 200) flippers[0].isUp = true;
-                else flippers[1].isUp = true;
-            }
-        }, {passive: false});
-        board.addEventListener('touchend', (e) => {
+        window.addEventListener('mouseup', () => {   // 보드 밖에서 손을 떼도 플리퍼가 내려오게
             flippers[0].isUp = false;
             flippers[1].isUp = false;
         });
 
-        // 메인 게임 루프
-        
+        // 터치: 두 손가락으로 양쪽 플리퍼를 따로 누를 수 있음
+        function updateFlippersFromTouches(e) {
+            e.preventDefault();
+            let left = false, right = false;
+            for (const t of e.touches) {
+                if (isLeftHalf(t.clientX)) left = true;
+                else right = true;
+            }
+            flippers[0].isUp = left;
+            flippers[1].isUp = right;
+        }
+        board.addEventListener('touchstart', updateFlippersFromTouches, { passive: false });
+        board.addEventListener('touchmove', updateFlippersFromTouches, { passive: false });
+        board.addEventListener('touchend', updateFlippersFromTouches, { passive: false });
+        board.addEventListener('touchcancel', updateFlippersFromTouches, { passive: false });
+
+        // ===== 그리기 =====
         function drawLaunchLane() {
-            ctx.fillStyle = '#4b5563'; // 어두운 회색 벽
-            ctx.fillRect(350, 100, 5, 500); // x:350, y:100 부터 끝까지 이어지는 얇은 벽
-            
-            // 발사구멍 장식
+            ctx.fillStyle = '#4b5563';
+            ctx.fillRect(350, 100, 5, 500);
             ctx.beginPath();
-            ctx.arc(370, 560, 20, 0, Math.PI, true); // 반원 모양
+            ctx.arc(370, 560, 20, 0, Math.PI, true);
             ctx.strokeStyle = '#374151';
             ctx.lineWidth = 3;
             ctx.stroke();
         }
 
         function updateAndDrawFlippers() {
-            ctx.fillStyle = '#ef4444'; // 빨간색 플리퍼
-            
-            flippers.forEach(flipper => {
-                // 각도 목표치 설정
-                let targetAngle = flipper.isLeft ? 0.5 : -0.5; // 기본 각도 (아래로 쳐짐)
-                if (flipper.isUp) {
-                    targetAngle = flipper.isLeft ? -0.5 : 0.5; // 올라간 각도
-                }
+            ctx.fillStyle = '#ef4444';
 
-                // 부드러운 각도 전환 (스무딩 적용)
+            flippers.forEach(flipper => {
+                let targetAngle = flipper.isLeft ? 0.5 : -0.5;
+                if (flipper.isUp) targetAngle = flipper.isLeft ? -0.5 : 0.5;
+
                 flipper.angle += (targetAngle - flipper.angle) * 0.3;
 
-                // 캔버스 회전 변환을 위해 현재 상태 저장
                 ctx.save();
-                
-                // 기준점을 플리퍼의 회전 축으로 이동
                 ctx.translate(flipper.pivotX, flipper.pivotY);
-                // 캔버스 회전
                 ctx.rotate(flipper.angle);
-                
-                // 플리퍼 그리기 (회전 축 기준이므로 -width/2, -height/2 등이 될 수 있지만 단순화를 위해 직사각형 그림)
-                // 왼쪽 플리퍼는 피벗이 왼쪽, 오른쪽 플리퍼는 피벗이 오른쪽 끝부분이라고 가정
-                if(flipper.isLeft) {
-                    // 둥근 모서리 플리퍼 (왼쪽 기준)
-                    ctx.beginPath();
-                    ctx.roundRect(0, -flipper.height/2, flipper.width, flipper.height, [flipper.height/2]);
-                    ctx.fill();
-                    ctx.stroke();
-                } else {
-                     // 오른쪽 플리퍼 (오른쪽 기준)
-                    ctx.beginPath();
-                    ctx.roundRect(-flipper.width, -flipper.height/2, flipper.width, flipper.height, [flipper.height/2]);
-                    ctx.fill();
-                    ctx.stroke();
-                }
-                
+                ctx.beginPath();
+                if (flipper.isLeft) ctx.roundRect(0, -flipper.height / 2, flipper.width, flipper.height, [flipper.height / 2]);
+                else ctx.roundRect(-flipper.width, -flipper.height / 2, flipper.width, flipper.height, [flipper.height / 2]);
+                ctx.fill();
+                ctx.stroke();
                 ctx.restore();
 
-                // -----------------------------------------
-                // 매우 단순화된 플리퍼 충돌 처리 로직 (바운딩 박스 근사)
-                // -----------------------------------------
-                if (ball.isLaunched && ball.y > 450 && ball.y < 550) { // 플리퍼가 있는 대략적인 Y 영역 
-                     // 플리퍼의 회전에 따른 대략적인 직선 방정식 계산
-                     let slope = Math.tan(flipper.angle);
-                     
-                     // 왼쪽 플리퍼 
-                     if(flipper.isLeft && ball.x >= flipper.x && ball.x <= flipper.x + flipper.width) {
-                         let lineY = flipper.pivotY + (ball.x - flipper.pivotX) * slope;
-                         
-                         // 공이 플리퍼 선 위에 있고 닿았다면
-                         if(ball.y + ball.radius >= lineY - flipper.height/2 && ball.y - ball.radius <= lineY + flipper.height/2) {
-                             // 공 밀어올리기
-                             ball.y = lineY - flipper.height/2 - ball.radius;
-                             
-                             // 플리퍼가 움직이는 중이면 강하게 튕김
-                             if(flipper.isUp && Math.abs(flipper.angle - targetAngle) > 0.1) {
-                                 ball.vy = -12; // 강한 튕기기
-                                 ball.vx = (ball.x - flipper.pivotX) * 0.1; // 바깥쪽으로 퍼지는 힘 추가
-                             } else {
-                                 // 그냥 닿아있으면 튕기기
-                                 ball.vy *= -BOUNCE_DAMPING;
-                             }
-                         }
-                     } 
-                     // 오른쪽 플리퍼
-                     else if(!flipper.isLeft && ball.x >= flipper.pivotX - flipper.width && ball.x <= flipper.pivotX) {
-                          let lineY = flipper.pivotY + (ball.x - flipper.pivotX) * slope;
-                          
-                          if(ball.y + ball.radius >= lineY - flipper.height/2 && ball.y - ball.radius <= lineY + flipper.height/2) {
-                             ball.y = lineY - flipper.height/2 - ball.radius;
-                             
-                             if(flipper.isUp && Math.abs(flipper.angle - targetAngle) > 0.1) {
-                                 ball.vy = -12;
-                                 ball.vx = (ball.x - flipper.pivotX) * 0.1;
-                             } else {
-                                 ball.vy *= -BOUNCE_DAMPING;
-                             }
-                         }
-                     }
+                if (ball.isLaunched && ball.y > 450 && ball.y < 550) {
+                    let slope = Math.tan(flipper.angle);
+
+                    if (flipper.isLeft && ball.x >= flipper.x && ball.x <= flipper.x + flipper.width) {
+                        let lineY = flipper.pivotY + (ball.x - flipper.pivotX) * slope;
+                        if (ball.y + ball.radius >= lineY - flipper.height / 2 && ball.y - ball.radius <= lineY + flipper.height / 2) {
+                            ball.y = lineY - flipper.height / 2 - ball.radius;
+                            if (flipper.isUp && Math.abs(flipper.angle - targetAngle) > 0.1) {
+                                ball.vy = -12;
+                                ball.vx = (ball.x - flipper.pivotX) * 0.1;
+                            } else {
+                                ball.vy *= -BOUNCE_DAMPING;
+                            }
+                        }
+                    } else if (!flipper.isLeft && ball.x >= flipper.pivotX - flipper.width && ball.x <= flipper.pivotX) {
+                        let lineY = flipper.pivotY + (ball.x - flipper.pivotX) * slope;
+                        if (ball.y + ball.radius >= lineY - flipper.height / 2 && ball.y - ball.radius <= lineY + flipper.height / 2) {
+                            ball.y = lineY - flipper.height / 2 - ball.radius;
+                            if (flipper.isUp && Math.abs(flipper.angle - targetAngle) > 0.1) {
+                                ball.vy = -12;
+                                ball.vx = (ball.x - flipper.pivotX) * 0.1;
+                            } else {
+                                ball.vy *= -BOUNCE_DAMPING;
+                            }
+                        }
+                    }
                 }
             });
         }
 
         function draw() {
-            // 캔버스 지우기
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 게임 요소 그리기 및 업데이트
             drawLaunchLane();
             drawSlantedWalls();
 
@@ -739,33 +668,43 @@
             });
 
             updateAndDrawFlippers();
-
             ball.update();
             ball.draw();
-            
-            // UI 업데이트 (플리퍼 조작 안내)
+
+            // 조작 안내 (PC는 키보드, 모바일은 터치)
             ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.font = '12px Inter';
+            ctx.font = '12px Inter, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('좌: ← / A | 우: → / D', 175, 580);
-            
-            // 발사 안내
-            if(!ball.isLaunched) {
+            ctx.fillText(isTouchDevice ? '화면 왼쪽/오른쪽을 터치!' : '좌: ← / A | 우: → / D', 175, 580);
+
+            if (!ball.isLaunched) {
                 ctx.fillStyle = 'rgba(255,0,0,0.7)';
-                ctx.font = '14px font-bold Inter';
-                ctx.fillText('파워 조절 후 [발사] 클릭!', 175, 200);
+                ctx.font = 'bold 14px Inter, sans-serif';
+                ctx.fillText(isTouchDevice ? '파워 조절 후 [발사] 터치!' : '파워 조절 후 [발사] 클릭!', 175, 200);
             }
         }
 
-        function gameLoop() {
-            draw();
+        // ===== 게임 루프 =====
+        // 휴대폰 화면은 1초에 120번 그리는 경우가 있어 게임이 2배로 빨라질 수 있음.
+        // 그래서 실제 시간 기준으로 1초에 60번만 움직이도록 맞춤.
+        const STEP = 1000 / 60;
+        let lastTime = null, acc = 0;
+        function gameLoop(time) {
+            if (lastTime === null) lastTime = time;
+            acc += Math.min(time - lastTime, 100); // 다른 탭에 다녀왔을 때 갑자기 튀지 않게
+            lastTime = time;
+            let steps = 0;
+            while (acc >= STEP && steps < 4) {
+                draw();
+                acc -= STEP;
+                steps++;
+            }
             animationId = requestAnimationFrame(gameLoop);
         }
 
-        // 초기화
         updateShopUI();
-        gameLoop();
-
+        draw();
+        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
