@@ -4,818 +4,641 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>여름 바이브 🌊 50계단 퀴즈 & 캐릭터 상점 🌴</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Korean Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- Canvas Confetti CDN -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
     <style>
-        body {
-            font-family: 'Jua', 'Noto Sans KR', sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #00c6ff 70%, #0072ff 100%);
-            min-height: 100vh;
-        }
-
-        .font-gaegu {
-            font-family: 'Gaegu', cursive;
-        }
-
-        /* Glassmorphic Summer Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(16px);
-            border: 3px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 20px 40px rgba(0, 114, 255, 0.22);
-        }
-
-        /* Background Wave Animation */
-        .ocean-wave {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 110px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.35" d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,176C960,203,1056,213,1152,192C1248,171,1344,117,1392,90L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x;
-            background-size: 1440px 110px;
-            animation: waveMove 12s linear infinite;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        @keyframes waveMove {
-            0% { background-position-x: 0; }
-            100% { background-position-x: 1440px; }
-        }
-
-        /* Float Bounce Animations */
-        @keyframes floatBounce {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(4deg); }
-        }
-        .animate-float {
-            animation: floatBounce 3s ease-in-out infinite;
-        }
-
-        /* Ding-Dong-Deng Graphic Pop Effect */
+        body { font-family: 'Jua', 'Noto Sans KR', sans-serif; user-select: none; -webkit-user-select: none;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 35%, #00c6ff 70%, #0072ff 100%); min-height: 100vh; }
+        .font-gaegu { font-family: 'Gaegu', cursive; }
+        .glass-card { background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); border: 3px solid rgba(255,255,255,0.95); box-shadow: 0 20px 40px rgba(0,114,255,0.22); }
+        .ocean-wave { position: fixed; bottom: 0; left: 0; width: 100%; height: 110px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.35" d="M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,176C960,203,1056,213,1152,192C1248,171,1344,117,1392,90L1440,64L1440,320L0,320Z"></path></svg>') repeat-x;
+            background-size: 1440px 110px; animation: waveMove 12s linear infinite; z-index: 0; pointer-events: none; }
+        @keyframes waveMove { 0% { background-position-x: 0; } 100% { background-position-x: 1440px; } }
+        @keyframes floatBounce { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-8px) rotate(4deg); } }
+        .animate-float { animation: floatBounce 3s ease-in-out infinite; }
         @keyframes dingDongDengPop {
-            0% { transform: translate(-50%, -50%) scale(0.1) rotate(-20deg); opacity: 0; }
-            40% { transform: translate(-50%, -50%) scale(1.25) rotate(5deg); opacity: 1; }
-            70% { transform: translate(-50%, -50%) scale(1.0) rotate(-2deg); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); opacity: 0; }
-        }
-        .animate-dingdongdeng {
-            animation: dingDongDengPop 1.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        /* Dancing Dog Keyframe */
+            0% { transform: translate(-50%,-50%) scale(0.1) rotate(-20deg); opacity: 0; }
+            40% { transform: translate(-50%,-50%) scale(1.25) rotate(5deg); opacity: 1; }
+            70% { transform: translate(-50%,-50%) scale(1.0) rotate(-2deg); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(1.1) rotate(0); opacity: 0; } }
+        .animate-dingdongdeng { animation: dingDongDengPop 1.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
         @keyframes dogDance {
-            0% { transform: scale(1) rotate(-15deg) translateY(0); }
-            25% { transform: scale(1.2) rotate(15deg) translateY(-25px); }
-            50% { transform: scale(0.9) rotate(-15deg) translateY(0); }
-            75% { transform: scale(1.25) rotate(15deg) translateY(-20px); }
-            100% { transform: scale(1) rotate(-15deg) translateY(0); }
-        }
-        .animate-dog-dance {
-            animation: dogDance 0.6s ease-in-out infinite;
-        }
+            0% { transform: scale(1) rotate(-15deg) translateY(0); } 25% { transform: scale(1.2) rotate(15deg) translateY(-25px); }
+            50% { transform: scale(0.9) rotate(-15deg) translateY(0); } 75% { transform: scale(1.25) rotate(15deg) translateY(-20px); }
+            100% { transform: scale(1) rotate(-15deg) translateY(0); } }
+        .animate-dog-dance { animation: dogDance 0.6s ease-in-out infinite; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #e0f7fa; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #00bcd4; border-radius: 10px; }
+        .stair-step-active { box-shadow: 0 0 15px #ffaa00; border-color: #f59e0b !important; background: linear-gradient(135deg,#fef08a,#fde047) !important; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #e0f7fa;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00bcd4;
-            border-radius: 10px;
-        }
-
-        /* Staircase track container */
-        .stair-step-active {
-            box-shadow: 0 0 15px #ffaa00;
-            border-color: #f59e0b !important;
-            background: linear-gradient(135deg, #fef08a, #fde047) !important;
+        /* 상장 인쇄: 상장만 인쇄되게 */
+        @media print {
+            body { background: #fff !important; }
+            body * { visibility: hidden !important; }
+            #certificateModal, #certificateModal * { visibility: visible !important; }
+            #certificateModal { position: absolute !important; inset: 0 !important; background: #fff !important; backdrop-filter: none !important; display: flex !important; }
+            #certificateModal .no-print { display: none !important; }
+            .ocean-wave { display: none !important; }
         }
     </style>
 </head>
 <body class="relative overflow-x-hidden flex flex-col justify-between min-h-screen text-slate-800 pb-8">
-
-    <!-- Ocean Wave Overlay -->
     <div class="ocean-wave"></div>
 
-    <!-- Ding Dong Deng 🔔 3-Chime Pop Banner -->
     <div id="dingDongDengOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none hidden whitespace-nowrap text-center">
         <div class="text-5xl sm:text-7xl font-black text-yellow-300 drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)] border-4 border-white bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 px-8 sm:px-12 py-5 sm:py-7 rounded-full font-gaegu flex items-center gap-4 shadow-2xl">
             🔔 딩동댕! 정답입니다! 🎉
         </div>
     </div>
 
-    <!-- Header Controls & Level Bar -->
     <header class="relative z-10 w-full max-w-5xl mx-auto px-4 pt-5 pb-2 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center gap-3">
-            <div id="activeAvatarHeader" class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-3xl transform -rotate-6 animate-float border-2 border-cyan-300">
-                🐶
-            </div>
+            <div id="activeAvatarHeader" class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-3xl transform -rotate-6 animate-float border-2 border-cyan-300">🐶</div>
             <div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md tracking-wide flex items-center gap-2">
-                    여름 바이브 50계단 퀴즈!
-                </h1>
-                <p class="text-xs sm:text-sm text-cyan-100 font-gaegu font-bold text-lg">
-                    🌊 10계단 마다 레벨업! 캐릭터 상점에서 장착해보세요!
-                </p>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-md tracking-wide">여름 바이브 50계단 퀴즈!</h1>
+                <p class="text-cyan-100 font-gaegu font-bold text-lg">🌊 10계단 마다 레벨업! 캐릭터 상점에서 장착해보세요!</p>
             </div>
         </div>
-
-        <!-- Right Side Top Stats -->
         <div class="flex flex-wrap items-center gap-2">
-            <!-- Ocean Sound Toggle -->
             <button id="waveAudioBtn" onclick="toggleWaveSound()" class="px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-cyan-800 transition flex items-center gap-1.5 text-xs sm:text-sm font-bold shadow-sm">
                 <i id="waveIcon" class="fa-solid fa-water text-cyan-600"></i>
                 <span id="waveText">파도 소리 켜기</span>
             </button>
-
-            <!-- Coins Badge -->
             <div class="px-3 py-1.5 rounded-xl bg-amber-400 text-amber-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
-                <span>🪙 코인:</span>
-                <span id="coinText" class="text-base font-black text-amber-950">0</span>
+                <span>🪙 코인:</span><span id="coinText" class="text-base font-black">0</span>
             </div>
-
-            <!-- Shop Button -->
             <button onclick="openShopModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center gap-1.5">
-                <i class="fa-solid fa-store"></i>
-                <span>캐릭터 상점</span>
+                <i class="fa-solid fa-store"></i><span>캐릭터 상점</span>
             </button>
-
-            <!-- Certificate Button (Unlocked after 50 Stairs) -->
             <button id="certificateBtn" onclick="openCertificateModal()" class="hidden px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-amber-950 font-black text-xs sm:text-sm shadow-lg transition flex items-center gap-1.5 animate-bounce">
-                <i class="fa-solid fa-award text-amber-900 text-base"></i>
-                <span>🏆 천재 상장</span>
+                <i class="fa-solid fa-award text-amber-900 text-base"></i><span>🏆 천재 상장</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Application Grid -->
     <main class="relative z-10 w-full max-w-5xl mx-auto px-4 py-3 flex-grow flex flex-col lg:flex-row gap-5">
-
-        <!-- Left Sidebar: 50 Stairs Level Tower -->
         <aside class="w-full lg:w-1/3 glass-card rounded-3xl p-4 flex flex-col justify-between">
             <div class="flex justify-between items-center mb-2 pb-2 border-b border-cyan-100">
-                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                    <i class="fa-solid fa-stairs text-cyan-600"></i>
-                    <span>50계단 등반 현황</span>
-                </h3>
-                <span id="stairLevelBadge" class="px-3 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-xs font-black">
-                    수준 1 (1~10계단)
-                </span>
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2"><i class="fa-solid fa-stairs text-cyan-600"></i><span>50계단 등반 현황</span></h3>
+                <span id="stairLevelBadge" class="px-3 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-xs font-black">수준 1 (1~10계단)</span>
             </div>
-
-            <!-- Stair Progress Summary Card -->
             <div class="bg-gradient-to-r from-cyan-50 to-emerald-50 rounded-2xl p-3 border border-cyan-200 mb-3 flex items-center justify-between">
                 <div>
-                    <div class="text-xs text-slate-500 font-bold">현재 위치</div>
+                    <div class="text-xs text-slate-500 font-bold">오른 계단</div>
                     <div class="text-2xl font-black text-cyan-700 font-gaegu"><span id="currentStairNum">0</span> / 50 계단</div>
                 </div>
                 <div class="text-right">
                     <div class="text-xs text-slate-500 font-bold">현재 레벨 (수준)</div>
-                    <div id="currentLevelNameText" class="text-sm font-extrabold text-emerald-600">1수준: 기초 상식</div>
+                    <div id="currentLevelNameText" class="text-sm font-extrabold text-emerald-600">1수준: 여름 상식</div>
                 </div>
             </div>
-
-            <!-- 50 Steps Staircase Display (Scrollable) -->
-            <div id="stairsContainer" class="h-64 lg:h-96 overflow-y-auto space-y-1 pr-1 flex flex-col-reverse">
-                <!-- 50 Stair rows dynamically generated -->
-            </div>
+            <div id="stairsContainer" class="h-64 lg:h-96 overflow-y-auto space-y-1 pr-1 flex flex-col-reverse"></div>
         </aside>
 
-        <!-- Right Main: Quiz Board & Video Display -->
         <section class="w-full lg:w-2/3 glass-card rounded-3xl p-5 sm:p-7 flex flex-col justify-between relative overflow-hidden">
-            
-            <!-- Top Controls in Card -->
             <div class="w-full flex justify-between items-center mb-3 flex-wrap gap-2">
                 <div class="flex items-center gap-2">
-                    <span id="quizLevelTag" class="bg-cyan-100 text-cyan-800 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-cyan-200">
-                        🏷️ 1수준 · 쉬움 상식
-                    </span>
-                    <span id="hintCountBadge" class="bg-amber-100 text-amber-900 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-amber-200">
-                        💡 힌트: <span id="hintCount">0</span>개
-                    </span>
+                    <span id="quizLevelTag" class="bg-cyan-100 text-cyan-800 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-cyan-200">🏷️ 1수준 · 여름 상식</span>
+                    <span class="bg-amber-100 text-amber-900 text-xs sm:text-sm px-3 py-1 rounded-full font-bold border border-amber-200">💡 힌트: <span id="hintCount">0</span>개</span>
                 </div>
-
-                <!-- Hidden Creator Button -->
                 <button id="hiddenCreatorBtn" onclick="openHiddenModal()" disabled class="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition flex items-center gap-1.5 border border-slate-300">
-                    <i class="fa-solid fa-lock text-xs" id="hiddenLockIcon"></i>
-                    <span>히든 (퀴즈 만들기)</span>
+                    <i class="fa-solid fa-lock text-xs" id="hiddenLockIcon"></i><span>히든 (퀴즈 만들기)</span>
                 </button>
             </div>
 
-            <!-- Quiz Main Display -->
             <div id="quizDisplayArea" class="w-full my-auto flex flex-col items-center">
-                
-                <!-- Start Screen -->
                 <div id="startScreen" class="flex flex-col items-center text-center py-8 gap-4">
                     <div id="avatarStartDisplay" class="text-7xl sm:text-8xl animate-float">🐶</div>
                     <h2 class="text-3xl sm:text-4xl font-extrabold text-cyan-900 font-gaegu leading-tight">
                         50계단을 올라가 <span class="text-emerald-600">5가지 수준</span>을 완등하고<br><span class="text-pink-600">마지막 세상이 못 맞히는 문제</span>에 도전하세요!
                     </h2>
                     <p class="text-xs sm:text-sm text-slate-600 max-w-md">
-                        • 1문제 맞힐 때마다 <b>+1계단</b> 등반!<br>
+                        • 1문제 맞힐 때마다 <b>+1계단</b> 등반! 틀리면 같은 계단에서 다시 도전해요.<br>
                         • 정답을 맞히면 <b>'딩동댕~'</b> 소리와 <b>관련 자료 영상</b>이 공개됩니다!<br>
                         • 10계단 클리어 시 <b>상점 코인 + 힌트 1개 + 춤추는 캐릭터</b> 획득!
                     </p>
                     <button onclick="startQuizGame()" class="mt-2 px-10 py-4 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white font-extrabold text-2xl rounded-2xl shadow-xl transform transition active:scale-95 flex items-center gap-3">
-                        <i class="fa-solid fa-play text-yellow-300"></i>
-                        <span>퀴즈 시작하기!</span>
+                        <i class="fa-solid fa-play text-yellow-300"></i><span>퀴즈 시작하기!</span>
                     </button>
                 </div>
 
-                <!-- Quiz Screen -->
                 <div id="quizScreen" class="hidden w-full flex flex-col items-center gap-4">
-                    
-                    <!-- Question Header & Hint Button -->
                     <div class="flex justify-between items-center w-full">
-                        <span id="stairQuestionHeader" class="text-sm font-extrabold text-cyan-700">
-                            📍 계단 1번 문제
-                        </span>
+                        <span id="stairQuestionHeader" class="text-sm font-extrabold text-cyan-700">📍 계단 1번 문제</span>
                         <button id="useHintBtn" onclick="useHintChance()" class="px-3 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-sm disabled:opacity-50">
-                            <i class="fa-solid fa-lightbulb"></i>
-                            <span>힌트 사용</span>
+                            <i class="fa-solid fa-lightbulb"></i><span>힌트 사용</span>
                         </button>
                     </div>
-
-                    <!-- Question Text -->
-                    <h2 id="questionText" class="text-2xl sm:text-3xl font-black text-slate-800 text-center font-gaegu leading-snug min-h-[60px] flex items-center justify-center">
-                        질문 내용입니다.
-                    </h2>
-
-                    <!-- Hint Box -->
-                    <div id="hintBox" class="hidden w-full bg-amber-50 border-2 border-amber-300 p-3 rounded-2xl text-xs sm:text-sm text-amber-900 font-semibold text-center animate-bounce">
+                    <h2 id="questionText" class="text-2xl sm:text-3xl font-black text-slate-800 text-center font-gaegu leading-snug min-h-[60px] flex items-center justify-center">질문 내용입니다.</h2>
+                    <div id="hintBox" class="hidden w-full bg-amber-50 border-2 border-amber-300 p-3 rounded-2xl text-xs sm:text-sm text-amber-900 font-semibold text-center">
                         💡 <b>힌트:</b> <span id="hintText"></span>
                     </div>
+                    <div id="resultMsg" class="hidden w-full text-center font-gaegu text-xl font-bold"></div>
+                    <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-1"></div>
 
-                    <!-- 4 Choice Options Grid -->
-                    <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-1">
-                        <!-- Options generated here -->
-                    </div>
-
-                    <!-- Related Video Card Section -->
+                    <!-- 관련 영상 -->
                     <div id="videoContainer" class="w-full mt-2 bg-slate-900 rounded-2xl overflow-hidden shadow-lg border-2 border-cyan-300 hidden flex-col">
                         <div class="bg-cyan-800 text-cyan-100 px-3 py-1.5 text-xs font-bold flex items-center justify-between">
-                            <span class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-film text-yellow-300"></i>
-                                <span>📺 관련 자료 영상 시청하기</span>
-                            </span>
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-film text-yellow-300"></i><span>📺 관련 자료 영상</span></span>
                             <span id="videoTitleText" class="text-cyan-200 text-xs truncate max-w-[200px]">관련 자료</span>
                         </div>
-                        <div class="relative w-full aspect-video bg-black flex items-center justify-center">
-                            <iframe id="youtubeIframe" class="w-full h-full" src="" title="Related Quiz Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div id="videoFrameWrap" class="relative w-full aspect-video bg-black hidden">
+                            <iframe id="youtubeIframe" class="w-full h-full" src="" title="Related Quiz Video" frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
+                        <a id="youtubeLink" href="#" target="_blank" rel="noopener" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-3 text-center transition flex items-center justify-center gap-1.5">
+                            <i class="fa-brands fa-youtube"></i><span id="youtubeLinkText">유튜브에서 관련 영상 찾아보기</span>
+                        </a>
                     </div>
 
-                    <!-- Next Question Button -->
-                    <button id="nextBtn" onclick="nextStairQuiz()" class="hidden mt-3 px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-blue-600 transition flex items-center gap-2">
-                        <span>다음 계단 문제 도전!</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                    <div class="flex gap-2 flex-wrap justify-center">
+                        <button id="retryBtn" onclick="retryStairQuiz()" class="hidden mt-3 px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold text-lg rounded-2xl shadow-lg transition items-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i><span>이 계단 다시 도전!</span>
+                        </button>
+                        <button id="nextBtn" onclick="nextStairQuiz()" class="hidden mt-3 px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:from-blue-600 transition items-center gap-2">
+                            <span id="nextBtnText">다음 계단 문제 도전!</span><i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Footer Progress Bar -->
             <div class="w-full border-t border-cyan-100 pt-3 mt-3">
                 <div class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                    <span>🏁 50계단 완등 진행도</span>
-                    <span id="overallProgressText" class="text-cyan-700">0 / 50 계단</span>
+                    <span>🏁 50계단 완등 진행도</span><span id="overallProgressText" class="text-cyan-700">0 / 50 계단</span>
                 </div>
                 <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200">
                     <div id="overallProgressBar" class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 h-full rounded-full transition-all duration-500 w-0"></div>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Character Shop Modal -->
+    <!-- 캐릭터 상점 -->
     <div id="shopModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl relative border-4 border-amber-300 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeShopModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <h3 class="text-2xl font-extrabold text-amber-800 mb-1 flex items-center gap-2 font-gaegu text-3xl">
-                🛍️ 캐릭터 상점
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">
-                10계단을 오를 때마다 획득한 코인으로 등반 캐릭터를 구매해 장착하세요!
-            </p>
-
+            <button onclick="closeShopModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-extrabold text-amber-800 mb-1 font-gaegu text-3xl">🛍️ 캐릭터 상점</h3>
+            <p class="text-xs text-slate-500 mb-4">10계단을 오를 때마다 획득한 코인으로 등반 캐릭터를 구매해 장착하세요!</p>
             <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 flex justify-between items-center mb-4">
                 <span class="text-xs font-bold text-amber-900">보유 코인:</span>
-                <span class="text-xl font-black text-amber-600 flex items-center gap-1">
-                    🪙 <span id="shopCoinText">0</span>개
-                </span>
+                <span class="text-xl font-black text-amber-600">🪙 <span id="shopCoinText">0</span>개</span>
             </div>
-
-            <div id="shopGrid" class="grid grid-cols-2 gap-3">
-                <!-- Dynamically generated shop items -->
-            </div>
+            <div id="shopGrid" class="grid grid-cols-2 gap-3"></div>
         </div>
     </div>
 
-    <!-- Hidden Creator Modal -->
+    <!-- 히든: 나만의 퀴즈 만들기 -->
     <div id="hiddenModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl relative border-4 border-pink-200 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeHiddenModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <h3 class="text-2xl font-extrabold text-pink-600 mb-1 flex items-center gap-2 font-gaegu text-3xl">
-                ✨ 히든 기능: 나만의 퀴즈 추가!
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">
-                직접 질문과 관련 유튜브 영상 URL을 입력해 나만의 문제에 도전하세요!
-            </p>
-
+            <button onclick="closeHiddenModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-extrabold text-pink-600 mb-1 font-gaegu text-3xl">✨ 히든 기능: 나만의 퀴즈 추가!</h3>
+            <p class="text-xs text-slate-500 mb-4">질문을 만들면 바로 '히든 문제'로 도전할 수 있어요. 만든 문제는 아래 목록에 모여요.</p>
             <form onsubmit="handleCreateCustomQuiz(event)" class="space-y-3 text-left">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">퀴즈 질문</label>
                     <input type="text" id="customQ" placeholder="예: 바다에 가장 많이 녹아있는 염류는?" required class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
                 </div>
-
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 1 (정답)</label>
-                        <input type="text" id="customOpt1" placeholder="염화나트륨" required class="w-full px-3 py-1.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:outline-none text-xs font-semibold bg-emerald-50/50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 2 (오답)</label>
-                        <input type="text" id="customOpt2" placeholder="설탕" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 3 (오답)</label>
-                        <input type="text" id="customOpt3" placeholder="비타민" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">보기 4 (오답)</label>
-                        <input type="text" id="customOpt4" placeholder="지방" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
-                    </div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">보기 1 (정답)</label>
+                        <input type="text" id="customOpt1" placeholder="염화나트륨" required class="w-full px-3 py-1.5 rounded-xl border-2 border-emerald-300 focus:border-emerald-500 focus:outline-none text-xs font-semibold bg-emerald-50/50"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">보기 2 (오답)</label>
+                        <input type="text" id="customOpt2" placeholder="설탕" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">보기 3 (오답)</label>
+                        <input type="text" id="customOpt3" placeholder="비타민" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold"></div>
+                    <div><label class="block text-xs font-bold text-slate-600 mb-1">보기 4 (오답)</label>
+                        <input type="text" id="customOpt4" placeholder="지방" required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold"></div>
                 </div>
-
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">관련 유튜브 영상 ID (선택)</label>
-                    <input type="text" id="customVideo" placeholder="예: LXb3EKWsInQ" class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">관련 유튜브 영상 ID (선택, 주소의 v= 뒤 11자리)</label>
+                    <input type="text" id="customVideo" placeholder="비워 두면 질문으로 유튜브 검색 버튼이 나와요" class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
                 </div>
-
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">힌트 문구</label>
                     <input type="text" id="customHint" placeholder="예: 소금의 대표 주성분이에요." required class="w-full px-3 py-1.5 rounded-xl border-2 border-slate-200 focus:border-pink-500 focus:outline-none text-xs font-semibold">
                 </div>
-
                 <div class="pt-2 flex gap-2">
                     <button type="button" onclick="closeHiddenModal()" class="w-1/2 py-2.5 rounded-xl font-bold text-slate-500 bg-slate-100 transition">취소</button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 transition shadow-md">퀴즈 생성!</button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 transition shadow-md">퀴즈 생성 & 도전!</button>
                 </div>
             </form>
+            <div class="mt-5">
+                <div class="text-xs font-bold text-slate-600 mb-2">📚 내가 만든 퀴즈 (<span id="customCount">0</span>개)</div>
+                <div id="customList" class="space-y-1.5 text-xs"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Level / 10-Stair Clear Celebration Modal -->
+    <!-- 10계단 클리어 -->
     <div id="levelClearModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-gradient-to-b from-yellow-100 via-white to-cyan-100 rounded-3xl p-7 max-w-md w-full shadow-2xl text-center relative border-4 border-yellow-300">
-            
-            <div id="dancingCharacterIcon" class="text-7xl sm:text-8xl my-3 animate-dog-dance inline-block">
-                🐶
-            </div>
-            
-            <h3 id="levelClearTitle" class="text-3xl sm:text-4xl font-extrabold text-yellow-800 font-gaegu mb-1">
-                🎉 수준 클리어 성공!! 🎉
-            </h3>
-            <p id="levelClearSub" class="text-base font-bold text-emerald-600 mb-3 font-gaegu">
-                10계단을 정복하여 신나는 댄스 타임! 🕺✨
-            </p>
-
+            <div id="dancingCharacterIcon" class="text-7xl sm:text-8xl my-3 animate-dog-dance inline-block">🐶</div>
+            <h3 id="levelClearTitle" class="text-3xl sm:text-4xl font-extrabold text-yellow-800 font-gaegu mb-1">🎉 1수준 클리어 성공!! 🎉</h3>
+            <p id="levelClearSub" class="text-base font-bold text-emerald-600 mb-3 font-gaegu">10계단을 정복하여 신나는 댄스 타임! 🕺✨</p>
             <div class="bg-white/90 rounded-2xl p-4 border border-yellow-200 text-xs sm:text-sm font-bold text-slate-700 space-y-2 mb-5 text-left">
-                <div class="text-amber-600 flex items-center gap-2">
-                    <i class="fa-solid fa-coins"></i>
-                    <span>보상: <b>골드 코인 +100개</b> 획득!</span>
-                </div>
-                <div class="text-pink-600 flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span><b>'히든 버튼'</b> (퀴즈 작성기) 추가 해금!</span>
-                </div>
-                <div class="text-emerald-600 flex items-center gap-2">
-                    <i class="fa-solid fa-lightbulb"></i>
-                    <span><b>'힌트 +1개'</b> 획득!</span>
-                </div>
+                <div class="text-amber-600 flex items-center gap-2"><i class="fa-solid fa-coins"></i><span>보상: <b>골드 코인 +100개</b> 획득!</span></div>
+                <div class="text-pink-600 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i><span><b>'히든 버튼'</b> (퀴즈 작성기) 해금!</span></div>
+                <div class="text-emerald-600 flex items-center gap-2"><i class="fa-solid fa-lightbulb"></i><span><b>'힌트 +1개'</b> 획득!</span></div>
             </div>
-
-            <button onclick="closeLevelClearModal()" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 text-yellow-950 font-extrabold text-lg rounded-2xl shadow-lg transition">
-                다음 계단 도전하기 🚀
-            </button>
+            <button onclick="closeLevelClearModal()" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 text-yellow-950 font-extrabold text-lg rounded-2xl shadow-lg transition">다음 계단 도전하기 🚀</button>
         </div>
     </div>
 
-    <!-- Official "You Are A Genius!" Certificate Modal -->
+    <!-- 천재 상장 -->
     <div id="certificateModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-amber-50 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative border-8 border-amber-300 text-center text-amber-950 flex flex-col items-center">
-            <button onclick="closeCertificateModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-amber-100">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <!-- Certificate Frame Inner -->
+            <button onclick="closeCertificateModal()" class="no-print absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center hover:bg-amber-100"><i class="fa-solid fa-xmark"></i></button>
             <div class="w-full border-4 border-double border-amber-400 p-5 sm:p-7 rounded-2xl bg-white/90 relative overflow-hidden shadow-inner">
                 <div class="absolute -top-10 -right-10 text-9xl opacity-10 select-none pointer-events-none">🏆</div>
                 <div class="text-xs font-black tracking-widest text-amber-700 uppercase mb-1">OFFICIAL CERTIFICATE OF GENIUS</div>
-                
-                <h2 class="text-3xl sm:text-4xl font-black text-amber-900 font-gaegu my-1 flex items-center justify-center gap-2">
-                    <span>📜</span>
-                    <span>상 장</span>
-                    <span>📜</span>
-                </h2>
-
-                <div id="certAvatar" class="text-6xl my-2 animate-bounce">🐶</div>
-
-                <div class="text-2xl sm:text-3xl font-black text-rose-600 font-gaegu my-2 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 py-2 px-4 rounded-xl border-2 border-amber-300 shadow-sm">
-                    ✨ 당신은 천재! ✨
-                </div>
-
+                <h2 class="text-3xl sm:text-4xl font-black text-amber-900 font-gaegu my-1">📜 상 장 📜</h2>
+                <div id="certAvatar" class="text-6xl my-2">🐶</div>
+                <div class="text-2xl sm:text-3xl font-black text-rose-600 font-gaegu my-2 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 py-2 px-4 rounded-xl border-2 border-amber-300 shadow-sm">✨ 당신은 천재! ✨</div>
                 <p class="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed font-gaegu my-3">
                     위 사람은 <b>'여름 바이브 50계단 퀴즈'</b>의 모든 고난도 문제를 극복하고,<br>
                     마지막 세상이 못 맞히는 문제까지 완벽하게 정복하였으므로<br>
                     지구상 최고 지능의 소유자임을 인정하여 이 <b>천재 상장</b>을 수여합니다!
                 </p>
-
                 <div class="mt-5 pt-3 border-t border-amber-200 flex justify-between items-center text-[11px] text-amber-800 font-bold">
-                    <div class="text-left">
-                        <div>발행일: <span id="certDate">2026. 10. 03</span></div>
-                        <div>수여 기관: 여름 바이브 퀴즈 위원회</div>
-                    </div>
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 border-4 border-amber-300 flex items-center justify-center text-white font-black text-[10px] shadow-lg transform rotate-12 leading-tight">
-                        천재인증<br>⭐
-                    </div>
+                    <div class="text-left"><div>발행일: <span id="certDate"></span></div><div>수여 기관: 여름 바이브 퀴즈 위원회</div></div>
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 border-4 border-amber-300 flex items-center justify-center text-white font-black text-[10px] shadow-lg transform rotate-12 leading-tight">천재인증<br>⭐</div>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-4 flex gap-2.5 w-full">
-                <button onclick="window.print()" class="w-1/2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl transition flex items-center justify-center gap-1.5 text-xs">
-                    <i class="fa-solid fa-print"></i>
-                    <span>상장 인쇄하기</span>
-                </button>
-                <button onclick="closeCertificateModal()" class="w-1/2 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-amber-950 font-black rounded-xl shadow-md transition text-xs">
-                    확인 및 닫기
-                </button>
+            <div class="no-print mt-4 flex gap-2.5 w-full">
+                <button onclick="window.print()" class="w-1/2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl transition flex items-center justify-center gap-1.5 text-xs"><i class="fa-solid fa-print"></i><span>상장 인쇄하기</span></button>
+                <button onclick="closeCertificateModal()" class="w-1/2 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-amber-950 font-black rounded-xl shadow-md transition text-xs">확인 및 닫기</button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="relative z-10 text-center py-3 text-xs text-white/80 font-normal">
-        <p>🌊 시원한 여름 바이브 50계단 랜덤 퀴즈 & 캐릭터 상점 🏝</p>
+        <p>🌊 시원한 여름 바이브 50계단 퀴즈 & 캐릭터 상점 🏝</p>
     </footer>
-
     <script>
-        // 외부 재생이 확실히 보장된 무료/공개 영상 ID 목록으로 교체 (자연/우주 테마)
-        const SAFE_NATURE_VIDEO = "LXb3EKWsInQ"; // 아름다운 자연 영상
-        const SAFE_SPACE_VIDEO = "_38JDGnr0vA"; // 우주 영상
-        
-        const STAIR_QUIZZES = [
-            {
-                stair: 1, level: 1, category: "🌊 1수준 · 여름 상식",
-                question: "바닷물이 짜게 느껴지는 가장 주된 소금 성분의 화학 이름은?",
-                options: ["염화나트륨", "이산화탄소", "탄산칼슘", "수산화나트륨"], answer: 0,
-                hint: "식탁에 올라오는 식염의 주성분이에요!", videoId: SAFE_NATURE_VIDEO, videoTitle: "바다의 아름다움"
-            },
-            {
-                stair: 2, level: 1, category: "🐬 1수준 · 동물의 세계",
-                question: "지구상에서 몸집이 가장 큰 포유류 동물은 무엇일까요?",
-                options: ["아프리카코끼리", "대왕고래 (흰수염고래)", "티라노사우루스", "향고래"], answer: 1,
-                hint: "바다에 살며 크릴새우를 주로 먹는 거대 포유류입니다.", videoId: SAFE_NATURE_VIDEO, videoTitle: "해양 생태계 탐험"
-            },
-            // ... (학생이 추가한 나머지 48개 문제도 아래와 같은 형식으로 반복됩니다. 
-            // 여기서는 빠른 테스트와 작동 확인을 위해 50번 최종 문제로 바로 넘어가게 3번~49번은 생략하고 50번을 3번째 문제로 둡니다.)
-            {
-                stair: 3, level: 5, category: "🔥 5수준 MAX · 이 세상 사람이 못 맞히는 문제",
-                question: "💥 [우주 최종 문제] 이 우주가 창조되기 0.0000001초 전에 일어난 일은?",
-                options: [
-                    "1. 알 수 없다.",
-                    "2. 우주 폭발과 함께 증발함",
-                    "3. 정답은 오직 출제자 마음속에만 존재함!",
-                    "4. 무한대"
-                ],
-                answer: 2,
-                hint: "이 세상 그 어떤 과학자나 물리학자도 논리적으로 맞힐 수 없습니다... 정답은 3번입니다!",
-                videoId: SAFE_SPACE_VIDEO, videoTitle: "신비로운 우주 다큐"
-            }
+        // ===== 수준 이름 =====
+        const LEVELS = {
+            1: "여름 상식", 2: "동물과 자연", 3: "과학 탐구", 4: "우리나라와 세계", 5: "MAX 도전"
+        };
+
+        // ===== 50계단 문제 =====
+        // [질문, [보기 4개], 정답 번호(0부터), 힌트, 유튜브 검색어, 영상ID]
+        // 영상ID: 선생님이 직접 확인한 영상의 11자리 ID를 넣으면 화면 안에서 재생돼요.
+        //         비워 두면('') 검색어로 '유튜브에서 찾아보기' 버튼이 나와요.
+        const RAW = [
+            // 1수준: 여름 상식 (1~10)
+            ["바닷물이 짜게 느껴지는 가장 주된 소금 성분의 이름은?", ["염화나트륨", "이산화탄소", "탄산칼슘", "산소"], 0, "식탁에 올라오는 소금의 주성분이에요!", "바닷물이 짠 이유", ""],
+            ["지구에서 몸집이 가장 큰 동물은?", ["아프리카코끼리", "대왕고래", "기린", "백상아리"], 1, "바다에 살며 크릴새우를 주로 먹어요.", "대왕고래", ""],
+            ["우리나라에서 장마가 보통 시작되는 달은?", ["3월", "6월", "9월", "12월"], 1, "여름이 막 시작될 때예요.", "장마", ""],
+            ["1년 중 낮이 가장 긴 날을 무엇이라고 할까요?", ["동지", "춘분", "하지", "추분"], 2, "'여름 하(夏)' 자가 들어가요.", "하지 낮이 가장 긴 날", ""],
+            ["무지개는 흔히 몇 가지 색이라고 할까요?", ["3가지", "5가지", "7가지", "10가지"], 2, "빨주노초파남보!", "무지개 생기는 원리", ""],
+            ["해가 떠오르는 방향은?", ["동쪽", "서쪽", "남쪽", "북쪽"], 0, "해는 서쪽으로 져요.", "해가 동쪽에서 뜨는 이유", ""],
+            ["여름에 '맴맴' 하고 우는 곤충은?", ["귀뚜라미", "매미", "나비", "개미"], 1, "땅속에서 오랫동안 애벌레로 살아요.", "매미", ""],
+            ["얼음이 녹으면 무엇이 될까요?", ["물", "소금", "모래", "공기"], 0, "마실 수 있어요!", "얼음이 녹는 과정", ""],
+            ["1년은 몇 달일까요?", ["10달", "11달", "12달", "13달"], 2, "1월부터 세어 보세요.", "1년 열두 달", ""],
+            ["수박 속살은 보통 무슨 색일까요?", ["파란색", "빨간색", "검은색", "보라색"], 1, "씨앗은 까만색이에요.", "수박 키우기", ""],
+            // 2수준: 동물과 자연 (11~20)
+            ["문어의 다리는 몇 개일까요?", ["4개", "6개", "8개", "10개"], 2, "거미의 다리 수와 같아요.", "문어", ""],
+            ["다음 중 날지 못하는 새는?", ["독수리", "참새", "펭귄", "갈매기"], 2, "남극에서 뒤뚱뒤뚱 걸어요.", "펭귄", ""],
+            ["상어는 어떤 무리에 속할까요?", ["물고기(어류)", "포유류", "파충류", "양서류"], 0, "아가미로 숨을 쉬어요.", "상어", ""],
+            ["돌고래는 어디로 숨을 쉴까요?", ["아가미", "머리 위 숨구멍", "꼬리", "지느러미"], 1, "물 위로 올라와 '푸우' 하고 내뿜어요.", "돌고래 숨쉬기", ""],
+            ["개구리가 어릴 때 부르는 이름은?", ["애벌레", "올챙이", "번데기", "병아리"], 1, "꼬리가 있고 물속에서 헤엄쳐요.", "올챙이 개구리 한살이", ""],
+            ["나비의 한살이에서 애벌레 다음 단계는?", ["알", "번데기", "어른벌레", "올챙이"], 1, "움직이지 않고 껍질 속에서 변해요.", "나비 한살이", ""],
+            ["바다거북은 알을 어디에 낳을까요?", ["바닷속 바위", "나무 위", "모래사장", "얼음 위"], 2, "엄마 거북이 바닷가로 올라와요.", "바다거북 알", ""],
+            ["식물이 햇빛을 이용해 양분을 만드는 일을 무엇이라 할까요?", ["광합성", "증발", "소화", "발효"], 0, "'빛 광(光)' 자가 들어가요.", "광합성", ""],
+            ["땅 위에서 가장 빨리 달리는 동물은?", ["사자", "말", "치타", "타조"], 2, "몸에 검은 점무늬가 있어요.", "치타", ""],
+            ["꿀벌이 꽃에서 모으는 것은?", ["흙", "꿀과 꽃가루", "물고기", "나뭇잎"], 1, "달콤한 것을 모아요.", "꿀벌", ""],
+            // 3수준: 과학 탐구 (21~30)
+            ["물이 끓는 온도는 보통 몇 도일까요?", ["0℃", "50℃", "100℃", "200℃"], 2, "세 자리 숫자예요.", "물이 끓는 온도", ""],
+            ["물이 얼기 시작하는 온도는 보통 몇 도일까요?", ["0℃", "10℃", "25℃", "100℃"], 0, "가장 작은 숫자예요.", "물이 어는 온도", ""],
+            ["지구에서 가장 가까운 별은?", ["북극성", "태양", "시리우스", "달"], 1, "낮에 하늘에서 빛나요.", "태양", ""],
+            ["태양계에서 가장 큰 행성은?", ["지구", "화성", "목성", "수성"], 2, "줄무늬와 '대적점'이 있어요.", "목성", ""],
+            ["자석의 같은 극끼리 가까이 하면?", ["서로 밀어낸다", "서로 끌어당긴다", "아무 일도 없다", "불이 난다"], 0, "N극과 N극은 사이가 안 좋아요.", "자석의 성질", ""],
+            ["달이 밝게 보이는 까닭은?", ["스스로 불타서", "햇빛을 반사해서", "전기가 흘러서", "얼음으로 되어 있어서"], 1, "달은 스스로 빛을 내지 못해요.", "달이 빛나는 이유", ""],
+            ["식물의 뿌리가 하는 가장 중요한 일은?", ["꽃 피우기", "물 흡수하기", "씨 날리기", "소리 내기"], 1, "땅속에 있어요.", "식물 뿌리가 하는 일", ""],
+            ["피를 온몸으로 보내는 우리 몸의 기관은?", ["위", "폐", "심장", "뇌"], 2, "쿵쾅쿵쾅 뛰어요.", "심장이 하는 일", ""],
+            ["그림자가 생기는 까닭은?", ["빛이 곧게 나아가서", "빛이 휘어서", "물이 있어서", "바람이 불어서"], 0, "빛은 물체를 돌아가지 못해요.", "그림자가 생기는 이유", ""],
+            ["소리가 가장 빠르게 전달되는 것은?", ["공기", "물", "쇠", "아무것도 없는 우주"], 2, "단단할수록 빨라요.", "소리의 전달", ""],
+            // 4수준: 우리나라와 세계 (31~40)
+            ["한글을 만든 임금은?", ["세종대왕", "이순신", "광개토대왕", "정조"], 0, "만 원짜리 지폐에 있어요.", "세종대왕 한글", ""],
+            ["대한민국의 수도는?", ["부산", "서울", "대전", "인천"], 1, "한강이 흘러요.", "서울", ""],
+            ["세계에서 가장 넓은 바다(대양)는?", ["대서양", "인도양", "태평양", "북극해"], 2, "'크게 평화로운 바다'라는 뜻이에요.", "태평양", ""],
+            ["세계에서 가장 높은 산은?", ["한라산", "백두산", "에베레스트산", "후지산"], 2, "히말라야산맥에 있어요.", "에베레스트산", ""],
+            ["우리나라에서 가장 큰 섬은?", ["제주도", "울릉도", "강화도", "거제도"], 0, "한라산이 있어요.", "제주도", ""],
+            ["우리나라 동쪽 끝에 있는 섬은?", ["마라도", "독도", "백령도", "진도"], 1, "울릉도에서 가까워요.", "독도", ""],
+            ["피라미드가 유명한 나라는?", ["이집트", "프랑스", "브라질", "캐나다"], 0, "나일강이 흘러요.", "피라미드", ""],
+            ["대한민국의 나라꽃은?", ["장미", "벚꽃", "무궁화", "해바라기"], 2, "애국가에도 나와요.", "무궁화", ""],
+            ["캥거루가 사는 나라는?", ["오스트레일리아(호주)", "중국", "미국", "이탈리아"], 0, "남반구에 있는 큰 대륙 나라예요.", "캥거루", ""],
+            ["올림픽 깃발(오륜기)의 고리는 몇 개일까요?", ["3개", "4개", "5개", "6개"], 2, "'오륜'의 '오'를 생각해 보세요.", "오륜기 의미", ""],
+            // 5수준: MAX 도전 (41~50)
+            ["지구가 태양을 한 바퀴 도는 데 걸리는 시간은?", ["약 하루", "약 한 달", "약 1년", "약 10년"], 2, "약 365일이에요.", "지구의 공전", ""],
+            ["사람 몸에서 가장 큰 기관은?", ["심장", "피부", "간", "뇌"], 1, "온몸을 감싸고 있어요.", "피부가 하는 일", ""],
+            ["빛의 3원색은?", ["빨강·노랑·파랑", "빨강·초록·파랑", "검정·하양·회색", "노랑·초록·보라"], 1, "텔레비전 화면이 이 세 색으로 모든 색을 만들어요.", "빛의 3원색", ""],
+            ["공기 중에 가장 많이 들어 있는 기체는?", ["산소", "이산화탄소", "질소", "수소"], 2, "산소보다 거의 4배나 많아요.", "공기의 구성", ""],
+            ["거미의 다리는 몇 개일까요?", ["6개", "8개", "10개", "12개"], 1, "곤충(6개)보다 많아요.", "거미", ""],
+            ["태양계 행성은 모두 몇 개일까요?", ["7개", "8개", "9개", "10개"], 1, "명왕성은 2006년에 행성에서 빠졌어요.", "태양계 행성", ""],
+            ["고래는 무엇으로 숨을 쉴까요?", ["아가미", "폐", "피부", "비늘"], 1, "고래는 물고기가 아니라 포유류예요.", "고래 숨쉬기", ""],
+            ["물의 화학식은?", ["CO₂", "O₂", "H₂O", "NaCl"], 2, "수소 2개와 산소 1개!", "물 분자", ""],
+            ["다이아몬드는 어떤 원소로 이루어져 있을까요?", ["철", "탄소", "금", "규소"], 1, "연필심(흑연)과 같은 원소예요.", "다이아몬드 탄소", ""],
+            // 50계단: 최종 문제
+            ["💥 [우주 최종 문제] 이 우주가 만들어지기 0.0000001초 전에 일어난 일은?",
+                ["알 수 없다.", "우주 폭발과 함께 증발함", "정답은 오직 출제자 마음속에만 존재함!", "무한대"], 2,
+                "이 세상 그 어떤 과학자도 논리적으로 맞힐 수 없습니다... 정답은 3번입니다!", "우주의 시작 빅뱅", ""]
         ];
+
+        const STAIR_QUIZZES = RAW.map((q, i) => {
+            const stair = i + 1, level = Math.ceil(stair / 10);
+            return {
+                stair, level,
+                category: stair === 50 ? "🔥 5수준 MAX · 세상이 못 맞히는 문제" : `🏷️ ${level}수준 · ${LEVELS[level]}`,
+                question: q[0], options: q[1], answer: q[2], hint: q[3], search: q[4], videoId: q[5]
+            };
+        });
+        const TOTAL = STAIR_QUIZZES.length; // 50
 
         const SHOP_CHARACTERS = [
             { id: "dog", name: "🐶 댄싱 댕댕이", price: 0, unlocked: true, icon: "🐶" },
             { id: "dolphin", name: "🐬 서핑 돌고래", price: 100, unlocked: false, icon: "🐬" },
             { id: "turtle", name: "🐢 핑크 바다거북", price: 100, unlocked: false, icon: "🐢" },
-            { id: "god", name: "👑 퀴즈의 신", price: 500, unlocked: false, icon: "👑" }
+            { id: "god", name: "👑 퀴즈의 신", price: 300, unlocked: false, icon: "👑" }
         ];
 
-        let currentStair = 0; 
-        let activeQuiz = null;
-        let hintsAvailable = 0;
-        let userCoins = 0;
+        let climbed = 0;              // 맞혀서 오른 계단 수
+        let activeQuiz = null;        // 지금 풀고 있는 문제
+        let shuffledAnswer = 0;       // 섞은 보기에서의 정답 위치
+        let isCustomMode = false;     // 히든 문제를 푸는 중인지
+        let customQuizzes = [];
+        let hintsAvailable = 0, userCoins = 0;
         let selectedCharacterIcon = "🐶";
-        let isWavePlaying = false;
-        let isHiddenUnlocked = false;
-        let isCertificateUnlocked = false;
-        let answeredCurrent = false;
+        let isHiddenUnlocked = false, isCertificateUnlocked = false, answeredCurrent = false;
 
+        // ===== 소리 =====
         let audioCtx = null;
-        let waveNoiseNode = null, waveGainNode = null, waveFilterNode = null, waveInterval = null;
-
         function initAudio() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) audioCtx = new AudioContext();
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) audioCtx = new AC();
             }
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
-
-        // 딩동댕 소리
         function playDingDongDengSound() {
-            initAudio();
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            
-            const freqs = [783.99, 659.25, 1046.50];
-            const times = [0, 0.16, 0.35];
-            const durations = [0.45, 0.44, 0.65];
-
-            for(let i=0; i<3; i++) {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freqs[i], now + times[i]);
-                gain.gain.setValueAtTime(0.4, now + times[i]);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + times[i] + durations[i]);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now + times[i]);
-                osc.stop(now + times[i] + durations[i]);
+            initAudio(); if (!audioCtx) return;
+            const now = audioCtx.currentTime, freqs = [783.99, 659.25, 1046.50], times = [0, 0.16, 0.35], durs = [0.45, 0.44, 0.65];
+            for (let i = 0; i < 3; i++) {
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = 'sine'; o.frequency.setValueAtTime(freqs[i], now + times[i]);
+                g.gain.setValueAtTime(0.4, now + times[i]); g.gain.exponentialRampToValueAtTime(0.001, now + times[i] + durs[i]);
+                o.connect(g); g.connect(audioCtx.destination); o.start(now + times[i]); o.stop(now + times[i] + durs[i]);
             }
         }
-
-        // 오답 삐- 소리
         function playWrongSound() {
-            initAudio();
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, now);
-            osc.frequency.setValueAtTime(130, now + 0.15);
-            gain.gain.setValueAtTime(0.25, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.35);
+            initAudio(); if (!audioCtx) return;
+            const now = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'sawtooth'; o.frequency.setValueAtTime(180, now); o.frequency.setValueAtTime(130, now + 0.15);
+            g.gain.setValueAtTime(0.25, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 0.35);
         }
 
-        // 파도 소리 토글
+        // 파도 소리: 부드러운 잡음을 천천히 크게-작게 하여 '쏴아~' 소리를 만듦
+        let wave = null, isWavePlaying = false;
         function toggleWaveSound() {
-            initAudio();
-            if (!audioCtx) return;
-            const icon = document.getElementById('waveIcon');
-            const text = document.getElementById('waveText');
-
+            initAudio(); if (!audioCtx) return;
+            const icon = document.getElementById('waveIcon'), text = document.getElementById('waveText');
             if (isWavePlaying) {
-                if (waveGainNode) waveGainNode.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-                setTimeout(() => {
-                    if (waveNoiseNode) { waveNoiseNode.stop(); waveNoiseNode.disconnect(); }
-                    if (waveInterval) clearInterval(waveInterval);
-                }, 800);
-                isWavePlaying = false;
-                text.textContent = "파도 소리 켜기";
-                icon.className = "fa-solid fa-water text-cyan-600";
-            } else {
-                // (생략: 백색잡음을 이용한 파도소리 합성 코드는 길어서 간소화)
-                // 실제 상용 앱에서는 여기에 audio 파일(mp3)을 넣는 것이 좋습니다.
-                isWavePlaying = true;
-                text.textContent = "파도 소리 끄기";
-                icon.className = "fa-solid fa-volume-high text-emerald-600 animate-bounce";
+                const w = wave, t = audioCtx.currentTime;
+                w.master.gain.cancelScheduledValues(t);
+                w.master.gain.setValueAtTime(w.master.gain.value, t);
+                w.master.gain.linearRampToValueAtTime(0.0001, t + 0.8);
+                setTimeout(() => { try { w.src.stop(); w.lfo.stop(); } catch (e) {} }, 900);
+                wave = null; isWavePlaying = false;
+                text.textContent = "파도 소리 켜기"; icon.className = "fa-solid fa-water text-cyan-600";
+                return;
             }
+            const len = audioCtx.sampleRate * 4, buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
+            let last = 0;
+            for (let i = 0; i < len; i++) { const white = Math.random() * 2 - 1; last = (last + 0.02 * white) / 1.02; d[i] = last * 3.5; }
+            const src = audioCtx.createBufferSource(); src.buffer = buf; src.loop = true;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 700;
+            const swell = audioCtx.createGain(); swell.gain.value = 0.5;
+            const lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.12; // 약 8초에 한 번 파도
+            const lfoAmt = audioCtx.createGain(); lfoAmt.gain.value = 0.45;
+            lfo.connect(lfoAmt); lfoAmt.connect(swell.gain);
+            const master = audioCtx.createGain(); master.gain.value = 0.0001;
+            src.connect(filter); filter.connect(swell); swell.connect(master); master.connect(audioCtx.destination);
+            src.start(); lfo.start();
+            master.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 1.5);
+            wave = { src, lfo, master }; isWavePlaying = true;
+            text.textContent = "파도 소리 끄기"; icon.className = "fa-solid fa-volume-high text-emerald-600";
         }
 
+        // ===== 계단 화면 =====
         function buildStairsUI() {
             const container = document.getElementById('stairsContainer');
             container.innerHTML = '';
-            // 총 3개 퀴즈만 렌더링 (테스트용)
-            STAIR_QUIZZES.forEach((quiz, idx) => {
-                const i = quiz.stair;
-                const stepRow = document.createElement('div');
-                stepRow.id = `stairRow-${i}`;
-                stepRow.className = `p-2 rounded-xl border flex items-center justify-between text-xs transition-all ${
-                    i === currentStair ? 'stair-step-active font-black scale-[1.02]' : (i < currentStair ? 'bg-emerald-50 border-emerald-200' : 'bg-white/80 border-cyan-100')
-                }`;
-                stepRow.innerHTML = `
+            const currentNum = Math.min(climbed + 1, TOTAL);
+            STAIR_QUIZZES.forEach(quiz => {
+                const i = quiz.stair, done = i <= climbed, now = i === currentNum && climbed < TOTAL;
+                const row = document.createElement('div');
+                row.id = `stairRow-${i}`;
+                row.className = `p-2 rounded-xl border flex items-center justify-between text-xs transition-all ${now ? 'stair-step-active font-black' : (done ? 'bg-emerald-50 border-emerald-200' : 'bg-white/80 border-cyan-100')}`;
+                row.innerHTML = `
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 rounded-lg ${i <= currentStair ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700'} font-extrabold flex items-center justify-center">${i <= currentStair ? '✓' : i}</span>
-                        <span>${quiz.category}</span>
+                        <span class="w-6 h-6 rounded-lg ${done ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700'} font-extrabold flex items-center justify-center">${done ? '✓' : i}</span>
+                        <span>${i}계단 · ${quiz.level}수준${i % 10 === 0 ? ' 🎁' : ''}</span>
                     </div>
-                    <div class="avatar-holder text-base">${i === currentStair ? selectedCharacterIcon : ''}</div>
-                `;
-                container.appendChild(stepRow);
+                    <div class="text-base">${now ? selectedCharacterIcon : (climbed === TOTAL && i === TOTAL ? selectedCharacterIcon : '')}</div>`;
+                container.appendChild(row);
             });
+            const active = document.getElementById(`stairRow-${currentNum}`);
+            if (active) active.scrollIntoView({ block: 'nearest' });
         }
 
         function updateStairsVisual() {
             buildStairsUI();
-            document.getElementById('currentStairNum').textContent = currentStair;
-            const percent = (currentStair / STAIR_QUIZZES.length) * 100;
-            document.getElementById('overallProgressBar').style.width = `${percent}%`;
-            document.getElementById('overallProgressText').textContent = `${currentStair} / ${STAIR_QUIZZES.length} 계단`;
+            const level = Math.min(Math.floor(climbed / 10) + 1, 5);
+            document.getElementById('currentStairNum').textContent = climbed;
+            document.getElementById('currentLevelNameText').textContent = `${level}수준: ${LEVELS[level]}`;
+            document.getElementById('stairLevelBadge').textContent = `수준 ${level} (${(level - 1) * 10 + 1}~${level * 10}계단)`;
+            document.getElementById('overallProgressBar').style.width = `${(climbed / TOTAL) * 100}%`;
+            document.getElementById('overallProgressText').textContent = `${climbed} / ${TOTAL} 계단`;
         }
 
+        // ===== 문제 =====
         function startQuizGame() {
             initAudio();
             document.getElementById('startScreen').classList.add('hidden');
             document.getElementById('quizScreen').classList.remove('hidden');
-            if (currentStair === 0) currentStair = STAIR_QUIZZES[0].stair;
             updateStairsVisual();
-            loadStairQuiz(currentStair);
+            if (climbed >= TOTAL) { openCertificateModal(); return; }
+            loadQuiz(STAIR_QUIZZES[climbed]);
         }
 
-        function loadStairQuiz(stairNum) {
+        function shuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+            return a;
+        }
+
+        function show(id, flex) { const el = document.getElementById(id); el.classList.remove('hidden'); if (flex) el.classList.add('flex'); }
+        function hide(id) { const el = document.getElementById(id); el.classList.add('hidden'); el.classList.remove('flex'); }
+
+        function loadQuiz(quiz) {
+            activeQuiz = quiz;
             answeredCurrent = false;
-            document.getElementById('hintBox').classList.add('hidden');
-            document.getElementById('nextBtn').classList.add('hidden');
-            
-            // 영상 컨테이너 숨기고 iframe 소스 제거 (오류 방지 및 로딩 최적화)
-            document.getElementById('videoContainer').classList.add('hidden');
-            document.getElementById('videoContainer').classList.remove('flex');
-            document.getElementById('youtubeIframe').src = ""; 
+            ['hintBox', 'nextBtn', 'retryBtn', 'resultMsg', 'videoContainer', 'videoFrameWrap'].forEach(hide);
+            document.getElementById('youtubeIframe').src = "";
 
-            activeQuiz = STAIR_QUIZZES.find(q => q.stair === stairNum) || STAIR_QUIZZES[0];
+            document.getElementById('stairQuestionHeader').textContent = isCustomMode ? "✨ 히든 문제 (내가 만든 퀴즈)" : `📍 계단 ${quiz.stair}번 문제`;
+            document.getElementById('quizLevelTag').textContent = isCustomMode ? "✨ 히든 문제" : quiz.category;
+            document.getElementById('questionText').textContent = quiz.question;
+            document.getElementById('hintText').textContent = quiz.hint;
 
-            document.getElementById('stairQuestionHeader').textContent = `📍 계단 ${activeQuiz.stair}번 문제`;
-            document.getElementById('quizLevelTag').textContent = activeQuiz.category;
-            document.getElementById('questionText').textContent = activeQuiz.question;
-            document.getElementById('hintText').textContent = activeQuiz.hint;
+            // 마지막 문제는 번호가 중요하니 섞지 않고, 나머지는 보기 순서를 섞음
+            const order = quiz.stair === 50 && !isCustomMode ? [0, 1, 2, 3] : shuffle([0, 1, 2, 3]);
+            shuffledAnswer = order.indexOf(quiz.answer);
 
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
-            activeQuiz.options.forEach((optText, idx) => {
+            order.forEach((orig, idx) => {
                 const btn = document.createElement('button');
                 btn.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-cyan-200 hover:border-cyan-400 text-slate-800 font-bold flex items-center justify-between shadow-sm text-left font-gaegu text-lg sm:text-xl transition-all";
-                btn.innerHTML = `<span><span class="w-7 h-7 rounded-full bg-cyan-100 text-cyan-800 text-xs inline-flex items-center justify-center mr-2">${idx + 1}</span>${optText}</span><i class="fa-regular fa-circle text-cyan-300"></i>`;
+                btn.innerHTML = `<span><span class="w-7 h-7 rounded-full bg-cyan-100 text-cyan-800 text-xs inline-flex items-center justify-center mr-2">${idx + 1}</span></span><i class="fa-regular fa-circle text-cyan-300"></i>`;
+                btn.querySelector('span').appendChild(document.createTextNode(quiz.options[orig]));
                 btn.onclick = () => selectOption(idx, btn);
                 container.appendChild(btn);
             });
             updateHintButtonState();
         }
 
-        // 누락되었던 딩동댕 애니메이션 시각 효과 함수 추가!
         function triggerDingDongDengVisual() {
-            const overlay = document.getElementById('dingDongDengOverlay');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('animate-dingdongdeng');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                overlay.classList.remove('animate-dingdongdeng');
-            }, 1300);
+            const o = document.getElementById('dingDongDengOverlay');
+            o.classList.remove('hidden'); o.classList.add('animate-dingdongdeng');
+            setTimeout(() => { o.classList.add('hidden'); o.classList.remove('animate-dingdongdeng'); }, 1300);
         }
 
-        function selectOption(selectedIndex, btnElement) {
+        function showQuizVideo(quiz) {
+            const link = document.getElementById('youtubeLink');
+            document.getElementById('videoTitleText').textContent = quiz.search || "관련 자료";
+            if (quiz.videoId) {
+                document.getElementById('youtubeIframe').src = `https://www.youtube.com/embed/${quiz.videoId}?autoplay=1&rel=0&playsinline=1`;
+                show('videoFrameWrap');
+                link.href = `https://www.youtube.com/watch?v=${quiz.videoId}`;
+                document.getElementById('youtubeLinkText').textContent = "영상이 안 나오면? 유튜브에서 바로 보기";
+            } else {
+                link.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(quiz.search || quiz.question)}`;
+                document.getElementById('youtubeLinkText').textContent = `유튜브에서 '${quiz.search || '관련 영상'}' 찾아보기`;
+            }
+            show('videoContainer', true);
+        }
+
+        function setResult(text, color) {
+            const m = document.getElementById('resultMsg');
+            m.textContent = text; m.className = `w-full text-center font-gaegu text-xl font-bold ${color}`;
+        }
+
+        function selectOption(idx, btn) {
             if (answeredCurrent) return;
             answeredCurrent = true;
+            updateHintButtonState();
 
-            const allButtons = document.querySelectorAll('#optionsContainer button');
+            if (idx === shuffledAnswer) {
+                playDingDongDengSound(); triggerDingDongDengVisual();
+                btn.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-emerald-500 border-2 border-emerald-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
+                btn.querySelector('i').className = "fa-solid fa-circle-check text-yellow-300 text-xl";
+                try { if (typeof confetti === 'function') confetti({ particleCount: 40, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
+                showQuizVideo(activeQuiz);
 
-            if (selectedIndex === activeQuiz.answer) {
-                // 정답 처리
-                playDingDongDengSound();
-                triggerDingDongDengVisual();
-                btnElement.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-emerald-500 border-2 border-emerald-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
-                btnElement.querySelector('i').className = "fa-solid fa-circle-check text-yellow-300 text-xl";
-
-                try {
-                    if (typeof confetti === 'function') confetti({ particleCount: 40, spread: 70, origin: { y: 0.6 } });
-                } catch(e) {}
-
-                // 정답을 맞췄을 때만 동영상 iframe 소스를 주입하고 화면에 표시 (오류 153 방지)
-                if (activeQuiz.videoId) {
-                    const embedUrl = `https://www.youtube.com/embed/${activeQuiz.videoId}?autoplay=1&rel=0`;
-                    document.getElementById('youtubeIframe').src = embedUrl;
-                    document.getElementById('videoTitleText').textContent = activeQuiz.videoTitle || "관련 자료";
-                    document.getElementById('videoContainer').classList.remove('hidden');
-                    document.getElementById('videoContainer').classList.add('flex');
+                if (isCustomMode) {
+                    setResult("🎉 내가 만든 문제도 정복!", "text-pink-600");
+                    document.getElementById('nextBtnText').textContent = "원래 계단으로 돌아가기";
+                    show('nextBtn', true);
+                    return;
                 }
 
-                // 레벨업 및 상장 지급 로직
-                if (currentStair === STAIR_QUIZZES[STAIR_QUIZZES.length - 1].stair) {
+                climbed++;
+                updateStairsVisual();
+                setResult(`⬆️ ${climbed}계단 등반 성공!`, "text-emerald-600");
+
+                if (climbed === TOTAL) {
                     isCertificateUnlocked = true;
                     updateStatsDisplay();
+                    document.getElementById('nextBtnText').textContent = "천재 상장 받기!";
                     setTimeout(() => openCertificateModal(), 1200);
-                } else if (STAIR_QUIZZES.findIndex(q => q.stair === currentStair) % 2 === 1) { // 빠른 테스트를 위해 2문제마다 보상
-                    userCoins += 100;
-                    hintsAvailable += 1;
-                    isHiddenUnlocked = true;
-                    updateStatsDisplay();
-                    setTimeout(() => showLevelClearModal(Math.ceil(currentStair / 10)), 800);
+                } else {
+                    document.getElementById('nextBtnText').textContent = "다음 계단 문제 도전!";
+                    if (climbed % 10 === 0) {
+                        userCoins += 100; hintsAvailable += 1; isHiddenUnlocked = true;
+                        updateStatsDisplay();
+                        setTimeout(() => showLevelClearModal(climbed / 10), 800);
+                    }
                 }
-
+                show('nextBtn', true);
             } else {
-                // 오답 처리
                 playWrongSound();
-                btnElement.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-rose-500 border-2 border-rose-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
-                btnElement.querySelector('i').className = "fa-solid fa-circle-xmark text-white text-xl";
-                
-                const correctBtn = allButtons[activeQuiz.answer];
-                if (correctBtn) correctBtn.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-emerald-100 border-2 border-emerald-400 text-emerald-900 font-bold flex items-center justify-between text-left font-gaegu text-lg sm:text-xl";
+                btn.className = "w-full p-3.5 sm:p-4 rounded-2xl bg-rose-500 border-2 border-rose-600 text-white font-bold flex items-center justify-between shadow-md text-left font-gaegu text-lg sm:text-xl";
+                btn.querySelector('i').className = "fa-solid fa-circle-xmark text-white text-xl";
+                setResult(isCustomMode ? "아쉬워요! 다시 도전해 보세요." : "아쉬워요! 이 계단에서 다시 도전해요.", "text-rose-600");
+                show('retryBtn', true);
             }
-            document.getElementById('nextBtn').classList.remove('hidden');
         }
+
+        function retryStairQuiz() { loadQuiz(activeQuiz); }
 
         function nextStairQuiz() {
-            const currentIndex = STAIR_QUIZZES.findIndex(q => q.stair === currentStair);
-            if (currentIndex < STAIR_QUIZZES.length - 1) {
-                currentStair = STAIR_QUIZZES[currentIndex + 1].stair;
-                updateStairsVisual();
-                loadStairQuiz(currentStair);
-            } else {
-                openCertificateModal();
-            }
+            if (isCustomMode) { isCustomMode = false; loadQuiz(STAIR_QUIZZES[Math.min(climbed, TOTAL - 1)]); return; }
+            if (climbed >= TOTAL) { openCertificateModal(); return; }
+            loadQuiz(STAIR_QUIZZES[climbed]);
         }
 
-        // 누락되었던 캐릭터 상점 모달 제어 함수 추가!
+        // ===== 상점 =====
         function openShopModal() {
             document.getElementById('shopCoinText').textContent = userCoins;
             const grid = document.getElementById('shopGrid');
             grid.innerHTML = '';
-            
-            SHOP_CHARACTERS.forEach(char => {
+            SHOP_CHARACTERS.forEach(ch => {
+                const equipped = ch.icon === selectedCharacterIcon;
                 const btn = document.createElement('button');
-                btn.className = `p-3 rounded-xl border-2 flex flex-col items-center gap-2 ${char.unlocked ? 'bg-white border-emerald-300' : 'bg-slate-100 border-slate-300'}`;
-                btn.innerHTML = `
-                    <div class="text-4xl">${char.icon}</div>
-                    <div class="font-bold text-sm">${char.name}</div>
-                    <div class="text-xs text-slate-500">${char.unlocked ? '보유중 (클릭 장착)' : `🪙 ${char.price}`}</div>
-                `;
+                btn.className = `p-3 rounded-xl border-2 flex flex-col items-center gap-2 ${equipped ? 'bg-yellow-50 border-yellow-400' : ch.unlocked ? 'bg-white border-emerald-300' : 'bg-slate-100 border-slate-300'}`;
+                btn.innerHTML = `<div class="text-4xl">${ch.icon}</div><div class="font-bold text-sm">${ch.name}</div>
+                    <div class="text-xs text-slate-500">${equipped ? '장착 중' : ch.unlocked ? '보유 중 (클릭 장착)' : `🪙 ${ch.price}`}</div>`;
                 btn.onclick = () => {
-                    if (char.unlocked) {
-                        selectedCharacterIcon = char.icon;
-                        updateAvatarDisplays();
-                        closeShopModal();
-                    } else if (userCoins >= char.price) {
-                        userCoins -= char.price;
-                        char.unlocked = true;
-                        selectedCharacterIcon = char.icon;
-                        updateStatsDisplay();
-                        updateAvatarDisplays();
-                        openShopModal(); // 화면 새로고침
-                    } else {
-                        alert('코인이 부족합니다! 문제를 더 맞혀주세요.');
-                    }
+                    if (ch.unlocked) { selectedCharacterIcon = ch.icon; updateAvatarDisplays(); openShopModal(); }
+                    else if (userCoins >= ch.price) {
+                        userCoins -= ch.price; ch.unlocked = true; selectedCharacterIcon = ch.icon;
+                        updateStatsDisplay(); updateAvatarDisplays(); openShopModal();
+                    } else alert('코인이 부족합니다! 문제를 더 맞혀주세요.');
                 };
                 grid.appendChild(btn);
             });
             document.getElementById('shopModal').classList.remove('hidden');
         }
+        function closeShopModal() { document.getElementById('shopModal').classList.add('hidden'); }
 
-        function closeShopModal() {
-            document.getElementById('shopModal').classList.add('hidden');
-        }
-
+        // ===== 상장 =====
         function openCertificateModal() {
             if (!isCertificateUnlocked) return;
             document.getElementById('certAvatar').textContent = selectedCharacterIcon;
-            const now = new Date();
-            document.getElementById('certDate').textContent = `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`;
+            const n = new Date();
+            document.getElementById('certDate').textContent = `${n.getFullYear()}. ${n.getMonth() + 1}. ${n.getDate()}`;
             document.getElementById('certificateModal').classList.remove('hidden');
-            try { if (typeof confetti === 'function') confetti({ particleCount: 80, spread: 90, origin: { y: 0.5 } }); } catch(e) {}
+            try { if (typeof confetti === 'function') confetti({ particleCount: 80, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
         }
         function closeCertificateModal() { document.getElementById('certificateModal').classList.add('hidden'); }
+
         function updateAvatarDisplays() {
-            document.getElementById('activeAvatarHeader').textContent = selectedCharacterIcon;
-            document.getElementById('avatarStartDisplay').textContent = selectedCharacterIcon;
-            document.getElementById('dancingCharacterIcon').textContent = selectedCharacterIcon;
-            document.getElementById('certAvatar').textContent = selectedCharacterIcon;
+            ['activeAvatarHeader', 'avatarStartDisplay', 'dancingCharacterIcon', 'certAvatar'].forEach(id => document.getElementById(id).textContent = selectedCharacterIcon);
             updateStairsVisual();
         }
+
         function updateStatsDisplay() {
             document.getElementById('coinText').textContent = userCoins;
             document.getElementById('hintCount').textContent = hintsAvailable;
-            document.getElementById('hintCountBadge').textContent = `💡 힌트: ${hintsAvailable}개`;
-            const hiddenBtn = document.getElementById('hiddenCreatorBtn');
+            const hb = document.getElementById('hiddenCreatorBtn');
             if (isHiddenUnlocked) {
-                hiddenBtn.disabled = false;
-                hiddenBtn.className = "px-3.5 py-1.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md cursor-pointer transition flex items-center gap-1.5 border border-white";
+                hb.disabled = false;
+                hb.className = "px-3.5 py-1.5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md cursor-pointer transition flex items-center gap-1.5 border border-white";
                 document.getElementById('hiddenLockIcon').className = "fa-solid fa-wand-magic-sparkles text-yellow-300";
             }
             if (isCertificateUnlocked) document.getElementById('certificateBtn').classList.remove('hidden');
@@ -826,21 +649,58 @@
             if (hintsAvailable <= 0 || answeredCurrent) return;
             hintsAvailable--; updateStatsDisplay(); document.getElementById('hintBox').classList.remove('hidden');
         }
-        function showLevelClearModal(clearedLevelNum) {
+
+        function showLevelClearModal(levelNum) {
+            document.getElementById('levelClearTitle').textContent = `🎉 ${levelNum}수준 클리어 성공!! 🎉`;
+            document.getElementById('levelClearSub').textContent = `${levelNum * 10}계단을 정복하여 신나는 댄스 타임! 🕺✨`;
+            document.getElementById('dancingCharacterIcon').textContent = selectedCharacterIcon;
             document.getElementById('levelClearModal').classList.remove('hidden');
-            try { if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 80, origin: { y: 0.5 } }); } catch(e) {}
+            try { if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 80, origin: { y: 0.5 } }); } catch (e) {}
         }
         function closeLevelClearModal() { document.getElementById('levelClearModal').classList.add('hidden'); }
-        function openHiddenModal() { if (isHiddenUnlocked) document.getElementById('hiddenModal').classList.remove('hidden'); }
+
+        // ===== 히든: 나만의 퀴즈 =====
+        function openHiddenModal() { if (isHiddenUnlocked) { renderCustomList(); document.getElementById('hiddenModal').classList.remove('hidden'); } }
         function closeHiddenModal() { document.getElementById('hiddenModal').classList.add('hidden'); }
-        function handleCreateCustomQuiz(e) {
-            e.preventDefault();
-            alert('🎉 성공! 퀴즈가 성공적으로 추가되었습니다!');
-            closeHiddenModal();
+
+        function renderCustomList() {
+            document.getElementById('customCount').textContent = customQuizzes.length;
+            const list = document.getElementById('customList');
+            list.innerHTML = customQuizzes.length ? '' : '<div class="text-slate-400">아직 만든 퀴즈가 없어요.</div>';
+            customQuizzes.forEach((q, i) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between gap-2 bg-pink-50 border border-pink-200 rounded-xl px-3 py-2";
+                const t = document.createElement('span'); t.className = "font-semibold truncate"; t.textContent = `${i + 1}. ${q.question}`;
+                const b = document.createElement('button'); b.className = "shrink-0 px-2.5 py-1 rounded-lg bg-pink-500 text-white font-bold"; b.textContent = "도전";
+                b.onclick = () => playCustomQuiz(q);
+                row.append(t, b); list.appendChild(row);
+            });
         }
 
-        window.onload = function() {
-            buildStairsUI();
+        function playCustomQuiz(q) {
+            closeHiddenModal();
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            isCustomMode = true;
+            loadQuiz(q);
+        }
+
+        function handleCreateCustomQuiz(e) {
+            e.preventDefault();
+            const v = id => document.getElementById(id).value.trim();
+            const q = {
+                stair: 0, level: 0, category: "✨ 히든 문제",
+                question: v('customQ'),
+                options: [v('customOpt1'), v('customOpt2'), v('customOpt3'), v('customOpt4')],
+                answer: 0, hint: v('customHint'),
+                search: v('customQ'), videoId: v('customVideo')
+            };
+            customQuizzes.push(q);
+            e.target.reset();
+            playCustomQuiz(q);
+        }
+
+        window.onload = function () {
             updateStairsVisual();
             updateStatsDisplay();
         };
