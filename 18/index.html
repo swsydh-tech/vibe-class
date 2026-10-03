@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>집을 지어라!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --sky: #DDF3F5;       /* 선선한 민트 하늘 */
+    --sky2: #EAF6FF;
+    --ink: #4B3B4F;
+    --pink: #FFB3C7;
+    --pink-dark: #F28AA8;
+    --mortar: #FFF0F4;
+    --grass: #BFE8C9;
+    --card: #FFFFFF;
+    --mint-btn: #7FD3C8;
+    --mint-dark: #56B3A7;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; min-height: 100%;
+    background: linear-gradient(var(--sky2), var(--sky));
+    color: var(--ink);
+    font-family: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    display: flex; justify-content: center;
+    padding: 20px 14px;
+  }
+  main { width: 100%; max-width: 460px; text-align: center; }
+  h1 { font-weight: 400; font-size: 2.3rem; margin: 0 0 14px; color: var(--pink-dark); }
+
+  .status {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 14px;
+  }
+  .chip {
+    background: var(--card); border-radius: 14px; padding: 8px 14px;
+    font-size: 1.15rem; box-shadow: 0 3px 0 rgba(75,59,79,.1);
+  }
+
+  .site {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 18px 16px 0;
+    box-shadow: 0 5px 0 rgba(75,59,79,.1);
+    overflow: hidden;
+  }
+  .roof {
+    width: 0; height: 0; margin: 0 auto;
+    border-left: 150px solid transparent;
+    border-right: 150px solid transparent;
+    border-bottom: 70px solid var(--pink-dark);
+    visibility: hidden;
+  }
+  .roof.on { visibility: visible; }
+  .wall {
+    width: 260px; height: 200px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 4px; padding: 4px;
+    background: #F7F7F7;
+    border: 2px dashed #E3D6DC;
+    border-bottom: none;
+    position: relative;
+  }
+  .wall.done { background: var(--mortar); border: 2px solid var(--pink-dark); border-bottom: none; }
+  .brick {
+    background: var(--pink);
+    border-radius: 6px;
+    border: 2px solid var(--pink-dark);
+    position: relative;
+  }
+  /* 귀여운 벽돌 얼굴 */
+  .brick::before, .brick::after {
+    content: ""; position: absolute; top: 34%;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--ink);
+  }
+  .brick::before { left: 32%; }
+  .brick::after  { right: 32%; }
+  .brick span {
+    position: absolute; left: 50%; top: 52%;
+    width: 9px; height: 5px; margin-left: -4.5px;
+    border-bottom: 2px solid var(--ink); border-radius: 0 0 8px 8px;
+  }
+  .door {
+    position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+    width: 54px; height: 84px; border-radius: 27px 27px 0 0;
+    background: #FFE7A8; border: 2px solid #E6B94A; border-bottom: none;
+    display: none;
+  }
+  .wall.done .door { display: block; }
+  .ground { height: 26px; background: var(--grass); margin: 0 -16px; }
+
+  .msg { min-height: 1.6em; margin: 12px 0 4px; font-size: 1.15rem; }
+
+  .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  button {
+    font-family: inherit; font-size: 1.3rem;
+    border: none; border-radius: 999px; padding: 13px 22px;
+    cursor: pointer; color: #fff;
+  }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .buy { background: var(--mint-btn); box-shadow: 0 5px 0 var(--mint-dark); }
+  .build { background: var(--pink-dark); box-shadow: 0 5px 0 #D06A88; }
+  .reset { background: #B9AFC0; box-shadow: 0 5px 0 #9A8FA2; font-size: 1rem; padding: 10px 18px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>집을 지어라!</h1>
+
+  <div class="status">
+    <div class="chip">💰 돈 <b id="coins">100</b></div>
+    <div class="chip">🪣 시멘트 <b id="cement">0</b></div>
+    <div class="chip">🧱 벽돌 <b id="bricks">0</b>/20</div>
+  </div>
+
+  <div class="site">
+    <div class="roof" id="roof"></div>
+    <div class="wall" id="wall"><div class="door"></div></div>
+    <div class="ground"></div>
+  </div>
+
+  <p class="msg" id="msg">시멘트를 사서 집을 지어 보세요!</p>
+
+  <div class="btns">
+    <button class="buy" id="buyBtn" type="button">시멘트 사기 (5원)</button>
+    <button class="build" id="buildBtn" type="button">벽돌 만들기</button>
+  </div>
+  <div class="btns">
+    <button class="reset" id="resetBtn" type="button">처음부터 다시</button>
+  </div>
+</main>
+
+<script>
+  const TOTAL = 20, PRICE = 5, START_COINS = 100;
+  let coins, cement, bricks;
+
+  const $ = id => document.getElementById(id);
+  const wall = $("wall");
+
+  // ----- 소리 (파일 없이 브라우저에서 만듦) -----
+  let ac;
+  function audio() {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === "suspended") ac.resume();
+    return ac;
+  }
+  // 뿅! (높아지는 소리)
+  function ppyong() {
+    const a = audio(), o = a.createOscillator(), g = a.createGain(), t = a.currentTime;
+    o.type = "sine";
+    o.frequency.setValueAtTime(300, t);
+    o.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
+    g.gain.setValueAtTime(0.25, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.22);
+  }
+  // 쌓는 소리 (톡, 딱)
+  function stack() {
+    const a = audio(), t = a.currentTime + 0.2;
+    const len = a.sampleRate * 0.08, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const n = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    n.buffer = buf; f.type = "lowpass"; f.frequency.value = 900; g.gain.value = 0.6;
+    n.connect(f).connect(g).connect(a.destination); n.start(t);
+  }
+  // 사는 소리 (짤랑)
+  function coin() {
+    const a = audio(), t = a.currentTime;
+    [988, 1319].forEach((fr, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = "triangle"; o.frequency.value = fr;
+      g.gain.setValueAtTime(0.15, t + i * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.15);
+      o.connect(g).connect(a.destination); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.16);
+    });
+  }
+
+  function render(msg) {
+    $("coins").textContent = coins;
+    $("cement").textContent = cement;
+    $("bricks").textContent = bricks;
+    $("buyBtn").disabled = coins < PRICE || bricks >= TOTAL;
+    $("buildBtn").disabled = bricks >= TOTAL;
+    if (msg) $("msg").textContent = msg;
+  }
+
+  function addBrick() {
+    // 아래 줄부터 쌓이도록 위치 지정 (움직임 없이 바로 나타남)
+    const row = 5 - Math.floor(bricks / 4);
+    const col = (bricks % 4) + 1;
+    const b = document.createElement("div");
+    b.className = "brick";
+    b.style.gridRow = row; b.style.gridColumn = col;
+    b.innerHTML = "<span></span>";
+    wall.appendChild(b);
+  }
+
+  $("buyBtn").addEventListener("click", () => {
+    if (coins < PRICE) return;
+    coins -= PRICE; cement++;
+    coin();
+    render("시멘트를 샀어요! 이제 벽돌을 만들 수 있어요.");
+  });
+
+  $("buildBtn").addEventListener("click", () => {
+    if (bricks >= TOTAL) return;
+    if (cement < 1) { render("시멘트가 없어요. 먼저 시멘트를 사 주세요!"); return; }
+    cement--; bricks++;
+    ppyong(); stack();
+    addBrick();
+    if (bricks === TOTAL) {
+      wall.classList.add("done");
+      $("roof").classList.add("on");
+      render("집 완성! 귀여운 핑크 집이 생겼어요 🏠");
+    } else {
+      render("뿅! 벽돌이 생겼어요. (" + bricks + "/" + TOTAL + ")");
+    }
+  });
+
+  $("resetBtn").addEventListener("click", reset);
+
+  function reset() {
+    coins = START_COINS; cement = 0; bricks = 0;
+    wall.querySelectorAll(".brick").forEach(b => b.remove());
+    wall.classList.remove("done");
+    $("roof").classList.remove("on");
+    render("시멘트를 사서 집을 지어 보세요!");
+  }
+  reset();
+</script>
+</body>
+</html>
